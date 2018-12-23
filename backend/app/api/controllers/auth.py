@@ -7,7 +7,6 @@ parser = reqparse.RequestParser()
 parser.add_argument('username', help = 'username cannot be blank', required = True)
 parser.add_argument('password', help = 'password cannot be blank', required = True)
 
-
 @api_rest.route('/auth/registration')
 @api_rest.expect(parser)
 class UserRegistration(Resource):

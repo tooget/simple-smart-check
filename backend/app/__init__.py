@@ -1,38 +1,33 @@
-import os
-from datetime import timedelta
-from functools import update_wrapper
-from flask import Flask, current_app, send_file, make_response
-from flask_cors import CORS
-
-from flask_sqlalchemy import SQLAlchemy
-from flask_jwt_extended import JWTManager
-
-# Create Flask app + CORS + configs
-app = Flask(__name__)
-CORS(app, origins=['https://frontend.smartcheck.ml'])
-
+from flask import Flask
 from .config import Config
-app.logger.info('>>> {}'.format(Config.FLASK_ENV))
+from .extensions import db, jwt, cors
+from .api import api_bp
 
-# Connect to DB with flask_sqlalchemy
-db = SQLAlchemy(app)
+def register_extensions(app):
+    db.init_app(app)
+    cors.init_app(app, origins=Config.CORS_ORIGIN)
+    jwt.init_app(app)
 
+def create_app():
+    # Create Flask app + CORS + app.config
+    app = Flask(__name__)
+    app.config.from_object(Config)
+    register_extensions(app)
+    return app
+
+# Flask App Instance Start.
+app = create_app()
+# Register modules to URL with Blueprint
+app.register_blueprint(api_bp)
+
+
+# Execute when this condition meets.
 @app.before_first_request
 def create_tables():
     db.create_all()
 
-# Create authentificated session with JWT 
-from .models import RevokedTokenModel
-jwt = JWTManager(app)
-
 @jwt.token_in_blacklist_loader
 def check_if_token_in_blacklist(decrypted_token):
+    from .models import RevokedTokenModel
     jti = decrypted_token['jti']
     return RevokedTokenModel.is_jti_blacklisted(jti)
-
-# Register modules to URL with Blueprint
-from .api import api_bp
-from .client import client_bp
-
-app.register_blueprint(api_bp)
-# app.register_blueprint(client_bp)
