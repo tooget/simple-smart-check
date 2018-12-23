@@ -1,0 +1,28 @@
+[[source]]
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+gunicorn = "==19.7.1"
+python-dotenv = "*"
+flask = "*"
+flask-cors = "*"
+flask-restplus = "*"
+zappa = "*"
+flask-sqlalchemy = "*"
+flask-jwt-extended = "*"
+passlib = "*"
+pandas = "*"
+
+[dev-packages]
+pytest = "*"
+bumpversion = "*"
+pytest-sugar = "*"
+pytest-cov = "*"
+
+[requires]
+python_version = "3.6"
+
+[pipenv]
+allow_prereleases = true
