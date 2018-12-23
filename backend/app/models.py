@@ -1,5 +1,8 @@
-from passlib.hash import pbkdf2_sha256 as sha256
+# Circular import issues in flask, Reference 1 : http://flask.pocoo.org/docs/1.0/patterns/packages
+# Circular import issues in flask, Reference 2 : https://stackoverflow.com/questions/22929839/circular-import-of-db-reference-using-flask-sqlalchemy-and-blueprints/23400668#23400668
 from .extensions import db
+from passlib.hash import pbkdf2_sha256 as sha256
+
 
 class UserModel(db.Model):
     __tablename__ = 'users'
@@ -41,6 +44,7 @@ class UserModel(db.Model):
     @staticmethod
     def verify_hash(password, hash):
         return sha256.verify(password, hash)
+
 
 class RevokedTokenModel(db.Model):
     __tablename__ = 'revoked_tokens'
