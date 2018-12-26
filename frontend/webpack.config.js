@@ -106,6 +106,12 @@ module.exports = {
       '.smartcheck.ml'
     ]
   },
+  externals: {
+    // global app config object
+    config: JSON.stringify({
+        apiUrl: 'http://localhost:5000'
+    })
+  },
   performance: {
     hints: false
   },

@@ -13,18 +13,22 @@ def create_app():
     app.config.from_object(Config)
     # Register modules to URL with Blueprint : Working as an API Router.
     app.register_blueprint(api_bp)
+    return app
+
+# Register Flask app extensions
+def register_extentions(app):
     # Initailize db connection from app.extensions.py
     db.init_app(app)
     # Initailize cors session from app.extensions.py
     cors.init_app(app, origins=Config.CORS_ORIGIN)
     # Initailize jwt session from app.extensions.py
     jwt.init_app(app)
-    return app
 # ---------------------------------------------------------------------------
 
 
 # -------------------[ Flask App Instance Start ]----------------------------
 app = create_app()
+register_extentions(app)
 # ---------------------------------------------------------------------------
 
 

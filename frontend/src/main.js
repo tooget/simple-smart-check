@@ -24,8 +24,8 @@ Vue.component('custom-toolbar', CustomToolbar); // Common toolbar
 
 new Vue({
   el: '#app',
-  store: new Vuex.Store(storeLike),
   router,
+  store: new Vuex.Store(storeLike),
   render: h => h(AppNavigator),
   beforeCreate() {
     // Shortcut for Material Design

@@ -1,8 +1,8 @@
 import Vue from 'vue';
 import Router from 'vue-router';
 
-import AppNavigator from './AppNavigator.vue';
-import AppLogin from './AppLogin.vue'
+import AppNavigator from '../AppNavigator.vue';
+import AppLogin from '../AppLogin.vue'
 
 Vue.use(Router);
 
