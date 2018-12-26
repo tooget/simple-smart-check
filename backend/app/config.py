@@ -25,4 +25,5 @@ class Config(object):
 
     # ------------------------[ Custom Parameters in app.__init__.py ]--------------------------
     CORS_ORIGIN = ['https://frontend.smartcheck.ml']
+    API_URI_PREFIX = '/api'
     # ------------------------------------------------------------------------------------------

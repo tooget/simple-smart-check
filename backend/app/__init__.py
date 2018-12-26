@@ -1,5 +1,5 @@
 from flask import Flask
-from .api import api_bp
+from .api import apiBlueprint
 from .config import Config
 from .models import RevokedTokenModel
 from .extensions import db, jwt, cors
@@ -12,7 +12,7 @@ def create_app():
     # Set app.config from app.config.py
     app.config.from_object(Config)
     # Register modules to URL with Blueprint : Working as an API Router.
-    app.register_blueprint(api_bp)
+    app.register_blueprint(apiBlueprint)
     return app
 
 # Register Flask app extensions
@@ -43,4 +43,9 @@ def create_tables():
 def check_if_token_in_blacklist(decrypted_token):
     jti = decrypted_token['jti']
     return RevokedTokenModel.is_jti_blacklisted(jti)
+
+@apiBlueprint.after_request
+def add_header(response):
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type,Authorization'
+    return response
 # ---------------------------------------------------------------------------

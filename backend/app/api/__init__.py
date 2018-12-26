@@ -1,19 +1,20 @@
-""" API Blueprint Application """
-
-from flask import Blueprint, current_app
+from flask import Blueprint
 from flask_restplus import Api
-
-api_bp = Blueprint('api_bp', __name__, url_prefix='/api')
-api_rest = Api(api_bp, version='1.0', title='simple-smart-check API',
-            description='Back-End API for simple-smart-check Project')
+from app.config import Config
 
 
-@api_bp.after_request
-def add_header(response):
-    response.headers['Access-Control-Allow-Headers'] = 'Content-Type,Authorization'
-    return response
+# -----------------------[ API Blueprint Application ]----------------------------
+apiBlueprint = Blueprint('apiBlueprint', 
+                            __name__,
+                            url_prefix= Config.API_URI_PREFIX)
 
+#Decorator instance in each APIs
+apiRestful = Api(apiBlueprint,
+                        version= '1.0',
+                        title= 'simple-smart-check API',
+                        description= 'Back-End API for simple-smart-check Project')
 
-# Import resources to ensure view is registered
-from .resources import * # NOQA
-from .controllers.auth import *
+# API Routing with @apiRestful.route
+from .resources import *
+from .auth import *
+# -------------------------------------------------------------------------------
