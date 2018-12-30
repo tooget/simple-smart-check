@@ -53,20 +53,21 @@ class UserRegistration(Resource):       # Before applying SecureResource
 class UserLogin(Resource):      # Before applying SecureResource
     def post(self):
         data = parser.parse_args()
-        username = data['username']
-        current_user = UserModel.find_by_username(username)
+        usernameFromClient = data['username']
+        passwordFromClient = data['password']
+        UserInfoFromDB = UserModel.find_by_username(usernameFromClient)
 
-        if not current_user:
-            return {'message': f'User {username} doesn\'t exist'}
+        if not UserInfoFromDB:
+            return {'message': f'User {usernameFromClient} doesn\'t exist'}, 500
         
-        if UserModel.verify_hash(data['password'], current_user.password):
-            access_token = create_access_token(identity= username)
+        if passwordFromClient == UserInfoFromDB.password.split('$')[-1]:
+            access_token = create_access_token(identity= usernameFromClient)
             return {
-                'message': f'Logged in as {current_user.username}',
+                'message': f'Logged in as {UserInfoFromDB.username}',
                 'access_token': access_token,
-            }
+            }, 201
         else:
-            return {'message': 'Wrong credentials'}
+            return {'message': 'Wrong credentials'}, 500
 # -------------------------------------------------------------------------------
 
 

@@ -14,6 +14,8 @@ flask-sqlalchemy = "*"
 flask-jwt-extended = "*"
 passlib = "*"
 pandas = "*"
+pymysql = "*"
+sqlalchemy = "*"
 
 [dev-packages]
 pytest = "*"

@@ -1,6 +1,7 @@
 from datetime import datetime
 from flask import request
 from flask_restplus import Resource, reqparse     # Reference : http://flask-restplus.readthedocs.io
+from app.models import CurriculumnsModel
 from . import apiRestful
 from .security import require_auth
 
@@ -46,4 +47,12 @@ class SecureResourceOne(SecureResource):
     def get(self, resource_id):
         timestamp = datetime.utcnow().isoformat()
         return {'timestamp': timestamp}
+# -------------------------------------------------------------------------------
+
+
+# ------------------------[ API to Register a New User ]--------------------------
+@apiRestful.route('/resource/curriculums/list')
+class AllCurriculumns(Resource):
+    def get(self):
+        return CurriculumnsModel.return_all()
 # -------------------------------------------------------------------------------

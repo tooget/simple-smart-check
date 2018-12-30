@@ -36,7 +36,8 @@ register_extentions(app)
 # Create DB tables when DB has no scheam/a query is called at the first time.
 @app.before_first_request
 def create_tables():
-    db.create_all()
+    for key in Config.SQLALCHEMY_BINDS.keys():
+        db.create_all(bind=key)
 
 # Block api request with blacklisted access token
 @jwt.token_in_blacklist_loader

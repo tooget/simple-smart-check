@@ -1,12 +1,12 @@
 import Vue from 'vue';
 import Router from 'vue-router';
 
-import AppNavigator from './AppNavigator.vue';
-import AppLogin from './AppLogin.vue'
+import AppNavigator from '../AppNavigator.vue';
+import AppLogin from '../AppLogin.vue';
 
 Vue.use(Router);
 
-const router = new Router({
+export const router = new Router({
   mode: 'history',
   routes: [
     { path: '/', component: AppNavigator },
@@ -29,5 +29,3 @@ router.beforeEach((to, from, next) => {
 
   next();
 })
-
-export default router;

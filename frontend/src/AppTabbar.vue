@@ -22,10 +22,8 @@
 </template>
 
 <script>
-import Participant from './pages/Participant.vue';
-import Email from './pages/Email.vue';
-import Class from './pages/Class.vue';
-import Information from './pages/Information.vue';
+import Settings from './pages/Settings.vue';
+import Home from './pages/Home.vue';
 
 // Just a linear interpolation formula
 const lerp = (x0, x1, t) => parseInt((1 - t) * x0 + t * x1, 10);
@@ -42,29 +40,17 @@ export default {
       topPosition: 0,
       tabs: [
         {
-          label: this.md ? null : 'Participant',
-          icon: 'ion-android-people, material:ion-android-people',
-          page: Participant,
-          theme: green,
-          style: this.md ? { maxWidth: '60px' } : {},
-          top: -105 // Toolbar + Tabbar heights
-        },
-        {
-          label: this.md ? null : 'Class',
-          icon: 'ion-ios-pricetags, material:ion-ios-pricetags',
-          page: Class,
-          theme: green
-        },
-        {
-          label: this.md ? null : 'Email',
-          icon: 'ion-ios-email, material:ion-ios-email',
-          page: Email,
-          theme: green
-        },
-        {
           label: this.md ? null : 'Settings',
           icon: 'ion-android-settings, material:ion-android-settings',
-          page: Information,
+          page: Settings,
+          theme: green,
+          style: this.md ? { maxWidth: '60px' } : {},
+          // top: -105 // Toolbar + Tabbar heights
+        },
+        {
+          label: this.md ? null : 'Home',
+          icon: 'ion-ios-pricetags, material:ion-ios-pricetags',
+          page: Home,
           theme: green
         }
       ]

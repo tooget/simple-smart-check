@@ -12,9 +12,11 @@ class Config(object):
 
     # flask_sqlalchemy app.config
     # Set SQLALCHEMY env on your production Environment
-    SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_URI', 'sqlite:///app.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = os.getenv('SQLALCHEMY_TRACK_MODIFICATIONS', False)
-
+    SQLALCHEMY_BINDS = os.getenv('SQLALCHEMY_BINDS', {  
+        'sqlite': 'sqlite:///app.db',
+        'mysql': 'mysql+pymysql://kisa:kisakisakisakisa!@rds-simplesmartcheck-mysql8.c4bcyomq603x.ap-northeast-2.rds.amazonaws.com:3306/simplesmartcheck?charset=utf8'
+    })
     # flask_jwt_extended app.config
     # Set JWT_SECRET env on your production Environment
     JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'jwt-secret-string')
@@ -24,6 +26,6 @@ class Config(object):
 
 
     # ------------------------[ Custom Parameters in app.__init__.py ]--------------------------
-    CORS_ORIGIN = ['https://frontend.smartcheck.ml']
+    CORS_ORIGIN = ['http://0.0.0.0:7000']
     API_URI_PREFIX = '/api'
     # ------------------------------------------------------------------------------------------

@@ -4,17 +4,16 @@ import './onsen-css-components.css'; // Onsen UI CSS components source for custo
 import './vue-onsenui-smartcheck.css'; // CSS specific to this app
 
 import Vue from 'vue';
-import Vuex from 'vuex';
 import VueOnsen from 'vue-onsenui'; // For UMD
+import VueQrcodeReader from 'vue-qrcode-reader';
 // import VueOnsen from 'vue-onsenui/esm'; // For ESM
 // import * as OnsenComponents from './onsen-components'; // For ESMz
-import VueQrcodeReader from 'vue-qrcode-reader';
-import router from './router';
-import storeLike from './store.js';
+import { router } from './helpers';
+import { store } from './store';
+import App from './App.vue';
 import CustomToolbar from './partials/CustomToolbar.vue';
-import AppNavigator from './AppNavigator.vue';
 
-Vue.use(Vuex);
+
 Vue.use(VueOnsen);
 Vue.use(VueQrcodeReader);
 
@@ -24,9 +23,9 @@ Vue.component('custom-toolbar', CustomToolbar); // Common toolbar
 
 new Vue({
   el: '#app',
-  router,
-  store: new Vuex.Store(storeLike),
-  render: h => h(AppNavigator),
+  router: router,
+  store: store,
+  render: h => h(App),
   beforeCreate() {
     // Shortcut for Material Design
     Vue.prototype.md = this.$ons.platform.isAndroid();

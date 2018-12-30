@@ -4,24 +4,6 @@
       <img src="../assets/vue.png">
     </div>
 
-    <v-ons-list-title>Access</v-ons-list-title>
-    <v-ons-list>
-      <v-ons-list-item v-for="(item, index) in access" :key="item.title"
-        :modifier="md ? 'nodivider' : ''"
-        @click="loadView(index)"
-      >
-        <div class="left">
-          <v-ons-icon fixed-width class="list-item__icon" :icon="item.icon"></v-ons-icon>
-        </div>
-        <div class="center">
-          {{ item.title }}
-        </div>
-        <div class="right">
-          <v-ons-icon icon="fa-link"></v-ons-icon>
-        </div>
-      </v-ons-list-item>
-    </v-ons-list>
-
     <v-ons-list-title>Links</v-ons-list-title>
     <v-ons-list>
       <v-ons-list-item v-for="item in links" :key="item.title"
@@ -57,43 +39,24 @@ export default {
     return {
       links: [
         {
-          title: 'Docs',
+          title: 'Google Docs',
           icon: 'ion-document-text',
-          url: 'https://onsen.io/v2/docs/guide/vue/'
+          url: 'https://drive.google.com/drive/folders/1y1aqwNcGervvuFQIh9Z4AAKbhs0PwlPC'
         },
         {
-          title: 'Github',
+          title: 'Bitbucket',
           icon: 'ion-social-github',
-          url: 'https://github.com/yunsu246/smart-check'
+          url: 'https://bitbucket.org/yunsu246/simple-smart-check'
         },
         {
-          title: 'Code',
-          icon: 'ion-code',
-          url: 'https://github.com/OnsenUI/OnsenUI'
-        },
-        {
-          title: 'Forum',
-          icon: 'ion-chatboxes',
-          url: 'https://community.onsen.io/'
-        },
-        {
-          title: 'Twitter',
+          title: 'Facebook',
           icon: 'ion-social-twitter',
-          url: 'https://twitter.com/Onsen_UI'
-        }
-      ],
-      access: [
-        {
-          title: 'Class',
-          icon: 'ion-ios-pricetags, material:ion-ios-pricetags'
+          url: 'https://www.facebook.com/kisa118/'
         },
         {
-          title: 'Email',
-          icon: 'ion-ios-email, material:ion-ios-email'
-        },
-        {
-          title: 'Settings',
-          icon: 'ion-android-settings, material:ion-android-settings'
+          title: 'OnOffMix',
+          icon: 'ion-chatboxes',
+          url: 'https://www.onoffmix.com/'
         }
       ]
     };
