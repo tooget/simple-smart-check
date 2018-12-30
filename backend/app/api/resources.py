@@ -1,9 +1,9 @@
 from datetime import datetime
 from flask import request
 from flask_restplus import Resource, reqparse     # Reference : http://flask-restplus.readthedocs.io
-from app.models import CurriculumnsModel
-from . import apiRestful
-from .security import require_auth
+from app.ormmodels import CurriculumsModel
+from app.api import apiRestful
+from app.api.security import require_auth
 
 
 # ---------------------------[ SecureResource ]----------------------------------
@@ -50,9 +50,25 @@ class SecureResourceOne(SecureResource):
 # -------------------------------------------------------------------------------
 
 
-# ------------------------[ API to Register a New User ]--------------------------
+# ------------------------[ API to manage Curriculums ]--------------------------
 @apiRestful.route('/resource/curriculums/list')
 class AllCurriculumns(Resource):
     def get(self):
-        return CurriculumnsModel.return_all()
+        def to_json(x= CurriculumsModel):
+            return {
+                'curriculumNo': x.curriculumNo,
+                'curriculumCategory': x.curriculumCategory,
+                'ordinalNo': x.ordinalNo,
+                'curriculumName': x.curriculumName,
+                'curriculumType': x.curriculumType,
+                'startDate': str(x.startDate),
+                'endDate': str(x.endDate),
+                'applicantsInserted': x.applicantsInserted,
+                'membersInserted': x.membersInserted,
+                'insertedTimestamp': str(x.insertedTimestamp),
+                'updatedTimestamp': str(x.updatedTimestamp)
+            }
+        return {
+            'curriculums': list(map(lambda x: to_json(x), CurriculumsModel.query.all()))
+        }
 # -------------------------------------------------------------------------------

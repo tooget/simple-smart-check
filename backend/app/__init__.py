@@ -1,8 +1,8 @@
 from flask import Flask
-from .api import apiBlueprint
-from .config import Config
-from .models import RevokedTokenModel
-from .extensions import db, jwt, cors
+from app.api import apiBlueprint
+from app.config import Config
+from app.ormmodels import RevokedTokenModel
+from app.extensions import db, jwt, cors
 
 
 # -------------------[ Flask App Settings ]----------------------------------
@@ -33,7 +33,7 @@ register_extentions(app)
 
 
 # -----[ Execute with specific condition after Flask App starts. ]-----------
-# Create DB tables when DB has no scheam/a query is called at the first time.
+# Create DB tables defined in models.py when DB has no scheam/a query is called at the first time.
 @app.before_first_request
 def create_tables():
     for key in Config.SQLALCHEMY_BINDS.keys():
@@ -43,7 +43,8 @@ def create_tables():
 @jwt.token_in_blacklist_loader
 def check_if_token_in_blacklist(decrypted_token):
     jti = decrypted_token['jti']
-    return RevokedTokenModel.is_jti_blacklisted(jti)
+    blacklisted = RevokedTokenModel.query.filter_by(jti = jti).first()
+    return bool(blacklisted)
 
 @apiBlueprint.after_request
 def add_header(response):
