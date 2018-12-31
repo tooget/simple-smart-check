@@ -8,11 +8,11 @@ from flask_jwt_extended import create_access_token, jwt_required, get_raw_jwt
 from passlib.hash import django_pbkdf2_sha256
 
 
-# ---------------------------[ SecureResource ]----------------------------------
-# Calls require_auth decorator on all requests
-class SecureResource(Resource):
-    method_decorators = [require_auth]
-# -------------------------------------------------------------------------------
+# # ---------------------------[ SecureResource ]----------------------------------
+# # Calls require_auth decorator on all requests
+# class SecureResource(Resource):
+#     method_decorators = [require_auth]
+# # -------------------------------------------------------------------------------
 
 
 # ----------------[ parser : Requested HTTP Body data ]--------------------------
@@ -26,10 +26,11 @@ parser.add_argument('password', help= 'password cannot be blank', required= True
 @apiRestful.route('/auth/registration')
 @apiRestful.expect(parser)
 class UserRegistration(Resource):       # Before applying SecureResource
+
     def post(self):
-        data = parser.parse_args()
-        usernameFromClient = data['username']
-        passwordFromClient = data['password']
+        httpBodyFromClient = parser.parse_args()
+        usernameFromClient = httpBodyFromClient['username']
+        passwordFromClient = httpBodyFromClient['password']
         
         if UserModel.query.filter_by(username= usernameFromClient).first():
             return {
@@ -62,13 +63,13 @@ class UserRegistration(Resource):       # Before applying SecureResource
 @apiRestful.expect(parser)
 class UserLogin(Resource):      # Before applying SecureResource
     def post(self):
-        data = parser.parse_args()
-        usernameFromClient = data['username']
+        httpBodyFromClient = parser.parse_args()
+        usernameFromClient = httpBodyFromClient['username']
         # When Requested with raw string password from POSTMAN for test
         # passwordFromClient = django_pbkdf2_sha256.using(
         #                         salt= Config.SALT_KEYWORD, salt_size= Config.SALT_SIZE, rounds= Config.SALT_ROUNDS
-        #                      ).hash(data['password']).split('$')[-1]
-        passwordFromClient = data['password']
+        #                      ).hash(httpBodyFromClient['password']).split('$')[-1]
+        passwordFromClient = httpBodyFromClient['password']
         UserInfoFromDB = UserModel.query.filter_by(username= usernameFromClient).first()
 
         # if UserInfoFromDB doesn't exist, return 500
@@ -126,12 +127,12 @@ class AllUsers(Resource):       # Before applying SecureResource
 # -------------------------------------------------------------------------------
 
 
-# ----------------[ API SAMPLE with Applying SecureResources ]-------------------
-@apiRestful.route('/auth/secret')
-class SecretResource(SecureResource):
-    @jwt_required
-    def get(self):
-        return {
-            'answer': 42
-        }
-# -------------------------------------------------------------------------------
+# # ----------------[ API SAMPLE with Applying SecureResources ]-------------------
+# @apiRestful.route('/auth/secret')
+# class SecretResource(SecureResource):
+#     @jwt_required
+#     def get(self):
+#         return {
+#             'answer': 42
+#         }
+# # -------------------------------------------------------------------------------
