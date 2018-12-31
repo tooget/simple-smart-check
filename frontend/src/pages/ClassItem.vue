@@ -1,10 +1,10 @@
 <template>
     <v-ons-list>
-        <v-ons-list-item v-for="item in list" :key="item"
+        <v-ons-list-item v-for="(item, key) in list" :key="key"
             modifier="chevron"
             @click="transition(item)"
         >
-            Item #{{ item }}
+            {{ item.curriculumName }}
         </v-ons-list-item>
     </v-ons-list>
 </template>

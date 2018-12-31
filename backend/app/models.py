@@ -62,7 +62,7 @@ class RevokedTokenModel(db.Model):
         return bool(query)
 
 
-class CurriculumnsModel(db.Model):
+class CurriculumsModel(db.Model):
     __tablename__ = 'curriculums'
     __bind_key__ = 'mysql'
 
@@ -94,4 +94,4 @@ class CurriculumnsModel(db.Model):
                 'insertedTimestamp': str(x.insertedTimestamp),
                 'updatedTimestamp': str(x.updatedTimestamp)
             }
-        return {'curriculumns': list(map(lambda x: to_json(x), CurriculumnsModel.query.all()))}
+        return {'curriculums': list(map(lambda x: to_json(x), CurriculumsModel.query.all()))}

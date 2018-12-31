@@ -1,7 +1,7 @@
  <template>   
     <v-ons-page>
       <custom-toolbar backLabel="Back">
-        {{ item }}
+        {{ item.curriculumName }}
       </custom-toolbar>
       <p style="text-align: center">
         Use the VOnsBackButton

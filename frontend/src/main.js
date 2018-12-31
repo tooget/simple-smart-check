@@ -6,6 +6,7 @@ import './vue-onsenui-smartcheck.css'; // CSS specific to this app
 import Vue from 'vue';
 import VueOnsen from 'vue-onsenui'; // For UMD
 import VueQrcodeReader from 'vue-qrcode-reader';
+import Axios from 'axios'
 // import VueOnsen from 'vue-onsenui/esm'; // For ESM
 // import * as OnsenComponents from './onsen-components'; // For ESMz
 import { router } from './helpers';
@@ -20,6 +21,7 @@ Vue.use(VueQrcodeReader);
 // Register components globally
 // Object.values(OnsenComponents).forEach(component => Vue.component(component.name, component)); // For ESM
 Vue.component('custom-toolbar', CustomToolbar); // Common toolbar
+
 
 new Vue({
   el: '#app',

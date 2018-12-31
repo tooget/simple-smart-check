@@ -1,7 +1,7 @@
 from datetime import datetime
 from flask import request
 from flask_restplus import Resource, reqparse     # Reference : http://flask-restplus.readthedocs.io
-from app.models import CurriculumnsModel
+from app.models import CurriculumsModel
 from . import apiRestful
 from .security import require_auth
 
@@ -54,5 +54,5 @@ class SecureResourceOne(SecureResource):
 @apiRestful.route('/resource/curriculums/list')
 class AllCurriculumns(Resource):
     def get(self):
-        return CurriculumnsModel.return_all()
+        return CurriculumsModel.return_all()
 # -------------------------------------------------------------------------------
