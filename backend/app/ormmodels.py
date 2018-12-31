@@ -1,6 +1,4 @@
-# Circular import issues in flask, Reference 1 : http://flask.pocoo.org/docs/1.0/patterns/packages
-# Circular import issues in flask, Reference 2 : https://stackoverflow.com/questions/22929839/circular-import-of-db-reference-using-flask-sqlalchemy-and-blueprints/23400668#23400668
-from app.extensions import db
+from app.extensions import db   # Circular import issues in flask, Reference : http://flask.pocoo.org/docs/1.0/patterns/packages, https://stackoverflow.com/questions/22929839/circular-import-of-db-reference-using-flask-sqlalchemy-and-blueprints/23400668#23400668
 from sqlalchemy import text
 
 
@@ -9,9 +7,9 @@ class UserModel(db.Model):
     __tablename__ = 'users'
     __bind_key__ = 'sqlite'
 
-    id = db.Column(db.Integer, primary_key = True)
-    username = db.Column(db.String(120), unique = True, nullable = False)
-    password = db.Column(db.String(120), nullable = False)
+    id = db.Column(db.Integer, primary_key= True)
+    username = db.Column(db.String(120), unique= True, nullable= False)
+    password = db.Column(db.String(120), nullable= False)
 
     def add(self):
         db.session.add(self)
@@ -22,7 +20,7 @@ class RevokedTokenModel(db.Model):
     __tablename__ = 'revoked_tokens'
     __bind_key__ = 'sqlite'
 
-    id = db.Column(db.Integer, primary_key = True)
+    id = db.Column(db.Integer, primary_key= True)
     jti = db.Column(db.String(120))
     
     def add(self):

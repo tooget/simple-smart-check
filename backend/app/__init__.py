@@ -1,8 +1,8 @@
-from flask import Flask
 from app.api import apiBlueprint
 from app.config import Config
-from app.ormmodels import RevokedTokenModel
 from app.extensions import db, jwt, cors
+from app.ormmodels import RevokedTokenModel
+from flask import Flask
 
 
 # -------------------[ Flask App Settings ]----------------------------------
@@ -20,7 +20,7 @@ def register_extentions(app):
     # Initailize db connection from app.extensions.py
     db.init_app(app)
     # Initailize cors session from app.extensions.py
-    cors.init_app(app, origins=Config.CORS_ORIGIN)
+    cors.init_app(app, origins= Config.CORS_ORIGIN)
     # Initailize jwt session from app.extensions.py
     jwt.init_app(app)
 # ---------------------------------------------------------------------------
@@ -37,13 +37,13 @@ register_extentions(app)
 @app.before_first_request
 def create_tables():
     for key in Config.SQLALCHEMY_BINDS.keys():
-        db.create_all(bind=key)
+        db.create_all(bind= key)
 
 # Block api request with blacklisted access token
 @jwt.token_in_blacklist_loader
 def check_if_token_in_blacklist(decrypted_token):
     jti = decrypted_token['jti']
-    blacklisted = RevokedTokenModel.query.filter_by(jti = jti).first()
+    blacklisted = RevokedTokenModel.query.filter_by(jti= jti).first()
     return bool(blacklisted)
 
 @apiBlueprint.after_request

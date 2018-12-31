@@ -1,9 +1,9 @@
+from app.api import apiRestful
+from app.api.security import require_auth
+from app.ormmodels import CurriculumsModel
 from datetime import datetime
 from flask import request
 from flask_restplus import Resource, reqparse     # Reference : http://flask-restplus.readthedocs.io
-from app.ormmodels import CurriculumsModel
-from app.api import apiRestful
-from app.api.security import require_auth
 
 
 # ---------------------------[ SecureResource ]----------------------------------

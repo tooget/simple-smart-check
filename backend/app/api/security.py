@@ -1,6 +1,6 @@
-from functools import wraps
 from flask import request
 from flask_restplus import abort
+from functools import wraps
 
 # Secure method decorator
 def require_auth(func):

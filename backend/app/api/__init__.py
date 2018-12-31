@@ -1,6 +1,6 @@
+from app.config import Config
 from flask import Blueprint
 from flask_restplus import Api
-from app.config import Config
 
 
 # -----------------------[ API Blueprint Application ]----------------------------

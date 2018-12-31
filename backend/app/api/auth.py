@@ -1,11 +1,11 @@
-from flask_restplus import Resource, reqparse
-from flask_jwt_extended import create_access_token, jwt_required, get_raw_jwt
-from datetime import timedelta
-from passlib.hash import django_pbkdf2_sha256
-from app.config import Config
-from app.ormmodels import UserModel, RevokedTokenModel
 from app.api import apiRestful
 from app.api.security import require_auth
+from app.config import Config
+from app.ormmodels import UserModel, RevokedTokenModel
+from datetime import timedelta
+from flask_restplus import Resource, reqparse
+from flask_jwt_extended import create_access_token, jwt_required, get_raw_jwt
+from passlib.hash import django_pbkdf2_sha256
 
 
 # ---------------------------[ SecureResource ]----------------------------------
