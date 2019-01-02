@@ -9,6 +9,8 @@ import { alert } from './alert.module';
 import { authentication } from './authentication.module';
 import { users } from './users.module';
 
+import { attendanceLog } from './attendanceLog.module';
+
 Vue.use(Vuex);
 
 export const store = new Vuex.Store({
@@ -18,6 +20,7 @@ export const store = new Vuex.Store({
         tabbar,
         alert,
         authentication,
-        users
+        users,
+        attendanceLog
     }
 });

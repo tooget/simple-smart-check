@@ -6,7 +6,6 @@
 
       <v-ons-list>
         <v-ons-list-header>Class Information</v-ons-list-header>
-
         <v-ons-list-item :modifier="md ? 'nodivider' : ''">
           <div class="left">
             curriculumCategory:
@@ -61,6 +60,7 @@
           </div>
         </v-ons-list-item>
 
+        <v-ons-list-header>phoneNo</v-ons-list-header>
         <v-ons-list-item :modifier="md ? 'nodivider' : ''">
           <div class="left">
             phoneNo:
@@ -74,6 +74,25 @@
           </label>
         </v-ons-list-item>
 
+        <v-ons-list-header>attendanceType</v-ons-list-header>
+        <v-ons-list-item v-for="(attendanceType, $index) in attendanceTypes" :key="attendanceType"
+          tappable
+          :modifier="($index === attendanceTypes.length - 1) ? 'longdivider' : ''"
+        >
+          <label class="left">
+            <v-ons-radio
+              :input-id="'radio-' + $index"
+              :value="attendanceType"
+              v-model=" selectAttendanceType"
+            >
+            </v-ons-radio>
+          </label>
+          <label :for="'radio-' + $index" class="center">
+            {{ attendanceType }}
+          </label>
+        </v-ons-list-item>
+
+        <v-ons-list-header>signaturePad</v-ons-list-header>
         <v-ons-list-item :modifier="md ? 'nodivider' : ''">
           <div class="left">
             signaturePad:
@@ -112,15 +131,25 @@
 
 <script>
 export default {
+  computed: {
+    checkInOut () {
+      return this.$store.state.attendanceLog.status.checkInOut;
+    }
+  },
   methods: {
     undo() {
       this.$refs.signaturePad.undoSignature();
     },
     save() {
       const { isEmpty, data } = this.$refs.signaturePad.saveSignature();
-      alert('Open DevTools see the save data.');
-      console.log(isEmpty);
-      console.log(data);
+      const { dispatch } = this.$store;
+      const requestBody = {
+        phoneNo: this.phoneNo,
+        curriculumNo: this.item.curriculumNo,
+        checkInOut: this.selectAttendanceType,
+        signature: data
+      };
+      dispatch('attendanceLog/checkInOut', { requestBody });
     }
   }
 };

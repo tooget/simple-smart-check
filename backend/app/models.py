@@ -95,3 +95,20 @@ class CurriculumsModel(db.Model):
                 'updatedTimestamp': str(x.updatedTimestamp)
             }
         return {'curriculums': list(map(lambda x: to_json(x), CurriculumsModel.query.all()))}
+
+
+class AttendanceLogsModel(db.Model):
+    __tablename__ = 'attendanceLogs'
+    __bind_key__ = 'mysql'
+
+    phoneNo = db.Column(db.String(16), primary_key= True)
+    curriculumNo = db.Column(db.Integer, primary_key= True)
+    checkInOut = db.Column(db.String(5), primary_key= True)
+    attendanceDate = db.Column(db.DateTime, primary_key= True)
+    signature = db.Column(db.Text, nullable= False)
+    insertedTimestamp = db.Column(db.TIMESTAMP, nullable= False, server_default= text('CURRENT_TIMESTAMP'))
+    updatedTimestamp = db.Column(db.TIMESTAMP, nullable= True, server_default= text('NULL ON UPDATE CURRENT_TIMESTAMP'))
+
+    def save_to_db(self):
+        db.session.add(self)
+        db.session.commit()

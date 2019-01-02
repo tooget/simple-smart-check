@@ -31,7 +31,10 @@ export default {
         extends: ClassItemPage,
         data() {
           return {
-            item: name
+            item: name,
+            phoneNo: null,
+            attendanceTypes: ['In', 'Out'],
+            selectAttendanceType: null
           }
         }
       });
