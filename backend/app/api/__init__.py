@@ -15,6 +15,6 @@ apiRestful = Api(apiBlueprint,
                         description= 'Back-End API for simple-smart-check Project')
 
 # API Routing with @apiRestful.route
-from .resources import *
-from .auth import *
+from app.api.resources import *
+from app.api.auth import *
 # -------------------------------------------------------------------------------

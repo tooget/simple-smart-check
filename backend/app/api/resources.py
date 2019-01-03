@@ -3,7 +3,7 @@ from app.api.security import require_auth
 from app.ormmodels import AttendanceLogsModel, ApplicantsModel, CurriculumsModel, MembersModel
 from datetime import datetime
 from flask import request
-from flask_restplus import Resource, reqparse     # Reference : http://flask-restplus.readthedocs.io
+from flask_restplus import Resource     # Reference : http://flask-restplus.readthedocs.io
 
 
 # # ---------------------------[ SecureResource ]----------------------------------
@@ -11,12 +11,6 @@ from flask_restplus import Resource, reqparse     # Reference : http://flask-res
 # class SecureResource(Resource):
 #     method_decorators = [require_auth]
 # # -------------------------------------------------------------------------------
-
-
-# ----------------[ parser : Requested HTTP Body data ]--------------------------
-parser = reqparse.RequestParser()
-parser.add_argument('curriculum_no', help= 'curriculum_no cannot be blank', required= True)
-# -------------------------------------------------------------------------------
 
 
 # # --------------------[ API SAMPLE without SecureResources ]---------------------

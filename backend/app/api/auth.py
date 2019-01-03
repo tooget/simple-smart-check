@@ -3,7 +3,8 @@ from app.api.security import require_auth
 from app.config import Config
 from app.ormmodels import UserModel, RevokedTokenModel
 from datetime import timedelta
-from flask_restplus import Resource, reqparse
+from flask import request
+from flask_restplus import Resource
 from flask_jwt_extended import create_access_token, jwt_required, get_raw_jwt
 from passlib.hash import django_pbkdf2_sha256
 
@@ -15,22 +16,19 @@ from passlib.hash import django_pbkdf2_sha256
 # # -------------------------------------------------------------------------------
 
 
-# ----------------[ parser : Requested HTTP Body data ]--------------------------
-parser = reqparse.RequestParser()
-parser.add_argument('username', help= 'username cannot be blank', required= True)   # Raw string username from client
-parser.add_argument('password', help= 'password cannot be blank', required= True)   # Hashed password from client
-# -------------------------------------------------------------------------------
-
-
 # --------------------------[ Register a New User ]------------------------------
 @apiRestful.route('/auth/registration')
-@apiRestful.expect(parser)
+@apiRestful.doc(params= {
+                    'username': 'required',
+                    'password': 'reuqried',
+                })
 class UserRegistration(Resource):       # Before applying SecureResource
 
     def post(self):
-        httpBodyFromClient = parser.parse_args()
-        usernameFromClient = httpBodyFromClient['username']
-        passwordFromClient = httpBodyFromClient['password']
+        # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand.")
+        # Reference : https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
+        usernameFromClient = request.form['username']
+        passwordFromClient = request.form['password']
         
         if UserModel.query.filter_by(username= usernameFromClient).first():
             return {
@@ -60,16 +58,16 @@ class UserRegistration(Resource):       # Before applying SecureResource
 
 # ---------------------------------[ LOGIN ]-------------------------------------
 @apiRestful.route('/auth/login')
-@apiRestful.expect(parser)
+@apiRestful.doc(params= {
+                    'username': 'required',
+                    'password': 'reuqried',
+                })
 class UserLogin(Resource):      # Before applying SecureResource
     def post(self):
-        httpBodyFromClient = parser.parse_args()
-        usernameFromClient = httpBodyFromClient['username']
-        # When Requested with raw string password from POSTMAN for test
-        # passwordFromClient = django_pbkdf2_sha256.using(
-        #                         salt= Config.SALT_KEYWORD, salt_size= Config.SALT_SIZE, rounds= Config.SALT_ROUNDS
-        #                      ).hash(httpBodyFromClient['password']).split('$')[-1]
-        passwordFromClient = httpBodyFromClient['password']
+        # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand.")
+        # Reference : https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
+        usernameFromClient = request.form['username']
+        passwordFromClient = request.form['password']
         UserInfoFromDB = UserModel.query.filter_by(username= usernameFromClient).first()
 
         # if UserInfoFromDB doesn't exist, return 500
