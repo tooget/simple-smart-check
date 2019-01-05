@@ -15,8 +15,8 @@ export const userService = {
 };
 
 function login(username, password) {
-    const requestOptions = { username: username, password: password };
-    return HTTP.post(`/auth/login`, requestOptions)
+    const requestBody = { username: username, password: password };
+    return HTTP.post(`/auth/login`, requestBody)
         .then(response => {
             // login successful if there's a jwt token in the response
             if (response.data.access_token) {

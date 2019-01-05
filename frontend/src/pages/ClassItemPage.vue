@@ -117,7 +117,7 @@
             <div class="col-6 mt-2">
               <button
                 class="btn btn-outline-primary float-left"
-                @click="save"
+                @click="handleSubmit"
               >
                 Save
               </button>
@@ -140,16 +140,14 @@ export default {
     undo() {
       this.$refs.signaturePad.undoSignature();
     },
-    save() {
+    handleSubmit (e) {
       const { isEmpty, data } = this.$refs.signaturePad.saveSignature();
       const { dispatch } = this.$store;
-      const requestBody = {
-        phoneNo: this.phoneNo,
-        curriculumNo: this.item.curriculumNo,
-        checkInOut: this.selectAttendanceType,
-        signature: data
-      };
-      dispatch('attendanceLog/checkInOut', { requestBody });
+      const phoneNo = this.phoneNo;
+      const curriculumNo = this.item.curriculumNo;
+      const checkInOut = this.selectAttendanceType;
+      const signature = data;
+      dispatch('attendanceLog/checkInOut', { phoneNo, curriculumNo, checkInOut, signature });
     }
   }
 };

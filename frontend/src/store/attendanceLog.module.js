@@ -6,10 +6,10 @@ export const attendanceLog = {
         checkInOut: {}
     },
     actions: {
-        checkInOut({ commit }, { requestBody }) {
+        checkInOut({ commit }, { phoneNo, curriculumNo, checkInOut, signature }) {
             commit('postCheckInOutRequest');
 
-            attendanceLogService.checkInOut(requestBody)
+            attendanceLogService.checkInOut(phoneNo, curriculumNo, checkInOut, signature)
                 .then(
                     response => {
                         commit('postCheckInOutSuccess', response.data);

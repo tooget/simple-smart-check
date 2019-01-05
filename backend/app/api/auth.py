@@ -1,106 +1,136 @@
-from flask_restplus import Resource, reqparse
+from app.api import apiRestful
+from app.api.security import require_auth
+from app.config import Config
+from app.ormmodels import UserModel, RevokedTokenModel
+from datetime import timedelta
+from flask import request
+from flask_restplus import Resource
 from flask_jwt_extended import create_access_token, jwt_required, get_raw_jwt
-from app.models import UserModel, RevokedTokenModel
-from . import apiRestful
-from .security import require_auth
+from passlib.hash import django_pbkdf2_sha256
 
 
-# ---------------------------[ SecureResource ]----------------------------------
-# Calls require_auth decorator on all requests
-class SecureResource(Resource):
-    method_decorators = [require_auth]
-# -------------------------------------------------------------------------------
+# # ---------------------------[ SecureResource ]----------------------------------
+# # Calls require_auth decorator on all requests
+# class SecureResource(Resource):
+#     method_decorators = [require_auth]
+# # -------------------------------------------------------------------------------
 
 
-# ----------------[ parser : Requested HTTP Body data ]--------------------------
-parser = reqparse.RequestParser()
-parser.add_argument('username', help= 'username cannot be blank', required= True)
-parser.add_argument('password', help= 'password cannot be blank', required= True)
-# -------------------------------------------------------------------------------
-
-
-# ------------------------[ API to Register a New User ]--------------------------
+# --------------------------[ Register a New User ]------------------------------
 @apiRestful.route('/auth/registration')
-@apiRestful.expect(parser)
+@apiRestful.doc(params= {
+                    'username': 'required',
+                    'password': 'reuqried',
+                })
 class UserRegistration(Resource):       # Before applying SecureResource
+
     def post(self):
-        data = parser.parse_args()
-        username = data['username']
+        # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand.")
+        # Reference : https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
+        usernameFromClient = request.form['username']
+        passwordFromClient = request.form['password']
         
-        if UserModel.find_by_username(username):
-            return {'message': f'User {username} already exists'}
-        
-        new_user = UserModel(
-            username = username,
-            password = UserModel.generate_hash(data['password'])
-        )
-        
-        try:
-            new_user.save_to_db()
-            access_token = create_access_token(identity= username)
+        if UserModel.query.filter_by(username= usernameFromClient).first():
             return {
-                'message': f'User {username} was created',
-                'access_token': access_token,
+                'message': f'User {usernameFromClient} already exists'
+            }
+        
+        pbkdf2_sha256 = django_pbkdf2_sha256.using(salt= Config.SALT_KEYWORD, salt_size= Config.SALT_SIZE, rounds= Config.SALT_ROUNDS)
+        newUserInfoFromClient = UserModel(
+            username= usernameFromClient,
+            password= pbkdf2_sha256.hash(passwordFromClient)    #Crypt the password with pbkdf2
+        )
+
+        # [!] Transaction Issue when DB insert fails
+        try:
+            UserModel.add(newUserInfoFromClient)
+            accessToken = create_access_token(identity= usernameFromClient)
+            return {
+                'message': f'User {usernameFromClient} was created',
+                'access_token': accessToken,
             }
         except:
-            return {'message': 'Something went wrong'}, 500
+            return {
+                'message': 'Something went wrong'
+            }, 500
 # -------------------------------------------------------------------------------
 
 
-# --------------------[ API to login with access token ]-------------------------
+# ---------------------------------[ LOGIN ]-------------------------------------
 @apiRestful.route('/auth/login')
-@apiRestful.expect(parser)
+@apiRestful.doc(params= {
+                    'username': 'required',
+                    'password': 'reuqried',
+                })
 class UserLogin(Resource):      # Before applying SecureResource
     def post(self):
-        data = parser.parse_args()
-        usernameFromClient = data['username']
-        passwordFromClient = data['password']
-        UserInfoFromDB = UserModel.find_by_username(usernameFromClient)
+        # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand.")
+        # Reference : https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
+        usernameFromClient = request.form['username']
+        passwordFromClient = request.form['password']
+        UserInfoFromDB = UserModel.query.filter_by(username= usernameFromClient).first()
 
+        # if UserInfoFromDB doesn't exist, return 500
         if not UserInfoFromDB:
-            return {'message': f'User {usernameFromClient} doesn\'t exist'}, 500
-        
-        if passwordFromClient == UserInfoFromDB.password.split('$')[-1]:
-            access_token = create_access_token(identity= usernameFromClient)
+            return {
+                'message': f'User {usernameFromClient} doesn\'t exist'
+            }, 500
+        # Successfully Login, return 201
+        elif passwordFromClient == UserInfoFromDB.password.split('$')[-1]:
+            accessToken = create_access_token(identity= usernameFromClient)
             return {
                 'message': f'Logged in as {UserInfoFromDB.username}',
-                'access_token': access_token,
+                'access_token': accessToken,
             }, 201
+        # Something wrong, return 500
         else:
-            return {'message': 'Wrong credentials'}, 500
+            return {
+                'message': 'Wrong credentials'
+            }, 500
 # -------------------------------------------------------------------------------
 
 
-# -----------------------------[ API to logout ]---------------------------------
-@apiRestful.route('/auth/logout/access')
-class UserLogoutAccess(Resource):       # Before applying SecureResource
+# ---------------------------------[ LOGOUT ]------------------------------------
+@apiRestful.route('/auth/logout')
+class UserLogout(Resource):       # Before applying SecureResource
     @jwt_required
     def post(self):
         jti = get_raw_jwt()['jti']
         try:
-            revoked_token = RevokedTokenModel(jti= jti)
-            revoked_token.add()
-            return {'message': 'Access token has been revoked'}
+            revokedToken = RevokedTokenModel(jti= jti)
+            revokedToken.add()
+            return {
+                'message': 'Access token has been revoked'
+            }
         except:
-            return {'message': 'Something went wrong'}, 500
+            return {
+                'message': 'Something went wrong'
+            }, 500
 # -------------------------------------------------------------------------------
 
 
-# --------------------------[ API to Query users ]-------------------------------
-@apiRestful.route('/auth/users')
-class AllUsers(Resource):
+# ------------------------------[ Get All Users ]--------------------------------
+@apiRestful.route('/auth/users/all')
+class AllUsers(Resource):       # Before applying SecureResource
     def get(self):
-        return UserModel.return_all()
-    
-    def delete(self):
-        return UserModel.delete_all()
+        def to_json(x= UserModel):
+            return {
+                'id': x.id,
+                'username': x.username,
+                'password': x.password
+            }
+        return {
+            'users': list(map(lambda x: to_json(x), UserModel.query.all()))
+        }
 # -------------------------------------------------------------------------------
 
 
-# ----------------[ API SAMPLE with Applying SecureResources ]-------------------
-@apiRestful.route('/auth/secret')
-class SecretResource(SecureResource):
-    @jwt_required
-    def get(self):
-        return {'answer': 42}
-# -------------------------------------------------------------------------------
+# # ----------------[ API SAMPLE with Applying SecureResources ]-------------------
+# @apiRestful.route('/auth/secret')
+# class SecretResource(SecureResource):
+#     @jwt_required
+#     def get(self):
+#         return {
+#             'answer': 42
+#         }
+# # -------------------------------------------------------------------------------
