@@ -1,6 +1,7 @@
 from app.api import apiRestful
 from app.api.security import require_auth
 from app.ormmodels import AttendanceLogsModel, ApplicantsModel, CurriculumsModel, MembersModel
+from app.ormmodels import AttendanceLogsModelSchema, ApplicantsModelSchema, CurriculumsModelSchema, MembersModelSchema
 from datetime import datetime, timedelta
 from flask import request
 from flask_restplus import Resource     # Reference : http://flask-restplus.readthedocs.io
@@ -50,25 +51,14 @@ from flask_restplus import Resource     # Reference : http://flask-restplus.read
 
 # ------------------------[ API to manage Curriculums ]--------------------------
 @apiRestful.route('/resource/curriculums/all')
-class Curriculumns(Resource):
+class Curriculums(Resource):
 
     def get(self):
-        def to_json(x= CurriculumsModel):
-            return {
-                'curriculumNo': x.curriculumNo,
-                'curriculumCategory': x.curriculumCategory,
-                'ordinalNo': x.ordinalNo,
-                'curriculumName': x.curriculumName,
-                'curriculumType': x.curriculumType,
-                'startDate': str(x.startDate),
-                'endDate': str(x.endDate),
-                'applicantsInserted': x.applicantsInserted,
-                'membersInserted': x.membersInserted,
-                'insertedTimestamp': str(x.insertedTimestamp),
-                'updatedTimestamp': str(x.updatedTimestamp)
-            }
+        curriculums = CurriculumsModel.query.all()
+        curriculumsSchema = CurriculumsModelSchema(many= True)
+        output = curriculumsSchema.dump(curriculums)
         return {
-            'curriculums': list(map(lambda x: to_json(x), CurriculumsModel.query.all()))
+            'curriculums': output
         }
 # -------------------------------------------------------------------------------
 
@@ -78,18 +68,11 @@ class Curriculumns(Resource):
 class AttendanceLogs(Resource):
 
     def get(self):
-        def to_json(x= AttendanceLogsModel):
-            return {
-                'phoneNo': x.phoneNo,
-                'curriculumNo': x.curriculumNo,
-                'checkInOut': x.checkInOut,
-                'attendanceDate': str(x.attendanceDate),
-                'signature': x.signature,
-                'insertedTimestamp': str(x.insertedTimestamp),
-                'updatedTimestamp': str(x.updatedTimestamp)
-            }
+        attendanceLogs = AttendanceLogsModel.query.all()
+        attendanceLogsSchema = AttendanceLogsModelSchema(many= True)
+        output = attendanceLogsSchema.dump(attendanceLogs)
         return {
-            'curriculums': list(map(lambda x: to_json(x), AttendanceLogsModel.query.all()))
+            'attendanceLogs': output
         }
 # -------------------------------------------------------------------------------
 
@@ -99,19 +82,11 @@ class AttendanceLogs(Resource):
 class Members(Resource):
 
     def get(self):
-        def to_json(x= MembersModel):
-            return {
-                'phoneNo': x.phoneNo,
-                'curriculumNo': x.curriculumNo,
-                'attendancePass': x.attendancePass,
-                'attendanceCheck': x.attendanceCheck,
-                'curriculumComplete': x.curriculumComplete,
-                'employment': x.employment,
-                'insertedTimestamp': str(x.insertedTimestamp),
-                'updatedTimestamp': str(x.updatedTimestamp)
-            }
+        members = MembersModel.query.all()
+        membersSchema = MembersModelSchema(many= True)
+        output = membersSchema.dump(members)
         return {
-            'curriculums': list(map(lambda x: to_json(x), MembersModel.query.all()))
+            'members': output
         }
 # -------------------------------------------------------------------------------
 
@@ -121,52 +96,19 @@ class Members(Resource):
 class Applicants(Resource):
 
     def get(self):
-        def to_json(x= ApplicantsModel):
-            return {
-                'phoneNo': x.phoneNo,
-                'curriculumNo': x.curriculumNo,
-                'applicantName': x.applicantName,
-                'affiliation': x.affiliation,
-                'department': x.department,
-                'position': x.position,
-                'birthDate': x.birthDate,
-                'email': x.email,
-                'otherContact': x.otherContact,
-                'job': x.job,
-                'purposeSelection': x.purposeSelection,
-                'competencyForJava': x.competencyForJava,
-                'competencyForWeb': x.competencyForWeb,
-                'projectExperience': x.projectExperience,
-                'careerDuration': x.careerDuration,
-                'purposeDescription': x.purposeDescription,
-                'agreeWithFullAttendance': x.agreeWithFullAttendance,
-                'agreeWithPersonalinfo': x.agreeWithPersonalinfo,
-                'agreeWithGuideInfo': x.agreeWithGuideInfo,
-                'applicationConfirm': x.applicationConfirm,
-                'recommender': x.recommender,
-                'howToFindOut': x.howToFindOut,
-                'insertedTimestamp': str(x.insertedTimestamp),
-                'updatedTimestamp': str(x.updatedTimestamp)
-            }
+        applicants = ApplicantsModel.query.all()
+        applicantsSchema = ApplicantsModelSchema(many= True)
+        output = applicantsSchema.dump(applicants)
         return {
-            'applicants': list(map(lambda x: to_json(x), ApplicantsModel.query.all()))
+            'applicants': output
         }
-# -------------------------------------------------------------------------------
-
-
-# ------------------------[ API to GET a All Curriculumns ]--------------------------
-@apiRestful.route('/resource/curriculums/list')
-class AllCurriculumns(Resource):
-
-    def get(self):
-        return CurriculumsModel.return_all()
 # -------------------------------------------------------------------------------
 
 
 # ------------------------[ API to Create Attendance Logs ]--------------------------
 @apiRestful.route('/resource/attendance/log')
 class CreateAttendanceLog(Resource):
-    
+
     def post(self):
         # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand.")
         # Reference : https://scotch.io/bar-talk/processing-incoming-request-data-in-flask

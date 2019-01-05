@@ -1,4 +1,4 @@
-from app.extensions import db   # Circular import issues in flask, Reference : http://flask.pocoo.org/docs/1.0/patterns/packages, https://stackoverflow.com/questions/22929839/circular-import-of-db-reference-using-flask-sqlalchemy-and-blueprints/23400668#23400668
+from app.extensions import db, ma   # Circular import issues in flask, Reference : http://flask.pocoo.org/docs/1.0/patterns/packages, https://stackoverflow.com/questions/22929839/circular-import-of-db-reference-using-flask-sqlalchemy-and-blueprints/23400668#23400668
 from sqlalchemy import text
 
 
@@ -73,7 +73,7 @@ class AttendanceLogsModel(db.Model):
     phoneNo = db.Column(db.String(16), nullable= False, primary_key= True)
     curriculumNo = db.Column(db.Integer, nullable= False, primary_key= True)
     checkInOut = db.Column(db.String(5), nullable= False, primary_key= True)
-    attendanceDate = db.Column(db.DateTime, nullable= False, primary_key= True)
+    attendanceDate = db.Column(db.Date, nullable= False, primary_key= True)
     signature = db.Column(db.Text, nullable= False)
     insertedTimestamp = db.Column(db.TIMESTAMP, nullable= False, server_default= text('CURRENT_TIMESTAMP'))
     updatedTimestamp = db.Column(db.TIMESTAMP, nullable= True, server_default= text('NULL ON UPDATE CURRENT_TIMESTAMP'))
@@ -93,8 +93,8 @@ class CurriculumsModel(db.Model):
     ordinalNo = db.Column(db.Text, nullable= False)
     curriculumName = db.Column(db.Text, nullable= False)
     curriculumType = db.Column(db.Text,  nullable= False)
-    startDate = db.Column(db.DateTime, nullable= False)
-    endDate = db.Column(db.DateTime, nullable= False)
+    startDate = db.Column(db.Date, nullable= False)
+    endDate = db.Column(db.Date, nullable= False)
     applicantsInserted = db.Column(db.Text, nullable= True)
     membersInserted = db.Column(db.Text, nullable= True)
     insertedTimestamp = db.Column(db.TIMESTAMP, nullable= False, server_default= text('CURRENT_TIMESTAMP'))
@@ -122,4 +122,24 @@ class MembersModel(db.Model):
     def add(self):
         db.session.add(self)
         db.session.commit()
+
+
+class ApplicantsModelSchema(ma.ModelSchema):
+    class Meta:
+        model = ApplicantsModel
+
+
+class AttendanceLogsModelSchema(ma.ModelSchema):
+    class Meta:
+        model = AttendanceLogsModel
+
+
+class CurriculumsModelSchema(ma.ModelSchema):
+    class Meta:
+        model = CurriculumsModel
+
+
+class MembersModelSchema(ma.ModelSchema):
+    class Meta:
+        model = MembersModel
 # ---------------------------------------------------------------------------------------------

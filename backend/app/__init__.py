@@ -1,6 +1,6 @@
 from app.api import apiBlueprint
 from app.config import Config
-from app.extensions import db, jwt, cors
+from app.extensions import db, ma, jwt, cors
 from app.ormmodels import RevokedTokenModel
 from flask import Flask
 
@@ -19,6 +19,8 @@ def create_app():
 def register_extentions(app):
     # Initailize db connection from app.extensions.py
     db.init_app(app)
+    # Initailize ma session from app.extensions.py
+    ma.init_app(app)
     # Initailize cors session from app.extensions.py
     cors.init_app(app, origins= Config.CORS_ORIGIN)
     # Initailize jwt session from app.extensions.py

@@ -16,6 +16,8 @@ passlib = "*"
 pandas = "*"
 pymysql = "*"
 sqlalchemy = "*"
+flask-marshmallow = "*"
+marshmallow-sqlalchemy = "*"
 
 [dev-packages]
 pytest = "*"
