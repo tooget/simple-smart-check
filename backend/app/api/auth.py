@@ -59,8 +59,8 @@ class UserRegistration(Resource):       # Before applying SecureResource
 # ---------------------------------[ LOGIN ]-------------------------------------
 @apiRestful.route('/auth/login')
 @apiRestful.doc(params= {
-                    'username': 'required',
-                    'password': 'reuqried',
+                    'username': 'application/json, body required',
+                    'password': 'application/json, body required',
                 })
 class UserLogin(Resource):      # Before applying SecureResource
     def post(self):
@@ -98,7 +98,8 @@ class UserLogout(Resource):       # Before applying SecureResource
         jti = get_raw_jwt()['jti']
         try:
             revokedToken = RevokedTokenModel(jti= jti)
-            revokedToken.add()
+            RevokedTokenModel.session.add(revokedToken)
+            RevokedTokenModel.session.commit()
             return {
                 'message': 'Access token has been revoked'
             }

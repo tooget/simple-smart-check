@@ -7,25 +7,17 @@ class UserModel(db.Model):
     __tablename__ = 'users'
     __bind_key__ = 'sqlite'
 
-    id = db.Column(db.Integer, primary_key= True)
-    username = db.Column(db.String(120), unique= True, nullable= False)
+    id = db.Column(db.Integer, nullable= False, primary_key= True)
+    username = db.Column(db.String(120), nullable= False, unique= True)
     password = db.Column(db.String(120), nullable= False)
-
-    def add(self):
-        db.session.add(self)
-        db.session.commit()
 
 
 class RevokedTokenModel(db.Model):
     __tablename__ = 'revoked_tokens'
     __bind_key__ = 'sqlite'
 
-    id = db.Column(db.Integer, primary_key= True)
+    id = db.Column(db.Integer, nullable= False, primary_key= True)
     jti = db.Column(db.String(120))
-    
-    def add(self):
-        db.session.add(self)
-        db.session.commit()
 # ---------------------------------------------------------------------------------------------
 
 
@@ -60,10 +52,6 @@ class ApplicantsModel(db.Model):
     insertedTimestamp = db.Column(db.TIMESTAMP, nullable= False, server_default= text('CURRENT_TIMESTAMP'))
     updatedTimestamp = db.Column(db.TIMESTAMP, nullable= True, server_default= text('NULL ON UPDATE CURRENT_TIMESTAMP'))
 
-    def add(self):
-        db.session.add(self)
-        db.session.commit()
-
 
 # AttendanceLogs Schema for Inserting/Querying Attendance Logs
 class AttendanceLogsModel(db.Model):
@@ -77,10 +65,6 @@ class AttendanceLogsModel(db.Model):
     signature = db.Column(db.Text, nullable= False)
     insertedTimestamp = db.Column(db.TIMESTAMP, nullable= False, server_default= text('CURRENT_TIMESTAMP'))
     updatedTimestamp = db.Column(db.TIMESTAMP, nullable= True, server_default= text('NULL ON UPDATE CURRENT_TIMESTAMP'))
-
-    def add(self):
-        db.session.add(self)
-        db.session.commit()
 
 
 # Curriculums Schema for Managing Attendance Check
@@ -100,10 +84,6 @@ class CurriculumsModel(db.Model):
     insertedTimestamp = db.Column(db.TIMESTAMP, nullable= False, server_default= text('CURRENT_TIMESTAMP'))
     updatedTimestamp = db.Column(db.TIMESTAMP, nullable= True, server_default= text('NULL ON UPDATE CURRENT_TIMESTAMP'))
 
-    def add(self):
-        db.session.add(self)
-        db.session.commit()
-
 
 # members Schema for Updating/Querying members(students) info
 class MembersModel(db.Model):
@@ -112,16 +92,12 @@ class MembersModel(db.Model):
 
     phoneNo = db.Column(db.String(16), nullable= False, primary_key= True)
     curriculumNo = db.Column(db.Integer, nullable= False, primary_key= True)
-    attendancePass = db.Column(db.Text, nullable= True)
-    attendanceCheck = db.Column(db.Text, nullable= True)
-    curriculumComplete = db.Column(db.Text, nullable= True)
-    employment = db.Column(db.Text, nullable= True)
+    attendancePass = db.Column(db.Text, nullable= False)
+    attendanceCheck = db.Column(db.Text, nullable= False)
+    curriculumComplete = db.Column(db.Text, nullable= False)
+    employment = db.Column(db.Text, nullable= False)
     insertedTimestamp = db.Column(db.TIMESTAMP, nullable= False, server_default= text('CURRENT_TIMESTAMP'))
     updatedTimestamp = db.Column(db.TIMESTAMP, nullable= True, server_default= text('NULL ON UPDATE CURRENT_TIMESTAMP'))
-
-    def add(self):
-        db.session.add(self)
-        db.session.commit()
 
 
 class ApplicantsModelSchema(ma.ModelSchema):
