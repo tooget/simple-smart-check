@@ -16,5 +16,5 @@ apiRestful = Api(apiBlueprint,
 
 # API Routing with @apiRestful.route
 from app.api.resources import *
-from app.api.auth import *
+from app.api.users import *
 # -------------------------------------------------------------------------------

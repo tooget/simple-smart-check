@@ -39,7 +39,7 @@ class Config(object):
 
 
     # ------------------------[ Custom Parameters in app.api.__init__.py ]----------------------
-    # Hash Parameters for app.api.auth.py
+    # Hash Parameters for app.api.users.py
     SALT_KEYWORD = 'kisa'
     SALT_SIZE = 256/32
     SALT_ROUNDS = 1

@@ -3,7 +3,7 @@ from sqlalchemy import text
 
 
 # -------------------[ sqlite: User Schema for SignUp/Login/Logout/Token ]----------------------
-class UserModel(db.Model):
+class UsersModel(db.Model):
     __tablename__ = 'users'
     __bind_key__ = 'sqlite'
 
@@ -18,6 +18,15 @@ class RevokedTokenModel(db.Model):
 
     id = db.Column(db.Integer, nullable= False, primary_key= True)
     jti = db.Column(db.String(120))
+
+
+class UsersModelSchema(ma.ModelSchema):
+    class Meta:
+        model = UsersModel
+
+class RevokedTokenModelSchema(ma.ModelSchema):
+    class Meta:
+        model = RevokedTokenModel
 # ---------------------------------------------------------------------------------------------
 
 
