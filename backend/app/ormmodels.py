@@ -24,6 +24,7 @@ class UsersModelSchema(ma.ModelSchema):
     class Meta:
         model = UsersModel
 
+
 class RevokedTokenModelSchema(ma.ModelSchema):
     class Meta:
         model = RevokedTokenModel

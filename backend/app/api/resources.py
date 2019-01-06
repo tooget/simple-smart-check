@@ -67,7 +67,7 @@ class Curriculums:
             curriculums = CurriculumsModel.query.filter_by(**queryFilter).all()
             curriculumsSchema = CurriculumsModelSchema(many= True)
             output = curriculumsSchema.dump(curriculums)
-            return {'curriculums': output}
+            return {'return': output}
     # ---------------------------------------------------------------------------
 # -------------------------------------------------------------------------------
 
@@ -91,7 +91,7 @@ class AttendanceLogs:
             attendanceLogs = AttendanceLogsModel.query.filter_by(**queryFilter).all()
             attendanceLogsSchema = AttendanceLogsModelSchema(many= True)
             output = attendanceLogsSchema.dump(attendanceLogs)
-            return {'attendanceLogs': output}
+            return {'return': output}
     # ---------------------------------------------------------------------------
 
 
@@ -129,10 +129,10 @@ class AttendanceLogs:
             try:
                 db.session.add(newAttendanceLog)
                 db.session.commit()
-                return {'message': f'New AttendanceLog created : {requestedBody}'}, 201
+                return {'return': {'message': f'New AttendanceLog created : {requestedBody}'}}, 201
             except:
                 db.session.rollback()
-                return {'message': 'Something went wrong'}, 500
+                return {'return': {'message': 'Something went wrong'}}, 500
     # ---------------------------------------------------------------------------
 # -------------------------------------------------------------------------------
 
@@ -158,7 +158,7 @@ class Members:
             members = MembersModel.query.filter_by(**queryFilter).all()
             membersSchema = MembersModelSchema(many= True)
             output = membersSchema.dump(members)
-            return {'members': output}
+            return {'return': output}
     # -----------------------------------------------------------------------------
 
 
@@ -179,31 +179,24 @@ class Members:
             # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand.")
             # Reference : https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
             infoFromClient = request.form
-            phoneNoFromClient = infoFromClient['phoneNo']   
-            curriculumNoFromClient = infoFromClient['curriculumNo']   
-            attendancePassFromClient = infoFromClient['attendancePass']                
-            attendanceCheckFromClient = infoFromClient['attendanceCheck']
-            curriculumCompleteFromClient = infoFromClient['curriculumComplete']
-            employmentFromClient = infoFromClient['employment']
-
             requestedBody = {
-                "phoneNo": phoneNoFromClient,
-                "curriculumNo": curriculumNoFromClient,
-                "attendancePass": attendancePassFromClient,
-                "attendanceCheck": attendanceCheckFromClient,
-                "curriculumComplete": curriculumCompleteFromClient,
-                "employment": employmentFromClient,
+                'phoneNo': infoFromClient['phoneNo'],
+                'curriculumNo': infoFromClient['curriculumNo'],
+                'attendancePass': infoFromClient['attendancePass'],
+                'attendanceCheck': infoFromClient['attendanceCheck'],
+                'curriculumComplete': infoFromClient['curriculumComplete'],
+                'employment': infoFromClient['employment'],
             }
 
             memberInfo = MembersModel(**requestedBody)
 
             try:
-                db.session.merge(memberInfo)
+                db.session.merge(memberInfo)    # session.merge() : A kind of UPSERT, https://docs.sqlalchemy.org/en/latest/orm/session_state_management.html#merging
                 db.session.commit()
-                return {'message': f'MemberInfo updated : {requestedBody}'}, 201
+                return {'return': {'message': f'MemberInfo updated : {requestedBody}'}}, 201
             except:
                 db.session.rollback()
-                return {'message': 'Something went wrong'}, 500
+                return {'return': {'message': 'Something went wrong'}}, 500
     # -----------------------------------------------------------------------------
 # ---------------------------------------------------------------------------------
 
@@ -227,6 +220,6 @@ class Applicants:
             applicants = ApplicantsModel.query.filter_by(**queryFilter).all()
             applicantsSchema = ApplicantsModelSchema(many= True)
             output = applicantsSchema.dump(applicants)
-            return {'applicants': output}
+            return {'return': output}
     # -----------------------------------------------------------------------------
 # ---------------------------------------------------------------------------------
