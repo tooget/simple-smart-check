@@ -4,8 +4,10 @@ from app.extensions import db
 from app.ormmodels import AttendanceLogsModel, ApplicantsModel, CurriculumsModel, MembersModel
 from app.ormmodels import AttendanceLogsModelSchema, ApplicantsModelSchema, CurriculumsModelSchema, MembersModelSchema
 from datetime import datetime, timedelta
+from json import loads
 from flask import request
 from flask_restplus import Resource     # Reference : http://flask-restplus.readthedocs.io
+import pandas as pd
 
 
 # # ---------------------------[ SecureResource ]----------------------------------
@@ -69,6 +71,22 @@ class Curriculums:
             output = curriculumsSchema.dump(curriculums)
             return {'return': output}
     # ---------------------------------------------------------------------------
+
+
+    # ----------------[ Get Curriculums, joined to Members counts ]--------------
+    @apiRestful.route('/resource/curriculums/join/members')
+    class get_Curriculums_Join(Resource):
+
+        def get(self):
+            query = CurriculumsModel.query  # [!] join query
+
+            engine = db.get_binds()[ list(db.get_binds().keys())[4] ]   # [!] CurriculumsModel Engine, defined in get_binds()
+            df = pd.read_sql(query.statement, engine)
+            df_recordslist = df.to_json(orient= 'records', date_format= 'iso', force_ascii= False)      # df_recordslist : date_format issue(TypeError: Object of type DataFrame is not JSON serializable), return type issue(always string representation of list), force_ascii issue(unicode problem when True)
+            output = loads(df_recordslist)                              # str representation list to list : https://stackoverflow.com/questions/1894269/convert-string-representation-of-list-to-list
+
+            return {'return': output}
+    # ---------------------------------------------------------------------------
 # -------------------------------------------------------------------------------
 
 
@@ -114,7 +132,7 @@ class AttendanceLogs:
             curriculumNoFromClient = infoFromClient['curriculumNo']
             checkInOutFromClient = infoFromClient['checkInOut']
             signatureFromClient = infoFromClient['signature']
-            attendanceDate = datetime.utcnow() + timedelta(hours= 9) # Calculate Korea Standard Time(KST)
+            attendanceDate = datetime.utcnow()
 
             requestedBody = {
                 "phoneNo": phoneNoFromClient,
