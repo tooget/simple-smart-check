@@ -51,16 +51,17 @@ from flask_restplus import Resource     # Reference : http://flask-restplus.read
 
 
 # ------------------------[ API to manage Curriculums ]-------------------------
-class Curriculums(Resource):
+class Curriculums:
 
     # ----------------[ Get Curriculums ]---------------------------------------
     @apiRestful.route('/resource/curriculums/filter')
     @apiRestful.doc(params= {
-                'curriculumCategory': 'URL parameter, optional',
-                'curriculumType': 'URL parameter, optional',
+                'curriculumCategory': {'in': 'query', 'description': 'URL parameter, optional'},
+                'curriculumType': {'in': 'query', 'description': 'URL parameter, optional'},
                 # You can add query filter columns if needed.
     })
-    class get_Filter(Resource):
+    class get_Curriculums_Filter(Resource):
+
         def get(self):
             queryFilter = request.args
             curriculums = CurriculumsModel.query.filter_by(**queryFilter).all()
@@ -72,18 +73,19 @@ class Curriculums(Resource):
 
 
 # ------------------------[ API to manage AttendanceLogs ]-----------------------
-class AttendanceLogs(Resource):
+class AttendanceLogs:
     
     # ----------------[ Get new Attendance logs ]--------------------------------
     @apiRestful.route('/resource/attendancelogs/filter')
     @apiRestful.doc(params= {
-                    'phoneNo': 'URL parameter, optional',
-                    'curriculumNo': 'URL parameter, optional',
-                    'checkInOut': 'URL parameter, optional',
-                    'attendanceDate': 'URL parameter, optional',
+                    'phoneNo': {'in': 'query', 'description': 'URL parameter, optional'},
+                    'curriculumNo': {'in': 'query', 'description': 'URL parameter, optional'},
+                    'checkInOut': {'in': 'query', 'description': 'URL parameter, optional'},
+                    'attendanceDate': {'in': 'query', 'description': 'URL parameter, optional'},
                     # You can add query filter columns if needed.
     })
-    class get_Filter(Resource):
+    class get_AttendanceLogs_Filter(Resource):
+
         def get(self):
             queryFilter = request.args
             attendanceLogs = AttendanceLogsModel.query.filter_by(**queryFilter).all()
@@ -96,13 +98,14 @@ class AttendanceLogs(Resource):
     # ----------------[ Create a new Attendance log ]----------------------------
     @apiRestful.route('/resource/attendancelogs/new')
     @apiRestful.doc(params= {
-                        'phoneNo': 'application/json, body required',
-                        'curriculumNo': 'application/json, body required',
-                        'checkInOut': 'application/json, body required',
-                        'signature': 'application/json, body required',
-                        # You can add query filter columns if needed.
+                    'phoneNo': {'in': 'formData', 'description': 'application/json, body required'},
+                    'curriculumNo': {'in': 'formData', 'description': 'application/json, body required'},
+                    'checkInOut': {'in': 'formData', 'description': 'application/json, body required'},
+                    'signature': {'in': 'formData', 'description': 'application/json, body required'},
+                    # You can add formData columns if needed.
     })
-    class post_New(Resource):
+    class post_AttendanceLogs_New(Resource):
+        
         def post(self):
             # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand.")
             # Reference : https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
@@ -111,13 +114,14 @@ class AttendanceLogs(Resource):
             curriculumNoFromClient = infoFromClient['curriculumNo']
             checkInOutFromClient = infoFromClient['checkInOut']
             signatureFromClient = infoFromClient['signature']
+            attendanceDate = datetime.utcnow() + timedelta(hours= 9) # Calculate Korea Standard Time(KST)
 
             requestedBody = {
                 "phoneNo": phoneNoFromClient,
                 "curriculumNo": curriculumNoFromClient,
                 "checkInOut": checkInOutFromClient,
                 "signature": signatureFromClient.split(',')[-1].strip(),
-                "attendanceDate": datetime.utcnow() + timedelta(hours= 9) # Calculate Korea Standard Time(KST)
+                "attendanceDate": attendanceDate.strftime('%Y-%m-%d')
             }
             
             newAttendanceLog = AttendanceLogsModel(**requestedBody)
@@ -134,20 +138,21 @@ class AttendanceLogs(Resource):
 
 
 # ------------------------[ API to manage Members ]------------------------------
-class Members(Resource):
+class Members:
 
     # ----------------[ Get members ]--------------------------------------------
     @apiRestful.route('/resource/members/filter')
     @apiRestful.doc(params= {
-                    'phoneNo': 'URL parameter, optional',
-                    'curriculumNo': 'URL parameter, optional',
-                    'attendancePass': 'URL parameter, optional',
-                    'attendanceCheck': 'URL parameter, optional',
-                    'curriculumComplete': 'URL parameter, optional',
-                    'employment': 'URL parameter, optional',
+                    'phoneNo': {'in': 'query', 'description': 'URL parameter, optional'},
+                    'curriculumNo': {'in': 'query', 'description': 'URL parameter, optional'},
+                    'attendancePass': {'in': 'query', 'description': 'URL parameter, optional'},
+                    'attendanceCheck': {'in': 'query', 'description': 'URL parameter, optional'},
+                    'curriculumComplete': {'in': 'query', 'description': 'URL parameter, optional'},
+                    'employment': {'in': 'query', 'description': 'URL parameter, optional'},
                     # You can add query filter columns if needed.
     })
-    class get_Filter(Resource):
+    class get_Members_Filter(Resource):
+
         def get(self):
             queryFilter = request.args
             members = MembersModel.query.filter_by(**queryFilter).all()
@@ -160,40 +165,42 @@ class Members(Resource):
     # ----------------[ Update members' Info ]-------------------------------------
     @apiRestful.route('/resource/members')
     @apiRestful.doc(params= {
-                        'phoneNo': 'application/json, body required',
-                        'curriculumNo': 'application/json, body required',
-                        'attendancePass': 'application/json, body required',
-                        'attendanceCheck': 'application/json, body required',
-                        'curriculumComplete': 'application/json, body required',
-                        'employment': 'application/json, body required',
-                        # You can add query filter columns if needed.
+                    'phoneNo': {'in': 'formData', 'description': 'application/json, body required'},
+                    'curriculumNo': {'in': 'formData', 'description': 'application/json, body required'},
+                    'attendancePass': {'in': 'formData', 'description': 'application/json, body required'},
+                    'attendanceCheck': {'in': 'formData', 'description': 'application/json, body required'},
+                    'curriculumComplete': {'in': 'formData', 'description': 'application/json, body required'},
+                    'employment': {'in': 'formData', 'description': 'application/json, body required'},
+                    # You can add formData columns if needed.
     })
-    class put_Info(Resource):
+    class put_Members_Info(Resource):
+
         def put(self):
             # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand.")
             # Reference : https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
             infoFromClient = request.form
-            
-            queryFilter = {
-                    'phoneNo': infoFromClient['phoneNo'],
-                    'curriculumNo': infoFromClient['curriculumNo'],
+            phoneNoFromClient = infoFromClient['phoneNo']   
+            curriculumNoFromClient = infoFromClient['curriculumNo']   
+            attendancePassFromClient = infoFromClient['attendancePass']                
+            attendanceCheckFromClient = infoFromClient['attendanceCheck']
+            curriculumCompleteFromClient = infoFromClient['curriculumComplete']
+            employmentFromClient = infoFromClient['employment']
+
+            requestedBody = {
+                "phoneNo": phoneNoFromClient,
+                "curriculumNo": curriculumNoFromClient,
+                "attendancePass": attendancePassFromClient,
+                "attendanceCheck": attendanceCheckFromClient,
+                "curriculumComplete": curriculumCompleteFromClient,
+                "employment": employmentFromClient,
             }
 
-            attendancePassFromClient = infoFromClient['attendancePass'],                    
-            attendanceCheckFromClient = infoFromClient['attendanceCheck'],
-            curriculumCompleteFromClient = infoFromClient['curriculumComplete'],
-            employmentFromClient = infoFromClient['employment'],
+            memberInfo = MembersModel(**requestedBody)
 
             try:
-                targetMember = MembersModel.query.filter_by(**queryFilter).first()  # Querying target member to update information.
-                print(targetMember)
-                targetMember.attendancePass = attendancePassFromClient              # ORM Update 'attendancePass' column 
-                targetMember.attendanceCheck = attendanceCheckFromClient            # ORM Update 'attendanceCheck' column
-                targetMember.curriculumComplete = curriculumCompleteFromClient      # ORM Update 'curriculumComplete' column
-                targetMember.employment = employmentFromClient                      # ORM Update 'employment' column
-                db.session.merge(targetMember)
+                db.session.merge(memberInfo)
                 db.session.commit()
-                return {'message': f'MemberInfo updated : {memberInfoFromClient}'}, 201
+                return {'message': f'MemberInfo updated : {requestedBody}'}, 201
             except:
                 db.session.rollback()
                 return {'message': 'Something went wrong'}, 500
@@ -202,18 +209,19 @@ class Members(Resource):
 
 
 # ------------------------[ API to manage Applicants ]-----------------------------
-class Applicants(Resource):
+class Applicants:
 
     # ----------------[ Get Applicants ]-------------------------------------------
     @apiRestful.route('/resource/applicants/filter')
     @apiRestful.doc(params= {
-                    'phoneNo': 'URL parameter, optional',
-                    'curriculumNo': 'URL parameter, optional',
-                    'applicantName': 'URL parameter, optional',
-                    'email': 'URL parameter, optional',
+                    'phoneNo': {'in': 'query', 'description': 'URL parameter, optional'},
+                    'curriculumNo': {'in': 'query', 'description': 'URL parameter, optional'},
+                    'applicantName': {'in': 'query', 'description': 'URL parameter, optional'},
+                    'email': {'in': 'query', 'description': 'URL parameter, optional'},
                     # You can add query filter columns if needed.
     })
-    class get_Filter(Resource):
+    class get_Applicants_Filter(Resource):
+
         def get(self):
             queryFilter = request.args
             applicants = ApplicantsModel.query.filter_by(**queryFilter).all()

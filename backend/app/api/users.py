@@ -30,15 +30,15 @@ from passlib.hash import django_pbkdf2_sha256
 
 
 # --------------------[ API to System Users/Admin and Auth ]-----------------------
-class Users(Resource):
+class Users:
 
     # ----------------[ Register a New User ]--------------------------------------
     @apiRestful.route('/users/new')
     @apiRestful.doc(params= {
-                        'username': 'application/json, body required',
-                        'password': 'application/json, body required',
+                    'username': {'in': 'formData', 'description': 'application/json, body required'},
+                    'password': {'in': 'formData', 'description': 'application/json, body required'},
     })
-    class post_New(Resource):       # Before applying SecureResource
+    class post_Users_New(Resource):       # Before applying SecureResource
 
         def post(self):
             # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand.")
@@ -74,10 +74,10 @@ class Users(Resource):
     # ----------------[ Login ]----------------------------------------------------
     @apiRestful.route('/users/login')
     @apiRestful.doc(params= {
-                        'username': 'application/json, body required',
-                        'password': 'application/json, body required',
+                    'username': {'in': 'formData', 'description': 'application/json, body required'},
+                    'password': {'in': 'formData', 'description': 'application/json, body required'},
     })
-    class post_Login(Resource):      # Before applying SecureResource
+    class post_Users_Login(Resource):      # Before applying SecureResource
 
         def post(self):
             # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand.")
@@ -104,7 +104,7 @@ class Users(Resource):
 
     # ----------------[ Logout ]---------------------------------------------------
     @apiRestful.route('/users/logout')
-    class post_Logout(Resource):       # Before applying SecureResource
+    class post_Users_Logout(Resource):       # Before applying SecureResource
 
         @jwt_required
         def post(self):
@@ -122,9 +122,9 @@ class Users(Resource):
     # ----------------[ Get Users ]------------------------------------------------
     @apiRestful.route('/users/filter')
     @apiRestful.doc(params= {
-                        'username': 'URL parameter, optional',
+                    'username': {'in': 'query', 'description': 'URL parameter, optional'},
     })
-    class get_Filter(Resource):       # Before applying SecureResource
+    class get_Users_Filter(Resource):       # Before applying SecureResource
         def get(self):
             queryFilter = request.args
             users = UsersModel.query.filter_by(**queryFilter).all()

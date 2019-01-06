@@ -12,7 +12,9 @@ apiBlueprint = Blueprint('apiBlueprint',
 apiRestful = Api(apiBlueprint,
                         version= '1.0',
                         title= 'simple-smart-check API',
-                        description= 'Back-End API for simple-smart-check Project')
+                        description= 'Back-End API for simple-smart-check Project',
+                        default ='app.api.__init__.py',
+                        default_label='simple-smart-check API LIST')
 
 # API Routing with @apiRestful.route
 from app.api.resources import *
