@@ -250,7 +250,7 @@ class Applicants:
     @apiRestful.route('/resource/applicants/bulk')
     @apiRestful.doc(params= {
                     'curriculumNo': {'in': 'formData', 'description': 'application/json, body required'},
-                    'applicantsBulkXlsxFile': {'in': 'formData', 'description': 'application/json, body required'},
+                    'applicantsBulkXlsxFile': {'in': 'formData', 'type': 'file', 'description': 'application/json, body/xlsx file required'},
                     # You can add formData columns if needed.
     })
     class post_Applicants_Bulk(Resource):
