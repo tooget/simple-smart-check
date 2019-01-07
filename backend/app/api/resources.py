@@ -264,7 +264,6 @@ class Applicants:
             applicantsDf = pd.read_excel(applicantsbulkFromClient)
             applicantsDf.columns = applicantsDf.columns.map(lambda x: Config.XLSX_COLUMNS_TO_SCHEMA_MAP[ x[:4]+'_'+str(len(x)//19) ])       # Using "x[:4]+'_'+str(len(x)//19)" as a unique key.
             applicantsDf['curriculumNo'] = curriculumNoFromClient               # Add a new 'curriculumNo' column
-            applicantsDf = applicantsDf.drop(columns= ['surveyTimestamp'])      # [!] Applicants Table doesn't have surveryTimestamp
             membersDf = applicantsDf[[
                             'phoneNo',
                             'curriculumNo'
