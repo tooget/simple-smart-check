@@ -1,5 +1,5 @@
 from app.api import apiRestful
-from app.api.security import require_auth
+from app.api.modules import requireAuth, convertDataframeToListedJson
 from app.config import Config
 from app.extensions import db
 from app.ormmodels import UsersModel, RevokedTokenModel
@@ -12,9 +12,9 @@ from passlib.hash import django_pbkdf2_sha256
 
 
 # # ---------------------------[ SecureResource ]----------------------------------
-# # Calls require_auth decorator on all requests
+# # Calls requireAuth decorator on all requests
 # class SecureResource(Resource):
-#     method_decorators = [require_auth]
+#     method_decorators = [requireAuth]
 # # -------------------------------------------------------------------------------
 
 

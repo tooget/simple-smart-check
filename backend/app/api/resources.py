@@ -1,10 +1,9 @@
 from app.api import apiRestful
-from app.api.security import require_auth
+from app.api.modules import requireAuth, convertDataframeToListedJson
 from app.extensions import db
 from app.ormmodels import AttendanceLogsModel, ApplicantsModel, CurriculumsModel, MembersModel
 from app.ormmodels import AttendanceLogsModelSchema, ApplicantsModelSchema, CurriculumsModelSchema, MembersModelSchema
 from datetime import datetime, timedelta
-from json import loads
 from flask import request
 from flask_restplus import Resource     # Reference : http://flask-restplus.readthedocs.io
 from sqlalchemy import func
@@ -12,9 +11,9 @@ import pandas as pd
 
 
 # # ---------------------------[ SecureResource ]----------------------------------
-# # Calls require_auth decorator on all requests
+# # Calls requireAuth decorator on all requests
 # class SecureResource(Resource):
-#     method_decorators = [require_auth]
+#     method_decorators = [requireAuth]
 # # -------------------------------------------------------------------------------
 
 
@@ -75,8 +74,8 @@ class Curriculums:
 
 
     # ----------------[ Get Curriculums, joined to Members counts ]--------------
-    @apiRestful.route('/resource/curriculums/join/members')
-    class get_Curriculums_Join(Resource):
+    @apiRestful.route('/resource/curriculums/withmembercount')
+    class get_Curriculums_WithMemberCount(Resource):
 
         def get(self):
             curriculumList = CurriculumsModel.query.with_entities(CurriculumsModel.curriculumNo, CurriculumsModel.curriculumCategory, CurriculumsModel.ordinalNo, CurriculumsModel.curriculumName, func.concat(CurriculumsModel.startDate, '~', CurriculumsModel.endDate).label('curriculumPeriod'), CurriculumsModel.curriculumType).subquery()
@@ -87,8 +86,7 @@ class Curriculums:
             query = db.session.query(curriculumList).with_entities(curriculumList, func.ifnull(applicantCount.c.ApplicantCount, 0).label('ApplicantCount'), func.ifnull(memberCount.c.MemberCount, 0).label('MemberCount'), func.ifnull(memberCompleteCount.c.MemberCompleteCount, 0).label('MemberCompleteCount'), func.ifnull(memberEmploymentCount.c.MemberEmploymentCount, 0).label('MemberEmploymentCount')).outerjoin(applicantCount, curriculumList.c.curriculumNo == applicantCount.c.curriculumNo).outerjoin(memberCount, curriculumList.c.curriculumNo == memberCount.c.curriculumNo).outerjoin(memberCompleteCount, curriculumList.c.curriculumNo == memberCompleteCount.c.curriculumNo).outerjoin(memberEmploymentCount, curriculumList.c.curriculumNo == memberEmploymentCount.c.curriculumNo)
 
             df = pd.read_sql(query.statement, db.get_engine(bind= 'mysql'))
-            df_recordslist = df.to_json(orient= 'records', date_format= 'iso', force_ascii= False)      # df_recordslist : date_format issue(TypeError: Object of type DataFrame is not JSON serializable), return type issue(always string representation of list), force_ascii issue(unicode problem when True)
-            output = loads(df_recordslist)                              # str representation list to list : https://stackoverflow.com/questions/1894269/convert-string-representation-of-list-to-list
+            output = convertDataframeToListedJson(df)
 
             return {'return': output}
     # ---------------------------------------------------------------------------
@@ -137,7 +135,7 @@ class AttendanceLogs:
             curriculumNoFromClient = infoFromClient['curriculumNo']
             checkInOutFromClient = infoFromClient['checkInOut']
             signatureFromClient = infoFromClient['signature']
-            attendanceDate = datetime.utcnow()
+            attendanceDate = datetime.utcnow() + timedelta(hours= 9) # Calculate Korea Standard Time(KST)
 
             requestedBody = {
                 "phoneNo": phoneNoFromClient,
@@ -244,5 +242,67 @@ class Applicants:
             applicantsSchema = ApplicantsModelSchema(many= True)
             output = applicantsSchema.dump(applicants)
             return {'return': output}
+    # -----------------------------------------------------------------------------
+
+
+    #--------[ POST Raw Excel File(Google Survey) to Applicants and Members ]------
+    @apiRestful.route('/resource/applicants/bulk')
+    @apiRestful.doc(params= {
+                    'curriculumNo': {'in': 'formData', 'description': 'application/json, body required'},
+                    'applicantsBulkXlsxFile': {'in': 'formData', 'description': 'application/json, body required'},
+                    # You can add formData columns if needed.
+    })
+    class post_Applicants_Bulk(Resource):
+
+        def post(self):
+            # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand.")
+            # Reference : https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
+            curriculumNoFromClient = request.form['curriculumNo']
+            applicantsbulkFromClient = request.files['applicantsBulkXlsxFile']
+
+            applicantsDf = pd.read_excel(applicantsbulkFromClient)
+            applicantsDf['curriculumNo'] = curriculumNoFromClient           # Add a new 'curriculumNo' column
+            applicantsDf.rename(columns= {                                  # Convert old columns(based on Google Survey) to schema columns.
+                            applicantsDf.columns[0]: 'surveryTimestamp',
+                            applicantsDf.columns[1]: 'applicantName',
+                            applicantsDf.columns[2]: 'affiliation',
+                            applicantsDf.columns[3]: 'department',
+                            applicantsDf.columns[4]: 'position',
+                            applicantsDf.columns[5]: 'birthDate',
+                            applicantsDf.columns[6]: 'email',
+                            applicantsDf.columns[7]: 'phoneNo',
+                            applicantsDf.columns[8]: 'otherContact',
+                            applicantsDf.columns[9]: 'job',
+                            applicantsDf.columns[10]: 'purposeSelection',
+                            applicantsDf.columns[11]: 'competencyForJava',
+                            applicantsDf.columns[12]: 'competencyForWeb',
+                            applicantsDf.columns[13]: 'projectExperience',
+                            applicantsDf.columns[14]: 'careerDuration',
+                            applicantsDf.columns[15]: 'purposeDescription',
+                            applicantsDf.columns[16]: 'agreeWithFullAttendance',
+                            applicantsDf.columns[17]: 'agreeWithPersonalinfo',
+                            applicantsDf.columns[18]: 'agreeWithGuideInfo',
+                            applicantsDf.columns[19]: 'applicationConfirm',
+                            applicantsDf.columns[20]: 'recommender',
+                            applicantsDf.columns[21]: 'howToFindOut',
+                            applicantsDf.columns[22]: 'curriculumNo',
+            }, inplace= True)
+            applicantsDf = applicantsDf.drop(columns= ['surveryTimestamp'])     # [!] Applicants Table doesn't have surveryTimestamp
+            membersDf = applicantsDf[['phoneNo', 'curriculumNo']]               # Extract Primary key of records to Members Table
+
+            applicantsListedJson = convertDataframeToListedJson(applicantsDf)
+            membersListedJson = convertDataframeToListedJson(membersDf)
+
+            newBulkApplicants = [ApplicantsModel(**applicant) for applicant in applicantsListedJson]
+            newBulkMembers = [MembersModel(**member) for member in membersListedJson]
+
+            try:
+                db.session.add_all(newBulkApplicants)
+                db.session.add_all(newBulkMembers)
+                db.session.commit()
+                return {'return': {'message': f'Applicants Bulk inserted. curriculumNo={curriculumNoFromClient}, bulk={applicantsListedJson}'}}, 201
+            except:
+                db.session.rollback()
+                return {'return': {'message': 'Something went wrong'}}, 500
     # -----------------------------------------------------------------------------
 # ---------------------------------------------------------------------------------
