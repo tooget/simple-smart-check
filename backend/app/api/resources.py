@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from json import loads
 from flask import request
 from flask_restplus import Resource     # Reference : http://flask-restplus.readthedocs.io
+from sqlalchemy import func
 import pandas as pd
 
 
@@ -78,10 +79,15 @@ class Curriculums:
     class get_Curriculums_Join(Resource):
 
         def get(self):
-            query = CurriculumsModel.query  # [!] join query
+            curriculumList = CurriculumsModel.query.with_entities(CurriculumsModel.curriculumNo, CurriculumsModel.curriculumCategory, CurriculumsModel.ordinalNo, CurriculumsModel.curriculumName, func.concat(CurriculumsModel.startDate, '~', CurriculumsModel.endDate).label('curriculumPeriod'), CurriculumsModel.curriculumType).subquery('curriculumList')
+            applicantCount = ApplicantsModel.query.with_entities(ApplicantsModel.curriculumNo, func.count(ApplicantsModel.phoneNo).label('ApplicantCount')).group_by(ApplicantsModel.curriculumNo).subquery('applicantCount')
+            memberCount = MembersModel.query.with_entities(MembersModel.curriculumNo, func.count(MembersModel.phoneNo).label('MemberCount')).filter(MembersModel.attendanceCheck == 'Y').group_by(MembersModel.curriculumNo).subquery('memberCount')
+            memberCompleteCount = MembersModel.query.with_entities(MembersModel.curriculumNo, func.count(MembersModel.phoneNo).label('MemberCompleteCount')).filter(MembersModel.curriculumComplete == 'Y').group_by(MembersModel.curriculumNo).subquery('memberCompleteCount')
+            memberEmploymentCount = MembersModel.query.with_entities(MembersModel.curriculumNo, func.count(MembersModel.phoneNo).label('MemberEmploymentCount')).filter(MembersModel.employment == 'Y').group_by(MembersModel.curriculumNo).subquery('memberEmploymentCount')
+            query = db.session.query(curriculumList).with_entities(curriculumList, func.ifnull(applicantCount.c.ApplicantCount, 0).label('ApplicantCount'), func.ifnull(memberCount.c.MemberCount, 0).label('MemberCount'), func.ifnull(memberCompleteCount.c.MemberCompleteCount, 0).label('MemberCompleteCount'), func.ifnull(memberEmploymentCount.c.MemberEmploymentCount, 0).label('MemberEmploymentCount')).outerjoin(applicantCount, curriculumList.c.curriculumNo == applicantCount.c.curriculumNo).outerjoin(memberCount, curriculumList.c.curriculumNo == memberCount.c.curriculumNo).outerjoin(memberCompleteCount, curriculumList.c.curriculumNo == memberCompleteCount.c.curriculumNo).outerjoin(memberEmploymentCount, curriculumList.c.curriculumNo == memberEmploymentCount.c.curriculumNo)
 
-            engine = db.get_binds()[ list(db.get_binds().keys())[4] ]   # [!] CurriculumsModel Engine, defined in get_binds()
-            df = pd.read_sql(query.statement, engine)
+            engines = { Table.name: Engine for Table, Engine in db.get_binds().items() }  # [!] CurriculumsModel Engine, defined in get_binds()  
+            df = pd.read_sql(query.statement, engines['curriculums'])
             df_recordslist = df.to_json(orient= 'records', date_format= 'iso', force_ascii= False)      # df_recordslist : date_format issue(TypeError: Object of type DataFrame is not JSON serializable), return type issue(always string representation of list), force_ascii issue(unicode problem when True)
             output = loads(df_recordslist)                              # str representation list to list : https://stackoverflow.com/questions/1894269/convert-string-representation-of-list-to-list
 
