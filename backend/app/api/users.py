@@ -61,13 +61,13 @@ class Users:
                 db.session.add(newUserInfoFromClient)
                 accessToken = create_access_token(identity= usernameFromClient)
                 db.session.commit()
-                return {
-                    'message': f'User {usernameFromClient} was created',
-                    'access_token': accessToken,
-                }
+                return {'return': {
+                            'message': f'User {usernameFromClient} was created',
+                            'access_token': accessToken,
+                        }}
             except:
                 db.session.rollback()
-                return {'message': 'Something went wrong'}, 500
+                return {'return': {'message': 'Something went wrong'}}, 500
     # -----------------------------------------------------------------------------
 
 
@@ -91,14 +91,14 @@ class Users:
 
             if passwordFromClient == UserInfoFromDB.password.split('$')[-1]:        # Successfully Login, return 201
                 accessToken = create_access_token(identity= usernameFromClient)
-                return {
-                    'message': f'Logged in as {UserInfoFromDB.username}',
-                    'access_token': accessToken,
-                }, 201
+                return {'return': {
+                            'message': f'Logged in as {UserInfoFromDB.username}',
+                            'access_token': accessToken,
+                        }}, 201
             elif not UserInfoFromDB:                                                # if User is not registered, return 500
-                return {'message': f'User {usernameFromClient} doesn\'t exist'}, 500
+                return {'return': {'message': f'User {usernameFromClient} doesn\'t exist'}}, 500
             else:
-                return {'message': 'Wrong credentials'}, 500                        # Something wrong, return 500
+                return {'return': {'message': 'Wrong credentials'}}, 500            # Something wrong, return 500
     # -----------------------------------------------------------------------------
 
 
@@ -112,10 +112,10 @@ class Users:
             try:
                 db.session.add(RevokedTokenModel(jti= jti))
                 db.session.commit()
-                return {'message': 'Successfully Logout, Access token has been revoked'}
+                return {'return': {'message': 'Successfully Logout, Access token has been revoked'}}
             except:
                 db.session.rollback()
-                return {'message': 'Something went wrong'}, 500
+                return {'return': {'message': 'Something went wrong'}}, 500
     # -----------------------------------------------------------------------------
 
 
@@ -130,6 +130,6 @@ class Users:
             users = UsersModel.query.filter_by(**queryFilter).all()
             usersSchema = UsersModelSchema(many= True)
             output = usersSchema.dump(users)
-            return {'users': output}
+            return {'return': output}
     # -----------------------------------------------------------------------------
 # ---------------------------------------------------------------------------------
