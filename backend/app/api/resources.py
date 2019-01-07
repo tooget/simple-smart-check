@@ -56,9 +56,9 @@ class Curriculums:
     # ----------------[ Get Curriculums ]---------------------------------------
     @apiRestful.route('/resource/curriculums/filter')
     @apiRestful.doc(params= {
-                'curriculumCategory': {'in': 'query', 'description': 'URL parameter, optional'},
-                'curriculumType': {'in': 'query', 'description': 'URL parameter, optional'},
-                # You can add query filter columns if needed.
+                    'curriculumCategory': {'in': 'query', 'description': 'URL parameter, optional'},
+                    'curriculumType': {'in': 'query', 'description': 'URL parameter, optional'},
+                    # You can add query filter columns if needed.
     })
     class get_Curriculums_Filter(Resource):
 
@@ -105,7 +105,7 @@ class AttendanceLogs:
                     # You can add formData columns if needed.
     })
     class post_AttendanceLogs_New(Resource):
-        
+
         def post(self):
             # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand.")
             # Reference : https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
