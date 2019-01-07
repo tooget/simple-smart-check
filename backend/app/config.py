@@ -44,3 +44,36 @@ class Config(object):
     SALT_SIZE = 256/32
     SALT_ROUNDS = 1
     # ------------------------------------------------------------------------------------------
+
+
+    # ------------------------[ Custom Parameters in app.api.resources.py ]---------------------
+    # Mapper of Google Survery Xlsx files to Applicants Table Schema
+    # Used in @apiRestful.route('/resource/applicants/bulk')
+    # Used in class post_Applicants_Bulk(Resource):
+    XLSX_COLUMNS_TO_SCHEMA_MAP = {
+        # Using "x[:4]+'_'+str(len(x)//19)" as a unique key. a few len(x) is various within its context.
+        # 'unique key': 'table schema'
+        '타임스탬_0': 'surveryTimestamp',
+        '1. 성_0': 'applicantName',
+        '2. 소_0': 'affiliation',                   # len(x)%19 = 0.7
+        '3. 부_0': 'department',
+        '4. 직_0': 'position',
+        '5. 생_1': 'birthDate',
+        '6. E_0': 'email',
+        '7. 휴_1': 'phoneNo',
+        '8. 기_0': 'otherContact',                  # len(x)%19 = 0.8
+        '9. 현_1': 'job',
+        '10. _1': 'purposeSelection',
+        '11. _1': 'competencyForJava',
+        '11-1_4': 'competencyForWeb',
+        '11-2_4': 'projectExperience',
+        '12. _1': 'careerDuration',
+        '13. _3': 'purposeDescription',             # len(x)%19 = 0.7
+        '14. _2': 'agreeWithFullAttendance',        # len(x)%19 = 0.8
+        'Unna_0': 'agreeWithPersonalinfo',          # 'Unnamed' : 15th column name is empty in xlsx
+        '16. _2': 'agreeWithGuideInfo',
+        '17. _4': 'applicationConfirm',
+        '18. _2': 'recommender',
+        '18. _1': 'howToFindOut',
+    }
+    # ------------------------------------------------------------------------------------------

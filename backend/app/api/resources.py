@@ -1,5 +1,6 @@
 from app.api import apiRestful
 from app.api.modules import requireAuth, convertDataframeToListedJson
+from app.config import Config
 from app.extensions import db
 from app.ormmodels import AttendanceLogsModel, ApplicantsModel, CurriculumsModel, MembersModel
 from app.ormmodels import AttendanceLogsModelSchema, ApplicantsModelSchema, CurriculumsModelSchema, MembersModelSchema
@@ -69,7 +70,7 @@ class Curriculums:
             curriculums = CurriculumsModel.query.filter_by(**queryFilter).all()
             curriculumsSchema = CurriculumsModelSchema(many= True)
             output = curriculumsSchema.dump(curriculums)
-            return {'return': output}
+            return {'return': output}, 200
     # ---------------------------------------------------------------------------
 
 
@@ -88,7 +89,7 @@ class Curriculums:
             df = pd.read_sql(query.statement, db.get_engine(bind= 'mysql'))
             output = convertDataframeToListedJson(df)
 
-            return {'return': output}
+            return {'return': output}, 200
     # ---------------------------------------------------------------------------
 # -------------------------------------------------------------------------------
 
@@ -112,7 +113,7 @@ class AttendanceLogs:
             attendanceLogs = AttendanceLogsModel.query.filter_by(**queryFilter).all()
             attendanceLogsSchema = AttendanceLogsModelSchema(many= True)
             output = attendanceLogsSchema.dump(attendanceLogs)
-            return {'return': output}
+            return {'return': output}, 200
     # ---------------------------------------------------------------------------
 
 
@@ -179,7 +180,7 @@ class Members:
             members = MembersModel.query.filter_by(**queryFilter).all()
             membersSchema = MembersModelSchema(many= True)
             output = membersSchema.dump(members)
-            return {'return': output}
+            return {'return': output}, 200
     # -----------------------------------------------------------------------------
 
 
@@ -241,7 +242,7 @@ class Applicants:
             applicants = ApplicantsModel.query.filter_by(**queryFilter).all()
             applicantsSchema = ApplicantsModelSchema(many= True)
             output = applicantsSchema.dump(applicants)
-            return {'return': output}
+            return {'return': output}, 200
     # -----------------------------------------------------------------------------
 
 
@@ -261,34 +262,13 @@ class Applicants:
             applicantsbulkFromClient = request.files['applicantsBulkXlsxFile']
 
             applicantsDf = pd.read_excel(applicantsbulkFromClient)
-            applicantsDf['curriculumNo'] = curriculumNoFromClient           # Add a new 'curriculumNo' column
-            applicantsDf.rename(columns= {                                  # Convert old columns(based on Google Survey) to schema columns.
-                            applicantsDf.columns[0]: 'surveryTimestamp',
-                            applicantsDf.columns[1]: 'applicantName',
-                            applicantsDf.columns[2]: 'affiliation',
-                            applicantsDf.columns[3]: 'department',
-                            applicantsDf.columns[4]: 'position',
-                            applicantsDf.columns[5]: 'birthDate',
-                            applicantsDf.columns[6]: 'email',
-                            applicantsDf.columns[7]: 'phoneNo',
-                            applicantsDf.columns[8]: 'otherContact',
-                            applicantsDf.columns[9]: 'job',
-                            applicantsDf.columns[10]: 'purposeSelection',
-                            applicantsDf.columns[11]: 'competencyForJava',
-                            applicantsDf.columns[12]: 'competencyForWeb',
-                            applicantsDf.columns[13]: 'projectExperience',
-                            applicantsDf.columns[14]: 'careerDuration',
-                            applicantsDf.columns[15]: 'purposeDescription',
-                            applicantsDf.columns[16]: 'agreeWithFullAttendance',
-                            applicantsDf.columns[17]: 'agreeWithPersonalinfo',
-                            applicantsDf.columns[18]: 'agreeWithGuideInfo',
-                            applicantsDf.columns[19]: 'applicationConfirm',
-                            applicantsDf.columns[20]: 'recommender',
-                            applicantsDf.columns[21]: 'howToFindOut',
-                            applicantsDf.columns[22]: 'curriculumNo',
-            }, inplace= True)
-            applicantsDf = applicantsDf.drop(columns= ['surveryTimestamp'])     # [!] Applicants Table doesn't have surveryTimestamp
-            membersDf = applicantsDf[['phoneNo', 'curriculumNo']]               # Extract Primary key of records to Members Table
+            applicantsDf.columns = applicantsDf.columns.map(lambda x: Config.XLSX_COLUMNS_TO_SCHEMA_MAP[ x[:4]+'_'+str(len(x)//19) ])       # Using "x[:4]+'_'+str(len(x)//19)" as a unique key.
+            applicantsDf['curriculumNo'] = curriculumNoFromClient               # Add a new 'curriculumNo' column
+            applicantsDf = applicantsDf.drop(columns= ['surveyTimestamp'])      # [!] Applicants Table doesn't have surveryTimestamp
+            membersDf = applicantsDf[[
+                            'phoneNo',
+                            'curriculumNo'
+                        ]]      # Extract Members Table bulk records' Primary key
 
             applicantsListedJson = convertDataframeToListedJson(applicantsDf)
             membersListedJson = convertDataframeToListedJson(membersDf)
@@ -300,7 +280,7 @@ class Applicants:
                 db.session.add_all(newBulkApplicants)
                 db.session.add_all(newBulkMembers)
                 db.session.commit()
-                return {'return': {'message': f'Applicants Bulk inserted. curriculumNo={curriculumNoFromClient}, bulk={applicantsListedJson}'}}, 201
+                return {'return': {'message': f'Applicants/Members Bulk inserted. curriculumNo={curriculumNoFromClient}, bulk={applicantsListedJson}'}}, 201
             except:
                 db.session.rollback()
                 return {'return': {'message': 'Something went wrong'}}, 500

@@ -64,7 +64,7 @@ class Users:
                 return {'return': {
                             'message': f'User {usernameFromClient} was created',
                             'access_token': accessToken,
-                        }}
+                        }}, 201
             except:
                 db.session.rollback()
                 return {'return': {'message': 'Something went wrong'}}, 500
@@ -130,6 +130,6 @@ class Users:
             users = UsersModel.query.filter_by(**queryFilter).all()
             usersSchema = UsersModelSchema(many= True)
             output = usersSchema.dump(users)
-            return {'return': output}
+            return {'return': output}, 200
     # -----------------------------------------------------------------------------
 # ---------------------------------------------------------------------------------
