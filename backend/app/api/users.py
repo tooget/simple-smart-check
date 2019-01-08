@@ -4,7 +4,6 @@ from app.config import Config
 from app.extensions import db
 from app.ormmodels import UsersModel, RevokedTokenModel
 from app.ormmodels import UsersModelSchema, RevokedTokenModelSchema
-from datetime import timedelta
 from flask import request
 from flask_restplus import Resource
 from flask_jwt_extended import create_access_token, jwt_required, get_raw_jwt
@@ -18,33 +17,20 @@ from passlib.hash import django_pbkdf2_sha256
 # # -------------------------------------------------------------------------------
 
 
-# # ----------------[ API SAMPLE with Applying SecureResources ]-------------------
-# @apiRestful.route('/users/secret')
-# class SecretResource(SecureResource):
-#     @jwt_required
-#     def get(self):
-#         return {
-#             'answer': 42
-#         }
-# # -------------------------------------------------------------------------------
-
-
 # --------------------[ API to System Users/Admin and Auth ]-----------------------
 class Users:
 
     # ----------------[ Register a New User ]--------------------------------------
     @apiRestful.route('/users/new')
     @apiRestful.doc(params= {
-                    'username': {'in': 'formData', 'description': 'application/json, body required'},
-                    'password': {'in': 'formData', 'description': 'application/json, body required'},
+            'username': {'in': 'formData', 'description': 'application/json, body required'},
+            'password': {'in': 'formData', 'description': 'application/json, body required'},
     })
-    class post_Users_New(Resource):       # Before applying SecureResource
+    class post_Users_New(Resource):
 
         def post(self):
-            # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand.")
-            # Reference : https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
             infoFromClient = request.form
-            usernameFromClient = infoFromClient['username']
+            usernameFromClient = infoFromClient['username']         # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand."), https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
             passwordFromClient = infoFromClient['password']
             
             if UsersModel.query.filter_by(username= usernameFromClient).first():
@@ -56,9 +42,9 @@ class Users:
                 password= pbkdf2_sha256.hash(passwordFromClient)    #Crypt the password with pbkdf2
             )
 
-            # [!] Transaction Issue when DB insert fails
             try:
                 db.session.add(newUserInfoFromClient)
+                # [!] New Token Issue when DB insert fails
                 accessToken = create_access_token(identity= usernameFromClient)
                 db.session.commit()
                 return {'return': {
@@ -74,18 +60,15 @@ class Users:
     # ----------------[ Login ]----------------------------------------------------
     @apiRestful.route('/users/login')
     @apiRestful.doc(params= {
-                    'username': {'in': 'formData', 'description': 'application/json, body required'},
-                    'password': {'in': 'formData', 'description': 'application/json, body required'},
+            'username': {'in': 'formData', 'description': 'application/json, body required'},
+            'password': {'in': 'formData', 'description': 'application/json, body required'},
     })
-    class post_Users_Login(Resource):      # Before applying SecureResource
+    class post_Users_Login(Resource):
 
         def post(self):
-            # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand.")
-            # Reference : https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
             infoFromClient = request.form
-            usernameFromClient = infoFromClient['username']
-            passwordFromClient = infoFromClient['password']
-            # passwordFromClient = django_pbkdf2_sha256.using(salt= Config.SALT_KEYWORD, salt_size= Config.SALT_SIZE, rounds= Config.SALT_ROUNDS).hash(infoFromClient['password']).split('$')[-1]
+            usernameFromClient = infoFromClient['username']         # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand."), https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
+            passwordFromClient = infoFromClient['password']         # passwordFromClient = django_pbkdf2_sha256.using(salt= Config.SALT_KEYWORD, salt_size= Config.SALT_SIZE, rounds= Config.SALT_ROUNDS).hash(infoFromClient['password']).split('$')[-1]
 
             UserInfoFromDB = UsersModel.query.filter_by(username= usernameFromClient).first()
 
@@ -104,7 +87,7 @@ class Users:
 
     # ----------------[ Logout ]---------------------------------------------------
     @apiRestful.route('/users/logout')
-    class post_Users_Logout(Resource):       # Before applying SecureResource
+    class post_Users_Logout(Resource):
 
         @jwt_required
         def post(self):
@@ -122,9 +105,10 @@ class Users:
     # ----------------[ Get Users ]------------------------------------------------
     @apiRestful.route('/users/filter')
     @apiRestful.doc(params= {
-                    'username': {'in': 'query', 'description': 'URL parameter, optional'},
+            'username': {'in': 'query', 'description': 'URL parameter, optional'},
     })
-    class get_Users_Filter(Resource):       # Before applying SecureResource
+    class get_Users_Filter(Resource):
+        
         def get(self):
             queryFilter = request.args
             users = UsersModel.query.filter_by(**queryFilter).all()

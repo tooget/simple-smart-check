@@ -1,12 +1,12 @@
 from app.api import apiRestful
-from app.api.modules import requireAuth, convertDataframeToListedJson
+from app.api.modules import requireAuth, convertDataframeToDictsList
 from app.config import Config
 from app.extensions import db
 from app.ormmodels import AttendanceLogsModel, ApplicantsModel, CurriculumsModel, MembersModel
 from app.ormmodels import AttendanceLogsModelSchema, ApplicantsModelSchema, CurriculumsModelSchema, MembersModelSchema
 from datetime import datetime, timedelta
 from flask import request
-from flask_restplus import Resource     # Reference : http://flask-restplus.readthedocs.io
+from flask_restplus import Resource
 from sqlalchemy import func
 import pandas as pd
 
@@ -15,29 +15,6 @@ import pandas as pd
 # # Calls requireAuth decorator on all requests
 # class SecureResource(Resource):
 #     method_decorators = [requireAuth]
-# # -------------------------------------------------------------------------------
-
-
-# # --------------------[ API SAMPLE without SecureResources ]---------------------
-# @apiRestful.route('/resource/<string:resource_id>')
-# @apiRestful.param('resource_id', 'Class-wide description')
-# class ResourceOne(Resource):    # Unsecure Resource Class: Inherit from Resource
-    
-#     @apiRestful.doc(params= {
-#                         'smaple_get_params1': 'get param1 samples',
-#                         'smaple_get_params2': 'get param2 samples',})
-#     def get(self, resource_id):
-#         checkParamsFromHttpReq(['smaple_get_params1'])
-#         timestamp = datetime.utcnow().isoformat()
-#         return {'timestamp': timestamp}
-
-#     @apiRestful.doc(params= {
-#                         'smaple_post_params1': 'post param1 samples',
-#                         'smaple_post_params2': 'post param2 samples',})
-#     @apiRestful.expect()
-#     def post(self, resource_id):
-#         requestBody = request.form.to_dict()
-#         return {'smaple_params': data}, 201
 # # -------------------------------------------------------------------------------
 
 
@@ -59,9 +36,9 @@ class Curriculums:
     # ----------------[ Get Curriculums ]---------------------------------------
     @apiRestful.route('/resource/curriculums/filter')
     @apiRestful.doc(params= {
-                    'curriculumCategory': {'in': 'query', 'description': 'URL parameter, optional'},
-                    'curriculumType': {'in': 'query', 'description': 'URL parameter, optional'},
-                    # You can add query filter columns if needed.
+            'curriculumCategory': {'in': 'query', 'description': 'URL parameter, optional'},
+            'curriculumType': {'in': 'query', 'description': 'URL parameter, optional'},
+            # You can add query filter columns if needed.
     })
     class get_Curriculums_Filter(Resource):
 
@@ -87,7 +64,7 @@ class Curriculums:
             query = db.session.query(curriculumList).with_entities(curriculumList, func.ifnull(applicantCount.c.ApplicantCount, 0).label('ApplicantCount'), func.ifnull(memberCount.c.MemberCount, 0).label('MemberCount'), func.ifnull(memberCompleteCount.c.MemberCompleteCount, 0).label('MemberCompleteCount'), func.ifnull(memberEmploymentCount.c.MemberEmploymentCount, 0).label('MemberEmploymentCount')).outerjoin(applicantCount, curriculumList.c.curriculumNo == applicantCount.c.curriculumNo).outerjoin(memberCount, curriculumList.c.curriculumNo == memberCount.c.curriculumNo).outerjoin(memberCompleteCount, curriculumList.c.curriculumNo == memberCompleteCount.c.curriculumNo).outerjoin(memberEmploymentCount, curriculumList.c.curriculumNo == memberEmploymentCount.c.curriculumNo)
 
             df = pd.read_sql(query.statement, db.get_engine(bind= 'mysql'))
-            output = convertDataframeToListedJson(df)
+            output = convertDataframeToDictsList(df)
 
             return {'return': output}, 200
     # ---------------------------------------------------------------------------
@@ -100,11 +77,11 @@ class AttendanceLogs:
     # ----------------[ Get new Attendance logs ]--------------------------------
     @apiRestful.route('/resource/attendancelogs/filter')
     @apiRestful.doc(params= {
-                    'phoneNo': {'in': 'query', 'description': 'URL parameter, optional'},
-                    'curriculumNo': {'in': 'query', 'description': 'URL parameter, optional'},
-                    'checkInOut': {'in': 'query', 'description': 'URL parameter, optional'},
-                    'attendanceDate': {'in': 'query', 'description': 'URL parameter, optional'},
-                    # You can add query filter columns if needed.
+            'phoneNo': {'in': 'query', 'description': 'URL parameter, optional'},
+            'curriculumNo': {'in': 'query', 'description': 'URL parameter, optional'},
+            'checkInOut': {'in': 'query', 'description': 'URL parameter, optional'},
+            'attendanceDate': {'in': 'query', 'description': 'URL parameter, optional'},
+            # You can add query filter columns if needed.
     })
     class get_AttendanceLogs_Filter(Resource):
 
@@ -120,30 +97,28 @@ class AttendanceLogs:
     # ----------------[ Create a new Attendance log ]----------------------------
     @apiRestful.route('/resource/attendancelogs/new')
     @apiRestful.doc(params= {
-                    'phoneNo': {'in': 'formData', 'description': 'application/json, body required'},
-                    'curriculumNo': {'in': 'formData', 'description': 'application/json, body required'},
-                    'checkInOut': {'in': 'formData', 'description': 'application/json, body required'},
-                    'signature': {'in': 'formData', 'description': 'application/json, body required'},
-                    # You can add formData columns if needed.
+            'phoneNo': {'in': 'formData', 'description': 'application/json, body required'},
+            'curriculumNo': {'in': 'formData', 'description': 'application/json, body required'},
+            'checkInOut': {'in': 'formData', 'description': 'application/json, body required'},
+            'signature': {'in': 'formData', 'description': 'application/json, body required'},
+            # You can add formData columns if needed.
     })
     class post_AttendanceLogs_New(Resource):
 
         def post(self):
-            # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand.")
-            # Reference : https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
             infoFromClient = request.form
-            phoneNoFromClient = infoFromClient['phoneNo']
+            phoneNoFromClient = infoFromClient['phoneNo']               # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand."), https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
             curriculumNoFromClient = infoFromClient['curriculumNo']
             checkInOutFromClient = infoFromClient['checkInOut']
-            signatureFromClient = infoFromClient['signature']
-            attendanceDate = datetime.utcnow() + timedelta(hours= 9) # Calculate Korea Standard Time(KST)
+            signatureFromClient = infoFromClient['signature'].split(',')[-1].strip()
+            attendanceDate = (datetime.utcnow() + timedelta(hours= 9)).strftime('%Y-%m-%d')     # Calculate Korea Standard Time(KST), date only
 
             requestedBody = {
                 "phoneNo": phoneNoFromClient,
                 "curriculumNo": curriculumNoFromClient,
                 "checkInOut": checkInOutFromClient,
-                "signature": signatureFromClient.split(',')[-1].strip(),
-                "attendanceDate": attendanceDate.strftime('%Y-%m-%d')
+                "signature": signatureFromClient,
+                "attendanceDate": attendanceDate,
             }
             
             newAttendanceLog = AttendanceLogsModel(**requestedBody)
@@ -165,13 +140,13 @@ class Members:
     # ----------------[ Get members ]--------------------------------------------
     @apiRestful.route('/resource/members/filter')
     @apiRestful.doc(params= {
-                    'phoneNo': {'in': 'query', 'description': 'URL parameter, optional'},
-                    'curriculumNo': {'in': 'query', 'description': 'URL parameter, optional'},
-                    'attendancePass': {'in': 'query', 'description': 'URL parameter, optional'},
-                    'attendanceCheck': {'in': 'query', 'description': 'URL parameter, optional'},
-                    'curriculumComplete': {'in': 'query', 'description': 'URL parameter, optional'},
-                    'employment': {'in': 'query', 'description': 'URL parameter, optional'},
-                    # You can add query filter columns if needed.
+            'phoneNo': {'in': 'query', 'description': 'URL parameter, optional'},
+            'curriculumNo': {'in': 'query', 'description': 'URL parameter, optional'},
+            'attendancePass': {'in': 'query', 'description': 'URL parameter, optional'},
+            'attendanceCheck': {'in': 'query', 'description': 'URL parameter, optional'},
+            'curriculumComplete': {'in': 'query', 'description': 'URL parameter, optional'},
+            'employment': {'in': 'query', 'description': 'URL parameter, optional'},
+            # You can add query filter columns if needed.
     })
     class get_Members_Filter(Resource):
 
@@ -187,22 +162,20 @@ class Members:
     # ----------------[ Update members' Info ]-------------------------------------
     @apiRestful.route('/resource/members')
     @apiRestful.doc(params= {
-                    'phoneNo': {'in': 'formData', 'description': 'application/json, body required'},
-                    'curriculumNo': {'in': 'formData', 'description': 'application/json, body required'},
-                    'attendancePass': {'in': 'formData', 'description': 'application/json, body required'},
-                    'attendanceCheck': {'in': 'formData', 'description': 'application/json, body required'},
-                    'curriculumComplete': {'in': 'formData', 'description': 'application/json, body required'},
-                    'employment': {'in': 'formData', 'description': 'application/json, body required'},
-                    # You can add formData columns if needed.
+            'phoneNo': {'in': 'formData', 'description': 'application/json, body required'},
+            'curriculumNo': {'in': 'formData', 'description': 'application/json, body required'},
+            'attendancePass': {'in': 'formData', 'description': 'application/json, body required'},
+            'attendanceCheck': {'in': 'formData', 'description': 'application/json, body required'},
+            'curriculumComplete': {'in': 'formData', 'description': 'application/json, body required'},
+            'employment': {'in': 'formData', 'description': 'application/json, body required'},
+            # You can add formData columns if needed.
     })
     class put_Members_Info(Resource):
 
         def put(self):
-            # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand.")
-            # Reference : https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
             infoFromClient = request.form
             requestedBody = {
-                'phoneNo': infoFromClient['phoneNo'],
+                'phoneNo': infoFromClient['phoneNo'],                   # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand."), https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
                 'curriculumNo': infoFromClient['curriculumNo'],
                 'attendancePass': infoFromClient['attendancePass'],
                 'attendanceCheck': infoFromClient['attendanceCheck'],
@@ -229,11 +202,11 @@ class Applicants:
     # ----------------[ Get Applicants ]-------------------------------------------
     @apiRestful.route('/resource/applicants/filter')
     @apiRestful.doc(params= {
-                    'phoneNo': {'in': 'query', 'description': 'URL parameter, optional'},
-                    'curriculumNo': {'in': 'query', 'description': 'URL parameter, optional'},
-                    'applicantName': {'in': 'query', 'description': 'URL parameter, optional'},
-                    'email': {'in': 'query', 'description': 'URL parameter, optional'},
-                    # You can add query filter columns if needed.
+            'phoneNo': {'in': 'query', 'description': 'URL parameter, optional'},
+            'curriculumNo': {'in': 'query', 'description': 'URL parameter, optional'},
+            'applicantName': {'in': 'query', 'description': 'URL parameter, optional'},
+            'email': {'in': 'query', 'description': 'URL parameter, optional'},
+            # You can add query filter columns if needed.
     })
     class get_Applicants_Filter(Resource):
 
@@ -249,37 +222,32 @@ class Applicants:
     #--------[ POST Raw Excel File(Google Survey) to Applicants and Members ]------
     @apiRestful.route('/resource/applicants/bulk')
     @apiRestful.doc(params= {
-                    'curriculumNo': {'in': 'formData', 'description': 'application/json, body required'},
-                    'applicantsBulkXlsxFile': {'in': 'formData', 'type': 'file', 'description': 'application/json, body/xlsx file required'},
-                    # You can add formData columns if needed.
+            'curriculumNo': {'in': 'formData', 'description': 'application/json, body required'},
+            'applicantsBulkXlsxFile': {'in': 'formData', 'type': 'file', 'description': 'application/json, body/xlsx file required'},
+            # You can add formData columns if needed.
     })
     class post_Applicants_Bulk(Resource):
 
         def post(self):
-            # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand.")
-            # Reference : https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
-            curriculumNoFromClient = request.form['curriculumNo']
+            curriculumNoFromClient = request.form['curriculumNo']               # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand."), https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
             applicantsbulkFromClient = request.files['applicantsBulkXlsxFile']
 
             applicantsDf = pd.read_excel(applicantsbulkFromClient)
-            applicantsDf.columns = applicantsDf.columns.map(lambda x: Config.XLSX_COLUMNS_TO_SCHEMA_MAP[ x[:4]+'_'+str(len(x)//19) ])       # Using "x[:4]+'_'+str(len(x)//19)" as a unique key.
-            applicantsDf['curriculumNo'] = curriculumNoFromClient               # Add a new 'curriculumNo' column
-            membersDf = applicantsDf[[
-                            'phoneNo',
-                            'curriculumNo'
-                        ]]      # Extract Members Table bulk records' Primary key
+            applicantsDf.columns = applicantsDf.columns.map(lambda x: Config.XLSX_COLUMNS_TO_SCHEMA_MAP[ x[:4]+'_'+str(len(x)//19) ])       # Convert column names, Using "x[:4]+'_'+str(len(x)//19)" as a unique key
+            applicantsDf['curriculumNo'] = curriculumNoFromClient
+            membersDf = applicantsDf[['phoneNo', 'curriculumNo']]
 
-            applicantsListedJson = convertDataframeToListedJson(applicantsDf)
-            membersListedJson = convertDataframeToListedJson(membersDf)
+            applicantsDictsList = convertDataframeToDictsList(applicantsDf)
+            membersDictsList = convertDataframeToDictsList(membersDf)
 
-            newBulkApplicants = [ApplicantsModel(**applicant) for applicant in applicantsListedJson]
-            newBulkMembers = [MembersModel(**member) for member in membersListedJson]
+            newBulkApplicants = [ApplicantsModel(**applicant) for applicant in applicantsDictsList]
+            newBulkMembers = [MembersModel(**member) for member in membersDictsList]
 
             try:
                 db.session.add_all(newBulkApplicants)
                 db.session.add_all(newBulkMembers)
                 db.session.commit()
-                return {'return': {'message': f'Applicants/Members Bulk inserted. curriculumNo={curriculumNoFromClient}, bulk={applicantsListedJson}'}}, 201
+                return {'return': {'message': f'Applicants/Members Bulk : curriculumNo {curriculumNoFromClient}, {len(newBulkApplicants)} records are inserted.'}}, 201
             except:
                 db.session.rollback()
                 return {'return': {'message': 'Something went wrong'}}, 500
