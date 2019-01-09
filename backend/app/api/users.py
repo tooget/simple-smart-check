@@ -93,6 +93,7 @@ class Users:
                 accessToken = create_access_token(identity= usernameFromClient)
                 return {'return': {
                             'message': f'Logged in as {UserInfoFromDB.username}',
+                            'username': usernameFromClient,
                             'access_token': accessToken,
                         }}, 201
             elif not UserInfoFromDB:                                                # if User is not registered, return 500

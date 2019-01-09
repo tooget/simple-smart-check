@@ -28,7 +28,7 @@ class Config(object):
 
     # ------------------------[ Custom Parameters in app.__init__.py ]--------------------------
     # app.Config for cors.init_app()
-    CORS_ORIGIN = ['http://0.0.0.0:7000']
+    CORS_ORIGIN = ['http://0.0.0.0:7000', 'http://localhost:9528']
     # ------------------------------------------------------------------------------------------
 
 

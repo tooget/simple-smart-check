@@ -7,7 +7,8 @@ from app.ormmodels import AttendanceLogsModelSchema, ApplicantsModelSchema, Curr
 from datetime import datetime, timedelta
 from flask import request
 from flask_restplus import Resource     # Reference : http://flask-restplus.readthedocs.io
-from sqlalchemy import func
+from json import loads
+from sqlalchemy import and_, func
 import pandas as pd
 
 
@@ -66,11 +67,22 @@ class Curriculums:
     class get_Curriculums_Filter(Resource):
 
         def get(self):
-            queryFilter = request.args
-            curriculums = CurriculumsModel.query.filter_by(**queryFilter).all()
+            queryParams = request.args
+            filtersFromClient = loads(queryParams['filters'])
+            filters = [getattr(CurriculumsModel, column).like(f'%{keyword}%') for column, keyword in filtersFromClient.items()]
+            sort = loads(queryParams['sort'])
+            column, option = sort['column'], sort['option']
+            order = getattr(getattr(CurriculumsModel, column), option)()
+            page = int(queryParams['page'])
+            limit = int(queryParams['limit'])
+            start, stop = (page-1)*limit, page*limit
+
+            query = CurriculumsModel.query.filter(and_(*filters))
+            curriculums = query.order_by(order).slice(start, stop).all()
             curriculumsSchema = CurriculumsModelSchema(many= True)
             output = curriculumsSchema.dump(curriculums)
-            return {'return': output}, 200
+            total = query.count()
+            return {'return': {'items': output, 'total': total}}, 200
     # ---------------------------------------------------------------------------
 
 
@@ -88,8 +100,9 @@ class Curriculums:
 
             df = pd.read_sql(query.statement, db.get_engine(bind= 'mysql'))
             output = convertDataframeToListedJson(df)
+            total = len(output)
 
-            return {'return': output}, 200
+            return {'return': {'items': output, 'total': total}}, 200
     # ---------------------------------------------------------------------------
 # -------------------------------------------------------------------------------
 
@@ -113,7 +126,8 @@ class AttendanceLogs:
             attendanceLogs = AttendanceLogsModel.query.filter_by(**queryFilter).all()
             attendanceLogsSchema = AttendanceLogsModelSchema(many= True)
             output = attendanceLogsSchema.dump(attendanceLogs)
-            return {'return': output}, 200
+            total = len(output)
+            return {'return': {'items': output, 'total': total}}, 200
     # ---------------------------------------------------------------------------
 
 
@@ -180,7 +194,8 @@ class Members:
             members = MembersModel.query.filter_by(**queryFilter).all()
             membersSchema = MembersModelSchema(many= True)
             output = membersSchema.dump(members)
-            return {'return': output}, 200
+            total = len(output)
+            return {'return': {'items': output, 'total': total}}, 200
     # -----------------------------------------------------------------------------
 
 
@@ -242,7 +257,8 @@ class Applicants:
             applicants = ApplicantsModel.query.filter_by(**queryFilter).all()
             applicantsSchema = ApplicantsModelSchema(many= True)
             output = applicantsSchema.dump(applicants)
-            return {'return': output}, 200
+            total = len(output)
+            return {'return': {'items': output, 'total': total}}, 200
     # -----------------------------------------------------------------------------
 
 
