@@ -1,5 +1,5 @@
 from app.api import apiRestful
-from app.api.modules import requireAuth, convertDataframeToListedJson
+from app.api.modules import requireAuth, convertDataframeToDictsList
 from app.config import Config
 from app.extensions import db
 from app.ormmodels import UsersModel, RevokedTokenModel
@@ -76,6 +76,7 @@ class Users:
                 accessToken = create_access_token(identity= usernameFromClient)
                 return {'return': {
                             'message': f'Logged in as {UserInfoFromDB.username}',
+                            'username': usernameFromClient,
                             'access_token': accessToken,
                         }}, 201
             elif not UserInfoFromDB:                                                # if User is not registered, return 500
