@@ -46,16 +46,10 @@ export const constantRouterMap = [
     meta: { title: 'Example', icon: 'example' },
     children: [
       {
-        path: 'table',
-        name: 'Table',
-        component: () => import('@/views/table/index'),
-        meta: { title: 'Table', icon: 'table' }
-      },
-      {
-        path: 'complexTable',
-        name: 'complexTable',
-        component: () => import('@/views/table/complexTable'),
-        meta: { title: 'complexTable', icon: 'table' }
+        path: 'curriculums',
+        name: 'curriculums',
+        component: () => import('@/views/table/curriculums'),
+        meta: { title: 'curriculums', icon: 'table' }
       },
       {
         path: 'tree',
