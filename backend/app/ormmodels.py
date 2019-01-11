@@ -59,6 +59,7 @@ class ApplicantsModel(db.Model):
     applicationConfirm = db.Column(db.Text, nullable= False)
     recommender = db.Column(db.Text, nullable= True)
     howToFindOut = db.Column(db.Text, nullable= True)
+    surveyTimestamp = db.Column(db.Text, nullable= False)
     insertedTimestamp = db.Column(db.TIMESTAMP, nullable= False, server_default= text('CURRENT_TIMESTAMP'))
     updatedTimestamp = db.Column(db.TIMESTAMP, nullable= True, server_default= text('NULL ON UPDATE CURRENT_TIMESTAMP'))
 

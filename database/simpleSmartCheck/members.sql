@@ -1,6 +1,7 @@
 CREATE TABLE `members` (
   `phoneNo` varchar(16) NOT NULL,
   `curriculumNo` int(10) NOT NULL,
+  `attendancePass` text,
   `attendanceCheck` text,
   `curriculumComplete` text,
   `employment` text,

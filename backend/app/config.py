@@ -47,13 +47,13 @@ class Config(object):
 
 
     # ------------------------[ Custom Parameters in app.api.resources.py ]---------------------
-    # Mapper of Google Survery Xlsx files to Applicants Table Schema
+    # Mapper of Google Survey Xlsx files to Applicants Table Schema
     # Used in @apiRestful.route('/resource/applicants/bulk')
     # Used in class post_Applicants_Bulk(Resource):
-    xlsxColumnsToSchemaMap = {
+    XLSX_COLUMNS_TO_SCHEMA_MAP = {
         # Using "x[:4]+'_'+str(len(x)//19)" as a unique key. a few len(x) is various within its context.
         # 'unique key': 'table schema'
-        '타임스탬_0': 'surveryTimestamp',
+        '타임스탬_0': 'surveyTimestamp',
         '1. 성_0': 'applicantName',
         '2. 소_0': 'affiliation',                   # len(x)%19 = 0.7
         '3. 부_0': 'department',

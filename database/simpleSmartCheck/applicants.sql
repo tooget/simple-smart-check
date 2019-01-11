@@ -21,6 +21,7 @@ CREATE TABLE `applicants` (
   `applicationConfirm` text NOT NULL,
   `recommender` text,
   `howToFindOut` text,
+  `surveyTimestamp` text NOT NULL,
   `insertedTimestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updatedTimestamp` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`phoneNo`,`curriculumNo`)
