@@ -7,7 +7,8 @@ from app.ormmodels import AttendanceLogsModelSchema, ApplicantsModelSchema, Curr
 from datetime import datetime, timedelta
 from flask import request
 from flask_restplus import Resource     # Reference : http://flask-restplus.readthedocs.io
-from json import loads
+from json import dumps, loads
+from operator import attrgetter
 from sqlalchemy import and_, func
 import pandas as pd
 
@@ -60,30 +61,169 @@ class Curriculums:
     # ----------------[ Get Curriculums ]---------------------------------------
     @apiRestful.route('/resource/curriculums/filter')
     @apiRestful.doc(params= {
-                    'curriculumCategory': {'in': 'query', 'description': 'URL parameter, optional'},
-                    'curriculumType': {'in': 'query', 'description': 'URL parameter, optional'},
+                    'filters': {'in': 'query', 'description': 'URL parameter, optional'},
+                    'sort': {'in': 'query', 'description': 'URL parameter, optional'},
+                    'pagination': {'in': 'query', 'description': 'URL parameter, optional'}
                     # You can add query filter columns if needed.
     })
     class get_Curriculums_Filter(Resource):
 
         def get(self):
-            queryParams = request.args
-            filtersFromClient = loads(queryParams['filters'])
-            filters = [getattr(CurriculumsModel, column).like(f'%{keyword}%') for column, keyword in filtersFromClient.items()]
-            sort = loads(queryParams['sort'])
-            column, option = sort['column'], sort['option']
-            order = getattr(getattr(CurriculumsModel, column), option)()
-            page = int(queryParams['page'])
-            limit = int(queryParams['limit'])
-            start, stop = (page-1)*limit, page*limit
+            queryParams = {key: loads(request.args[key]) for key in request.args}
+            filters = (getattr(CurriculumsModel, target).like(f'%{value}%') for target, value in queryParams['filters'].items())
+            sortFromClient = queryParams['sort']
+            sortTarget, sortOption = sortFromClient['target'], sortFromClient['value']
+            sort = getattr(getattr(CurriculumsModel, sortTarget), sortOption)()
+            paginationFromClient = queryParams['pagination']
+            pagenum, limit = paginationFromClient['pagenum'], paginationFromClient['limit']
+            start, stop = (pagenum-1)*limit, pagenum*limit
 
             query = CurriculumsModel.query.filter(and_(*filters))
-            curriculums = query.order_by(order).slice(start, stop).all()
+            curriculums = query.order_by(sort).slice(start, stop).all()
             curriculumsSchema = CurriculumsModelSchema(many= True)
             output = curriculumsSchema.dump(curriculums)
             total = query.count()
             return {'return': {'items': output, 'total': total}}, 200
     # ---------------------------------------------------------------------------
+
+
+    # ----------------[ Create a new Curriculums data ]----------------------------
+    @apiRestful.route('/resource/curriculums')
+    @apiRestful.doc(params= {
+                    'curriculumCategory': {'in': 'formData', 'description': 'application/json, body required'},
+                    'ordinalNo': {'in': 'formData', 'description': 'application/json, body required'},
+                    'curriculumName': {'in': 'formData', 'description': 'application/json, body required'},
+                    'curriculumType': {'in': 'formData', 'description': 'application/json, body required'},
+                    'startDate': {'in': 'formData', 'description': 'application/json, body required'},
+                    'endDate': {'in': 'formData', 'description': 'application/json, body required'},
+                    # You can add formData columns if needed.
+    })
+    class post_Curriculums(Resource):
+
+        def post(self):
+            # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand.")
+            # Reference : https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
+            infoFromClient = request.form
+            curriculumCategoryFromClient = infoFromClient['curriculumCategory']
+            ordinalNoFromClient = infoFromClient['ordinalNo']
+            curriculumNameFromClient = infoFromClient['curriculumName']
+            curriculumTypeFromClient = infoFromClient['curriculumType']
+            startDateFromClient = int(infoFromClient['startDate']) / 1000.0      # Divide by 1000.0, to preserve the millisecond accuracy 
+            endDateFromClient = int(infoFromClient['endDate']) / 1000.0      # Divide by 1000.0, to preserve the millisecond accuracy
+
+            requestedBody = {
+                "curriculumCategory": curriculumCategoryFromClient,
+                "ordinalNo": ordinalNoFromClient,
+                "curriculumName": curriculumNameFromClient,
+                "curriculumType": curriculumTypeFromClient,
+                "startDate": datetime.fromtimestamp(startDateFromClient).strftime('%Y-%m-%d'),
+                "endDate": datetime.fromtimestamp(endDateFromClient).strftime('%Y-%m-%d')
+            }
+            
+            CurriculumsData = CurriculumsModel(**requestedBody)
+
+            try:
+                db.session.add(CurriculumsData)
+                db.session.commit()
+                requestedBody['curriculumNo'] = CurriculumsData.curriculumNo
+                curriculums = CurriculumsModel.query.filter_by(**requestedBody).one()
+                curriculumsSchema = CurriculumsModelSchema(many= False)
+                argument = curriculumsSchema.dump(curriculums)
+                argumentToJson = dumps(argument)
+                return {'message': { 'title': '成功', 'content': '创建成功', },
+                        'return': { 
+                            'argument': f'{argumentToJson}'
+                        }}, 201
+            except:
+                db.session.rollback()
+                return {'message': 'Something went wrong'}, 500
+    # ---------------------------------------------------------------------------
+
+
+    # ----------------[ Update a new Curriculums data ]----------------------------
+    @apiRestful.route('/resource/curriculums')
+    @apiRestful.doc(params= {
+                    'curriculumCategory': {'in': 'formData', 'description': 'application/json, body required'},
+                    'ordinalNo': {'in': 'formData', 'description': 'application/json, body required'},
+                    'curriculumName': {'in': 'formData', 'description': 'application/json, body required'},
+                    'curriculumType': {'in': 'formData', 'description': 'application/json, body required'},
+                    'startDate': {'in': 'formData', 'description': 'application/json, body required'},
+                    'endDate': {'in': 'formData', 'description': 'application/json, body required'},
+                    # You can add formData columns if needed.
+    })
+    class put_Curriculums(Resource):
+
+        def put(self):
+            # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand.")
+            # Reference : https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
+            infoFromClient = request.form
+            curriculumNoFromClient = int(infoFromClient['curriculumNo'])
+            curriculumCategoryFromClient = infoFromClient['curriculumCategory']
+            ordinalNoFromClient = infoFromClient['ordinalNo']
+            curriculumNameFromClient = infoFromClient['curriculumName']
+            curriculumTypeFromClient = infoFromClient['curriculumType']
+            startDateFromClient = int(infoFromClient['startDate']) / 1000.0      # Divide by 1000.0, to preserve the millisecond accuracy 
+            endDateFromClient = int(infoFromClient['endDate']) / 1000.0      # Divide by 1000.0, to preserve the millisecond accuracy
+
+            requestedBody = {
+                "curriculumNo": curriculumNoFromClient,
+                "curriculumCategory": curriculumCategoryFromClient,
+                "ordinalNo": ordinalNoFromClient,
+                "curriculumName": curriculumNameFromClient,
+                "curriculumType": curriculumTypeFromClient,
+                "startDate": datetime.fromtimestamp(startDateFromClient).strftime('%Y-%m-%d'),
+                "endDate": datetime.fromtimestamp(endDateFromClient).strftime('%Y-%m-%d')
+            }
+            
+            CurriculumsData = CurriculumsModel(**requestedBody)
+
+            try:
+                db.session.merge(CurriculumsData)      # session.merge() : A kind of UPSERT, https://docs.sqlalchemy.org/en/latest/orm/session_state_management.html#merging
+                db.session.commit()
+                curriculums = CurriculumsModel.query.filter_by(**requestedBody).one()
+                curriculumsSchema = CurriculumsModelSchema(many= False)
+                argument = curriculumsSchema.dump(curriculums)
+                argumentToJson = dumps(argument)
+                return {'message': { 'title': '成功', 'content': '更新成功', },
+                        'return': {
+                            'argument': f'{argumentToJson}'
+                        }}, 201
+            except:
+                db.session.rollback()
+                return {'message': 'Something went wrong'}, 500
+    # ---------------------------------------------------------------------------
+
+
+    # ----------------[ Delete a Curriculums data ]----------------------------
+    @apiRestful.route('/resource/curriculums')
+    @apiRestful.doc(params= {
+                    'curriculumCategory': {'in': 'formData', 'description': 'application/json, body required'},
+                    'ordinalNo': {'in': 'formData', 'description': 'application/json, body required'},
+                    'curriculumName': {'in': 'formData', 'description': 'application/json, body required'},
+                    'curriculumType': {'in': 'formData', 'description': 'application/json, body required'},
+                    'startDate': {'in': 'formData', 'description': 'application/json, body required'},
+                    'endDate': {'in': 'formData', 'description': 'application/json, body required'},
+                    # You can add formData columns if needed.
+    })
+    class delete_Curriculums(Resource):
+
+        def delete(self):
+            # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand.")
+            # Reference : https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
+            infoFromClient = request.form
+            curriculumNoFromClient = int(infoFromClient['curriculumNo'])
+            requestedBody = { "curriculumNo": curriculumNoFromClient }
+            curriculums = CurriculumsModel.query.filter_by(**requestedBody).one()
+
+            try:
+                db.session.delete(curriculums)      # session.delete() : A kind of DELETE, http://flask-sqlalchemy.pocoo.org/latest/queries/#deleting-records
+                db.session.commit()
+                return {'message': {'title': '成功', 'content': '删除成功'}}, 201
+            except:
+                db.session.rollback()
+                return {'message': 'Something went wrong'}, 500
+    # ---------------------------------------------------------------------------  
+# -------------------------------------------------------------------------------
 
 
     # ----------------[ Get Curriculums, joined to Members counts ]--------------
@@ -150,7 +290,7 @@ class AttendanceLogs:
             curriculumNoFromClient = infoFromClient['curriculumNo']
             checkInOutFromClient = infoFromClient['checkInOut']
             signatureFromClient = infoFromClient['signature']
-            attendanceDate = datetime.utcnow() + timedelta(hours= 9) # Calculate Korea Standard Time(KST)
+            attendanceDate = datetime.utcnow() + timedelta(hours= 9)      # Calculate Korea Standard Time(KST)
 
             requestedBody = {
                 "phoneNo": phoneNoFromClient,
@@ -228,7 +368,7 @@ class Members:
             memberInfo = MembersModel(**requestedBody)
 
             try:
-                db.session.merge(memberInfo)    # session.merge() : A kind of UPSERT, https://docs.sqlalchemy.org/en/latest/orm/session_state_management.html#merging
+                db.session.merge(memberInfo)      # session.merge() : A kind of UPSERT, https://docs.sqlalchemy.org/en/latest/orm/session_state_management.html#merging
                 db.session.commit()
                 return {'return': {'message': f'MemberInfo updated : {requestedBody}'}}, 201
             except:
