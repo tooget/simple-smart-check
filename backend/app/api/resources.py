@@ -260,10 +260,11 @@ class AttendanceLogs:
             queryFilter = request.args
             
             attendanceLogs = AttendanceLogsModel.query.filter_by(**queryFilter)
-            curriculumDuration = CurriculumsModel.query.with_entities(CurriculumsModel.startDate, CurriculumsModel.endDate).filter_by(**queryFilter).all()
-            curriculumDuration = [date.strftime('%Y-%m-%d') for date in curriculumDuration[0]]
-            membersPhoneNoList = MembersModelSchema(many= True).dump( MembersModel.query.with_entities(MembersModel.phoneNo).filter_by(**queryFilter).all() )
-            membersPhoneNoList = [phoneNoDict['phoneNo'] for phoneNoDict in membersPhoneNoList]
+            curriculumDuration = CurriculumsModel.query.with_entities(CurriculumsModel.startDate, CurriculumsModel.endDate).filter_by(**queryFilter).first()
+            curriculumDuration = [date.strftime('%Y-%m-%d') for date in curriculumDuration]
+            curriculumDuration = set([date.strftime('%Y-%m-%d') for date in pd.date_range(start= curriculumDuration[0], end= curriculumDuration[1], freq= 'B')])
+            membersPhoneNoList = MembersModelSchema(many= True).dump( MembersModel.query.with_entities(MembersModel.phoneNo).filter_by(**queryFilter, attendanceCheck= 'Y').all() )
+            membersPhoneNoList = set([phoneNoDict['phoneNo'] for phoneNoDict in membersPhoneNoList])
 
             attendanceLogsDf = pd.read_sql(attendanceLogs.statement, db.get_engine(bind= 'mysql'))
             attendanceLogsDf['attendanceDate'] = attendanceLogsDf['attendanceDate'].astype(str)
@@ -271,12 +272,22 @@ class AttendanceLogs:
             pivot['signatureTimestamp'] = pivot['signature'] + '\n' + pivot['insertedTimestamp'].dt.strftime('%Y-%m-%dT%H:%M:%SZ').astype(str)
             pivot = pivot.drop(columns= ['signature', 'insertedTimestamp']).unstack(level= [2, 1]).sort_index(axis= 'columns', level= 1)
 
-            curriculumDates = [date.strftime('%Y-%m-%d') for date in pd.date_range(start= curriculumDuration[0], end= curriculumDuration[1], freq= 'B')]
+            iterables = [
+                list(set(pivot.columns.get_level_values(0))),
+                curriculumDuration,
+                list(set(pivot.columns.get_level_values(2))),
+            ]
+            emptyAttendanceTableDF = pd.DataFrame(
+                index= membersPhoneNoList,
+                columns= pd.MultiIndex.from_product(iterables, names= pivot.columns.names),
+            )
+            emptyAttendanceTableDF.index.name = pivot.index.name
+            pivot = pivot.combine_first(emptyAttendanceTableDF)
 
             def convertDataframeToVueElementUiJsonFormat(dataframe):
 
                 target = dataframe
-                vueElementUiListJson = []
+                vueElementUiListedJson = []
 
                 recordIdx_name = target.index.name
                 columnLevel0_name = target.columns.get_level_values(0)[0]
@@ -299,9 +310,9 @@ class AttendanceLogs:
                             columnLevel3_2st: columnLevel3_2ndRecordValue
                         }
                         recordJson[columnLevel0_name].append(columnLevel2Segment)
-                    vueElementUiListJson.append(recordJson)
+                    vueElementUiListedJson.append(recordJson)
 
-                return vueElementUiListJson
+                return vueElementUiListedJson
 
             output = convertDataframeToVueElementUiJsonFormat(pivot)
             total = attendanceLogs.count()
