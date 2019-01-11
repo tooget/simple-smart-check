@@ -10,6 +10,7 @@ from flask_restplus import Resource     # Reference : http://flask-restplus.read
 from json import dumps, loads
 from operator import attrgetter
 from sqlalchemy import and_, func
+from copy import deepcopy
 import pandas as pd
 
 
@@ -260,18 +261,22 @@ class AttendanceLogs:
             queryFilter = request.args
             
             attendanceLogs = AttendanceLogsModel.query.filter_by(**queryFilter)
+            # Get full duration of a curriculum.
             curriculumDuration = CurriculumsModel.query.with_entities(CurriculumsModel.startDate, CurriculumsModel.endDate).filter_by(**queryFilter).first()
-            curriculumDuration = [date.strftime('%Y-%m-%d') for date in curriculumDuration]
-            curriculumDuration = set([date.strftime('%Y-%m-%d') for date in pd.date_range(start= curriculumDuration[0], end= curriculumDuration[1], freq= 'B')])
+            startDate, endDate = curriculumDuration.startDate.strftime('%Y-%m-%dT%H:%M:%SZ'), curriculumDuration.endDate.strftime('%Y-%m-%dT%H:%M:%SZ')
+            curriculumDuration = set([date.strftime('%Y-%m-%d') for date in pd.date_range(start= startDate, end= endDate, freq= 'B')])
+            # Get entire members list of a curriculum.
             membersPhoneNoList = MembersModelSchema(many= True).dump( MembersModel.query.with_entities(MembersModel.phoneNo).filter_by(**queryFilter, attendanceCheck= 'Y').all() )
             membersPhoneNoList = set([phoneNoDict['phoneNo'] for phoneNoDict in membersPhoneNoList])
 
+            # Pivot Attendance Check-Table for now.
             attendanceLogsDf = pd.read_sql(attendanceLogs.statement, db.get_engine(bind= 'mysql'))
             attendanceLogsDf['attendanceDate'] = attendanceLogsDf['attendanceDate'].astype(str)
             pivot = attendanceLogsDf.set_index(['phoneNo', 'checkInOut', 'attendanceDate'])[['signature', 'insertedTimestamp']]
             pivot['signatureTimestamp'] = pivot['signature'] + '\n' + pivot['insertedTimestamp'].dt.strftime('%Y-%m-%dT%H:%M:%SZ').astype(str)
             pivot = pivot.drop(columns= ['signature', 'insertedTimestamp']).unstack(level= [2, 1]).sort_index(axis= 'columns', level= 1)
 
+            # Create Full Attendance Check-Table with Nan values.
             iterables = [
                 list(set(pivot.columns.get_level_values(0))),
                 curriculumDuration,
@@ -282,39 +287,32 @@ class AttendanceLogs:
                 columns= pd.MultiIndex.from_product(iterables, names= pivot.columns.names),
             )
             emptyAttendanceTableDF.index.name = pivot.index.name
+            # Overlay and Update the pivot table.
             pivot = pivot.combine_first(emptyAttendanceTableDF)
 
-            def convertDataframeToVueElementUiJsonFormat(dataframe):
+            # Make ListedJson for Vue Element-Ui to visualize a multicolumn Table.
+            pivotLebels = list(map(lambda x: x.tolist(), pivot.columns.levels))
+            signatureTimestampLevel, insertedTimestampLevel, checkInOutLevel = pivotLebels
+            vueElementUiListedJson = list()
+            signatureTimestampListItem = dict()
+            vueElementUiListedJsonItem = dict()
+            signatureTimestampList = list()
+            for phoneNo, row in pivot.iterrows():
+                for signatureTimestampLabel, insertedTimestampLabel, checkInOutLabel in zip(*pivot.columns.labels):
+                    level1 = signatureTimestampLevel[signatureTimestampLabel]
+                    level2 = insertedTimestampLevel[insertedTimestampLabel]
+                    level3 = checkInOutLevel[checkInOutLabel]            
+                    value = row[level1][level2][level3]
+                    signatureTimestampListItem.update({'attendanceDate': level2})
+                    signatureTimestampListItem.update({level3: value})
+                    if checkInOutLabel == 1:
+                        signatureTimestampList.append(deepcopy(signatureTimestampListItem))
 
-                target = dataframe
-                vueElementUiListedJson = []
+                vueElementUiListedJsonItem.update({'phoneNo': phoneNo})
+                vueElementUiListedJsonItem.update({'signatureTimestamp': deepcopy(signatureTimestampList)})
+                vueElementUiListedJson.append(deepcopy(vueElementUiListedJsonItem))
 
-                recordIdx_name = target.index.name
-                columnLevel0_name = target.columns.get_level_values(0)[0]
-                columnLevel1_name = target.columns.get_level_values(1).name
-                columnLevel3_1st = target.columns.get_level_values(2)[0]
-                columnLevel3_2st = target.columns.get_level_values(2)[1]
-
-                for recordIdxOrder in range(len(target.index)):
-                    recordJson = {}
-                    recordJson[recordIdx_name] = target.index[recordIdxOrder]
-                    recordJson[columnLevel0_name] = []
-
-                    for columnLevel2Order in range( len(set(target.columns.get_level_values(1))) ):
-                        columnLevel2Idx = columnLevel2Order * 2
-                        columnLevel3_1stRecordValue = target[ columnLevel0_name ][ target.columns.get_level_values(1)[columnLevel2Idx] ][ columnLevel3_1st ].values[recordIdxOrder]
-                        columnLevel3_2ndRecordValue = target[ columnLevel0_name ][ target.columns.get_level_values(1)[columnLevel2Idx] ][ columnLevel3_2st ].values[recordIdxOrder]
-                        columnLevel2Segment = {
-                            columnLevel1_name: target.columns.get_level_values(1)[columnLevel2Idx],
-                            columnLevel3_1st: columnLevel3_1stRecordValue,
-                            columnLevel3_2st: columnLevel3_2ndRecordValue
-                        }
-                        recordJson[columnLevel0_name].append(columnLevel2Segment)
-                    vueElementUiListedJson.append(recordJson)
-
-                return vueElementUiListedJson
-
-            output = convertDataframeToVueElementUiJsonFormat(pivot)
+            output = vueElementUiListedJson
             total = attendanceLogs.count()
 
             return {'return': {'items': output, 'total': total}}, 200

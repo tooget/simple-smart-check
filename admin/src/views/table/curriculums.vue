@@ -237,7 +237,7 @@ export default {
           tempData.endDate = +new Date(tempData.endDate) // change Thu Nov 30 2017 16:41:05 GMT+0800 (CST) to 1512031311464
           createCurriculumData(tempData).then(response => {
             const argument = JSON.parse(response.data.return.argument)
-            const message = response.data.return.message
+            const message = response.data.message
             this.list.unshift(argument)
             this.dialogFormVisible = false
             this.$notify({
@@ -269,7 +269,7 @@ export default {
           tempData.endDate = +new Date(tempData.endDate) // change Thu Nov 30 2017 16:41:05 GMT+0800 (CST) to 1512031311464
           updateCurriculumData(tempData).then(response => {
             const argument = JSON.parse(response.data.return.argument)
-            const message = response.data.return.message
+            const message = response.data.message
             for (const v of this.list) {
               if (v.curriculumNo === argument.curriculumNo) {
                 const index = this.list.indexOf(v)
@@ -291,7 +291,7 @@ export default {
     handleDelete(row) {
       const curriculumNo = row.curriculumNo
       deleteCurriculumData(curriculumNo).then(response => {
-        const message = response.data.return.message
+        const message = response.data.message
         const index = this.list.indexOf(row)
         this.list.splice(index, 1)
         this.$notify({
