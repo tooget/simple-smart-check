@@ -109,6 +109,67 @@ class AttendanceLogs:
     # ---------------------------------------------------------------------------
 
 
+    # ----------------[ Get attendance list of a specific curriculum ]-----------
+    @apiRestful.route('/resource/attendancelogs/list')
+    @apiRestful.doc(params= {
+            'curriculumNo': {'in': 'query', 'description': 'URL parameter, reqired'},
+    })
+    class get_AttendanceLogs_List(Resource):
+
+        def get(self):
+            queryFilter = request.args
+            
+            attendanceLogs = AttendanceLogsModel.query.filter_by(**queryFilter)
+            curriculumDuration = CurriculumsModel.query.with_entities(CurriculumsModel.startDate, CurriculumsModel.endDate).filter_by(**queryFilter).all()
+            curriculumDuration = [date.strftime('%Y-%m-%d') for date in curriculumDuration[0]]
+            membersPhoneNoList = MembersModelSchema(many= True).dump( MembersModel.query.with_entities(MembersModel.phoneNo).filter_by(**queryFilter).all() )
+            membersPhoneNoList = [phoneNoDict['phoneNo'] for phoneNoDict in membersPhoneNoList]
+
+            attendanceLogsDf = pd.read_sql(attendanceLogs.statement, db.get_engine(bind= 'mysql'))
+            attendanceLogsDf['attendanceDate'] = attendanceLogsDf['attendanceDate'].astype(str)
+            pivot = attendanceLogsDf.set_index(['phoneNo', 'checkInOut', 'attendanceDate'])[['signature', 'insertedTimestamp']]
+            pivot['signatureTimestamp'] = pivot['signature'] + '\n' + pivot['insertedTimestamp'].dt.strftime('%Y-%m-%dT%H:%M:%SZ').astype(str)
+            pivot = pivot.drop(columns= ['signature', 'insertedTimestamp']).unstack(level= [2, 1]).sort_index(axis= 'columns', level= 1)
+
+            curriculumDates = [date.strftime('%Y-%m-%d') for date in pd.date_range(start= curriculumDuration[0], end= curriculumDuration[1], freq= 'B')]
+
+            def convertDataframeToVueElementUiJsonFormat(dataframe):
+
+                target = dataframe
+                vueElementUiListJson = []
+
+                recordIdx_name = target.index.name
+                columnLevel0_name = target.columns.get_level_values(0)[0]
+                columnLevel1_name = target.columns.get_level_values(1).name
+                columnLevel3_1st = target.columns.get_level_values(2)[0]
+                columnLevel3_2st = target.columns.get_level_values(2)[1]
+
+                for recordIdxOrder in range(len(target.index)):
+                    recordJson = {}
+                    recordJson[recordIdx_name] = target.index[recordIdxOrder]
+                    recordJson[columnLevel0_name] = []
+
+                    for columnLevel2Order in range( len(set(target.columns.get_level_values(1))) ):
+                        columnLevel2Idx = columnLevel2Order * 2
+                        columnLevel3_1stRecordValue = target[ columnLevel0_name ][ target.columns.get_level_values(1)[columnLevel2Idx] ][ columnLevel3_1st ].values[recordIdxOrder]
+                        columnLevel3_2ndRecordValue = target[ columnLevel0_name ][ target.columns.get_level_values(1)[columnLevel2Idx] ][ columnLevel3_2st ].values[recordIdxOrder]
+                        columnLevel2Segment = {
+                            columnLevel1_name: target.columns.get_level_values(1)[columnLevel2Idx],
+                            columnLevel3_1st: columnLevel3_1stRecordValue,
+                            columnLevel3_2st: columnLevel3_2ndRecordValue
+                        }
+                        recordJson[columnLevel0_name].append(columnLevel2Segment)
+                    vueElementUiListJson.append(recordJson)
+
+                return vueElementUiListJson
+
+            output = convertDataframeToVueElementUiJsonFormat(pivot)
+            total = attendanceLogs.count()
+
+            return {'return': {'items': output, 'total': total}}, 200
+    # ---------------------------------------------------------------------------
+
+
     # ----------------[ Create a new Attendance log ]----------------------------
     @apiRestful.route('/resource/attendancelogs/new')
     @apiRestful.doc(params= {
