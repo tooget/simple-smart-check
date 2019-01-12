@@ -90,8 +90,7 @@ class CurriculumsModel(db.Model):
     curriculumType = db.Column(db.Text,  nullable= False)
     startDate = db.Column(db.Date, nullable= False)
     endDate = db.Column(db.Date, nullable= False)
-    applicantsInserted = db.Column(db.Text, nullable= True)
-    membersInserted = db.Column(db.Text, nullable= True)
+    applicantsBulkInserted = db.Column(db.TIMESTAMP, nullable= True)
     insertedTimestamp = db.Column(db.TIMESTAMP, nullable= False, server_default= text('CURRENT_TIMESTAMP'))
     updatedTimestamp = db.Column(db.TIMESTAMP, nullable= True, server_default= text('NULL ON UPDATE CURRENT_TIMESTAMP'))
 
