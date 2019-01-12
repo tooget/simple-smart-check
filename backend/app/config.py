@@ -71,9 +71,10 @@ class Config(object):
         '13. _3': 'purposeDescription',             # len(x)%19 = 0.7
         '14. _2': 'agreeWithFullAttendance',        # len(x)%19 = 0.8
         'Unna_0': 'agreeWithPersonalinfo',          # 'Unnamed' : 15th column name is empty in xlsx
-        '16. _2': 'agreeWithGuideInfo',
+        '16. _2': 'agreeWithMktMailSubscription',
         '17. _4': 'applicationConfirm',
         '18. _2': 'recommender',
         '18. _1': 'howToFindOut',
+        '운영메모_0': 'operationMemo'
     }
     # ------------------------------------------------------------------------------------------
