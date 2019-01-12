@@ -469,10 +469,18 @@ class Applicants:
             applicantsDictsList = convertDataframeToDictsList(applicantsDf)
             membersDictsList = convertDataframeToDictsList(membersDf)
 
+            oldBulkApplicants = ApplicantsModel.query.filter(curriculumNo= curriculumNoFromClient)
+            oldBulkMembers = MembersModel.query.filter(curriculumNo= curriculumNoFromClient)
+            oldBulkAttendanceLogs = AttendanceLogsModel.filter(curriculumNo= curriculumNoFromClient)
             newBulkApplicants = [ApplicantsModel(**applicant) for applicant in applicantsDictsList]
             newBulkMembers = [MembersModel(**member) for member in membersDictsList]
 
             try:
+                # Delete old applicants/members of a curriculumn.
+                db.session.delete(oldBulkApplicants.all())
+                db.session.delete(oldBulkMembers.all())
+                db.session.delete(oldBulkAttendanceLogs.all())
+                # Add new applicants/members of a curriculumn.
                 db.session.add_all(newBulkApplicants)
                 db.session.add_all(newBulkMembers)
                 db.session.commit()
