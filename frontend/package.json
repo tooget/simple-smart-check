@@ -5,7 +5,7 @@
   "author": "Yoon-Su Choi <yunsu246@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "dev": "cross-env NODE_ENV=development webpack-dev-server --open --hot --host 0.0.0.0 --port 7000",
+    "dev": "cross-env NODE_ENV=development webpack-dev-server --open --hot --host 127.0.0.1 --port 7000",
     "build": "cross-env NODE_ENV=production webpack --progress --hide-modules",
     "build:watch": "cross-env NODE_ENV=production WEBPACK_WATCH=true webpack --progress --hide-modules",
     "deploy": "npm run build && aws s3 sync ./dist s3://smartcheck.ml"

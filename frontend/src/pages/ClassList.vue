@@ -26,13 +26,18 @@ const HTTP = axios.create({
 export default {
   data() {
     return {
-      list: []
+      list: [],
+      listQuery: {
+        filters: { curriculumName: undefined, curriculumCategory: undefined },
+        sort: { target: 'curriculumNo', value: 'desc' },
+        pagination: { pagenum: 1, limit: 20 }
+      },
     };
   },
-  mounted () {
-    HTTP.get(`resource/curriculums/list`)
+  created () {
+    HTTP.get(`resource/curriculums/filter`, {params: this.listQuery})
       .then(response => {
-        this.list = response.data.curriculums
+        this.list = response.data.return.items
       })
   },
   components: { ClassItem }

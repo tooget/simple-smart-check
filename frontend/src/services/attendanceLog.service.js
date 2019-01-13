@@ -19,7 +19,8 @@ function checkInOut(phoneNo, curriculumNo, checkInOut, signature) {
     requestBody.append('curriculumNo', curriculumNo);
     requestBody.append('checkInOut', checkInOut);
     requestBody.append('signature', signature);
-    return HTTP.post(`/resource/attendance/log`, requestBody)
+    
+    return HTTP.post(`/resource/attendancelogs/new`, requestBody)
         .then(response => {
             return response;
         });
