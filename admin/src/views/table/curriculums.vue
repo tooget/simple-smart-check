@@ -3,10 +3,11 @@
     <div class="filter-container">
       <el-input :placeholder="$t('table.curriculums.curriculumName')" v-model="listQuery.filters.curriculumName" style="width: 200px;" class="filter-item" @keyup.enter.native="handleFilter"/>
       <el-select v-model="listQuery.filters.curriculumCategory" :placeholder="$t('table.curriculums.curriculumCategory')" clearable class="filter-item" style="width: 130px">
-        <el-option v-for="(item, index) in calendarTypeOptions" :key="index" :label="item.display_name" :value="item.key"/>
+        <el-option v-for="(item, index) in curriculumCategoryOptions" :key="index" :label="item.display_name" :value="item.key"/>
       </el-select>
       <el-button v-waves class="filter-item" type="primary" icon="el-icon-search" @click="handleFilter">{{ $t('table.search') }}</el-button>
       <el-button class="filter-item" style="margin-left: 10px;" type="primary" icon="el-icon-edit" @click="handleCreate">{{ $t('table.add') }}</el-button>
+      <el-checkbox v-model="showDelete" class="filter-item" style="margin-left:15px;" @change="tableKey=tableKey+1">{{ $t('table.delete') }}</el-checkbox>
     </div>
 
     <el-table
@@ -53,6 +54,22 @@
           <span>{{ scope.row.endDate | parseTime('{y}-{m}-{d}') }}</span>
         </template>
       </el-table-column>
+      <el-table-column :label="$t('table.curriculums.applicantsBulkInserted')" width="150px" align="center">
+        <template slot-scope="scope">
+          <span>{{ scope.row.applicantsBulkInserted | parseTime('{y}-{m}-{d} {h}:{i}:{s}') }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column :label="$t('table.browse')" align="center" width="150" class-name="small-padding fixed-width">
+        <template slot-scope="scope">
+          <input ref="excel-upload-input" class="excel-upload-input" type="file" accept=".xlsx, .xls" @change="handleClick">
+          <el-button :loading="uploadExcelLoading" style="margin-left:16px;" size="mini" type="primary" @click="handleUpload(scope.row)">{{ $t('table.browse') }}</el-button>
+        </template>
+      </el-table-column>
+      <el-table-column v-if="showDelete" :label="$t('table.delete')" align="center" width="100" class-name="small-padding fixed-width">
+        <template slot-scope="scope">
+          <el-button type="danger" size="mini" @click="handleDelete(scope.row)">{{ $t('table.delete') }}</el-button>
+        </template>
+      </el-table-column>
       <el-table-column :label="$t('table.curriculums.insertedTimestamp')" width="150px" align="center">
         <template slot-scope="scope">
           <span>{{ scope.row.insertedTimestamp | parseTime('{y}-{m}-{d} {h}:{i}:{s}') }}</span>
@@ -61,12 +78,6 @@
       <el-table-column :label="$t('table.curriculums.updatedTimestamp')" width="150px" align="center">
         <template slot-scope="scope">
           <span>{{ scope.row.updatedTimestamp | parseTime('{y}-{m}-{d} {h}:{i}:{s}') }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column :label="$t('table.actions')" align="center" width="200" class-name="small-padding fixed-width">
-        <template slot-scope="scope">
-          <el-button type="primary" size="mini" @click="handleUpdate(scope.row)">{{ $t('table.edit') }}</el-button>
-          <el-button type="danger" size="mini" @click="handleDelete(scope.row)">{{ $t('table.delete') }}</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -108,7 +119,7 @@ import { fetchCurriculumList, createCurriculumData, updateCurriculumData, delete
 import waves from '@/directive/waves' // Waves directive
 import Pagination from '@/components/Pagination' // Secondary package based on el-pagination
 
-const calendarTypeOptions = [
+const curriculumCategoryOptions = [
   { key: '단기과정', display_name: '단기과정' },
   { key: '집중과정', display_name: '집중과정' },
   { key: '고급과정', display_name: '고급과정' }
@@ -139,7 +150,8 @@ export default {
         sort: { target: 'curriculumNo', value: 'desc' },
         pagination: { pagenum: 1, limit: 20 }
       },
-      calendarTypeOptions,
+      curriculumCategoryOptions,
+      showDelete: false,
       temp: {
         curriculumNo: undefined,
         curriculumCategory: '',
@@ -163,7 +175,7 @@ export default {
         startDate: [{ type: 'date', required: true, message: 'startDate is required', trigger: 'change' }],
         endDate: [{ type: 'date', required: true, message: 'endDate is required', trigger: 'change' }]
       },
-      downloadLoading: false
+      uploadExcelLoading: false
     }
   },
   created() {
@@ -284,6 +296,14 @@ export default {
               type: 'success',
               duration: 2000
             })
+          }).catch(error => {
+            const message = error.response.data.message
+            this.$notify({
+              title: message.title,
+              message: message.content,
+              type: 'warn',
+              duration: 2000
+            })
           })
         }
       })
@@ -301,7 +321,39 @@ export default {
           duration: 2000
         })
       })
+    },
+    handleUpload(row) {
+      this.temp = Object.assign({}, row) // copy obj
+      this.temp.curriculumNo = row.curriculumNo
+      this.temp.startDate = new Date(this.temp.startDate)
+      this.temp.endDate = new Date(this.temp.endDate)
+      this.$refs['excel-upload-input'].click()
+    },
+    handleClick(e) {
+      const files = e.target.files
+      const rawFile = files[0] // only use files[0]
+      if (!rawFile) return
+      this.upload(rawFile)
+    },
+    upload(rawFile) {
+      this.$refs['excel-upload-input'].value = null // fix can't select the same excel
+
+      if (!this.beforeUpload) {
+        this.readerData(rawFile)
+        return
+      }
+      const before = this.beforeUpload(rawFile)
+      if (before) {
+        this.readerData(rawFile)
+      }
     }
   }
 }
 </script>
+
+<style scoped>
+.excel-upload-input{
+  display: none;
+  z-index: -9999;
+}
+</style>

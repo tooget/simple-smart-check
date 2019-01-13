@@ -114,13 +114,14 @@ class Curriculums:
                         }}, 201
             except:
                 db.session.rollback()
-                return {'message': 'Something went wrong'}, 500
+                return {'message': { 'title': '失敗', 'content': '创建失敗', }}, 500
     # ---------------------------------------------------------------------------
 
 
     # ----------------[ Update a new Curriculums data ]----------------------------
     @apiRestful.route('/resource/curriculums')
     @apiRestful.doc(params= {
+                    'curriculumNo': {'in': 'formData', 'description': 'application/json, body required'},
                     'curriculumCategory': {'in': 'formData', 'description': 'application/json, body required'},
                     'ordinalNo': {'in': 'formData', 'description': 'application/json, body required'},
                     'curriculumName': {'in': 'formData', 'description': 'application/json, body required'},
@@ -168,19 +169,14 @@ class Curriculums:
                         }}, 201
             except:
                 db.session.rollback()
-                return {'message': 'Something went wrong'}, 500
+                return {'message': { 'title': '失敗', 'content': '更新失敗', }}, 500
     # ---------------------------------------------------------------------------
 
 
     # ----------------[ Delete a Curriculums data ]----------------------------
     @apiRestful.route('/resource/curriculums')
     @apiRestful.doc(params= {
-                    'curriculumCategory': {'in': 'formData', 'description': 'application/json, body required'},
-                    'ordinalNo': {'in': 'formData', 'description': 'application/json, body required'},
-                    'curriculumName': {'in': 'formData', 'description': 'application/json, body required'},
-                    'curriculumType': {'in': 'formData', 'description': 'application/json, body required'},
-                    'startDate': {'in': 'formData', 'description': 'application/json, body required'},
-                    'endDate': {'in': 'formData', 'description': 'application/json, body required'},
+                    'curriculumNo': {'in': 'formData', 'description': 'application/json, body required'},
                     # You can add formData columns if needed.
     })
     class delete_Curriculums(Resource):

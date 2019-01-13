@@ -15,13 +15,16 @@ export const userService = {
 };
 
 function login(username, password) {
-    const requestBody = { username: username, password: password };
-    return HTTP.post(`/auth/login`, requestBody)
+    const requestBody = new FormData()
+    requestBody.append('username', username)
+    requestBody.append('password', password)
+
+    return HTTP.post(`/users/login`, requestBody)
         .then(response => {
             // login successful if there's a jwt token in the response
-            if (response.data.access_token) {
+            if (response.data.return.access_token) {
                 // store user details and jwt token in local storage to keep user logged in between page refreshes
-                localStorage.setItem('user', JSON.stringify(response.data));
+                localStorage.setItem('user', JSON.stringify(response.data.return));
             }
             
             return response;
