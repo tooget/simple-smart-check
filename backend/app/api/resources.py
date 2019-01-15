@@ -1,5 +1,5 @@
 from app.api import apiRestful
-from app.api.modules import requireAuth, convertDataframeToDictsList
+from app.api.modules import requireAuth, convertDataframeToDictsList, createOrmModelQueryFiltersDict
 from app.config import Config
 from app.extensions import db
 from app.ormmodels import AttendanceLogsModel, ApplicantsModel, CurriculumsModel, MembersModel
@@ -39,28 +39,35 @@ class Curriculums:
     # ----------------[ Get Curriculums ]---------------------------------------
     @apiRestful.route('/resource/curriculums/filter')
     @apiRestful.doc(params= {
-                    'filters': {'in': 'query', 'description': 'URL parameter, optional'},
-                    'sort': {'in': 'query', 'description': 'URL parameter, optional'},
-                    'pagination': {'in': 'query', 'description': 'URL parameter, optional'},
-                    # You can add query filter columns if needed.
+            'filters': {'in': 'query', 'description': 'URL parameter, optional'},
+            'sort': {'in': 'query', 'description': 'URL parameter, optional'},
+            'pagination': {'in': 'query', 'description': 'URL parameter, optional'},
+            # You can add query filter columns if needed.
     })
     class get_Curriculums_Filter(Resource):
 
         def get(self):
             queryParams = {key: loads(request.args[key]) for key in request.args}
-            filters = (getattr(CurriculumsModel, target).like(f'%{value}%') for target, value in queryParams['filters'].items())
+
+            ormQueryFilters = createOrmModelQueryFiltersDict(queryParams['filters'])
+            filters = (getattr(CurriculumsModel, target).like(f'%{value}%') for target, value in ormQueryFilters['CurriculumsModel'].items())
+
             sortFromClient = queryParams['sort']
             sortTarget, sortOption = sortFromClient['target'], sortFromClient['value']
             sort = getattr(getattr(CurriculumsModel, sortTarget), sortOption)()
+
             paginationFromClient = queryParams['pagination']
             pagenum, limit = paginationFromClient['pagenum'], paginationFromClient['limit']
             start, stop = (pagenum-1)*limit, pagenum*limit
 
             query = CurriculumsModel.query.filter(and_(*filters))
             curriculums = query.order_by(sort).slice(start, stop).all()
+
             curriculumsSchema = CurriculumsModelSchema(many= True)
             output = curriculumsSchema.dump(curriculums)
+
             total = query.count()
+
             return {'return': {'items': output, 'total': total}}, 200
     # ---------------------------------------------------------------------------
 
@@ -68,13 +75,13 @@ class Curriculums:
     # ----------------[ Create a new Curriculums data ]----------------------------
     @apiRestful.route('/resource/curriculums')
     @apiRestful.doc(params= {
-                    'curriculumCategory': {'in': 'formData', 'description': 'application/json, body required'},
-                    'ordinalNo': {'in': 'formData', 'description': 'application/json, body required'},
-                    'curriculumName': {'in': 'formData', 'description': 'application/json, body required'},
-                    'curriculumType': {'in': 'formData', 'description': 'application/json, body required'},
-                    'startDate': {'in': 'formData', 'description': 'application/json, body required'},
-                    'endDate': {'in': 'formData', 'description': 'application/json, body required'},
-                    # You can add formData columns if needed.
+            'curriculumCategory': {'in': 'formData', 'description': 'application/json, body required'},
+            'ordinalNo': {'in': 'formData', 'description': 'application/json, body required'},
+            'curriculumName': {'in': 'formData', 'description': 'application/json, body required'},
+            'curriculumType': {'in': 'formData', 'description': 'application/json, body required'},
+            'startDate': {'in': 'formData', 'description': 'application/json, body required'},
+            'endDate': {'in': 'formData', 'description': 'application/json, body required'},
+            # You can add formData columns if needed.
     })
     class post_Curriculums(Resource):
 
@@ -121,14 +128,14 @@ class Curriculums:
     # ----------------[ Update a new Curriculums data ]----------------------------
     @apiRestful.route('/resource/curriculums')
     @apiRestful.doc(params= {
-                    'curriculumNo': {'in': 'formData', 'description': 'application/json, body required'},
-                    'curriculumCategory': {'in': 'formData', 'description': 'application/json, body required'},
-                    'ordinalNo': {'in': 'formData', 'description': 'application/json, body required'},
-                    'curriculumName': {'in': 'formData', 'description': 'application/json, body required'},
-                    'curriculumType': {'in': 'formData', 'description': 'application/json, body required'},
-                    'startDate': {'in': 'formData', 'description': 'application/json, body required'},
-                    'endDate': {'in': 'formData', 'description': 'application/json, body required'},
-                    # You can add formData columns if needed.
+            'curriculumNo': {'in': 'formData', 'description': 'application/json, body required'},
+            'curriculumCategory': {'in': 'formData', 'description': 'application/json, body required'},
+            'ordinalNo': {'in': 'formData', 'description': 'application/json, body required'},
+            'curriculumName': {'in': 'formData', 'description': 'application/json, body required'},
+            'curriculumType': {'in': 'formData', 'description': 'application/json, body required'},
+            'startDate': {'in': 'formData', 'description': 'application/json, body required'},
+            'endDate': {'in': 'formData', 'description': 'application/json, body required'},
+            # You can add formData columns if needed.
     })
     class put_Curriculums(Resource):
 
@@ -176,8 +183,8 @@ class Curriculums:
     # ----------------[ Delete a Curriculums data ]----------------------------
     @apiRestful.route('/resource/curriculums')
     @apiRestful.doc(params= {
-                    'curriculumNo': {'in': 'formData', 'description': 'application/json, body required'},
-                    # You can add formData columns if needed.
+            'curriculumNo': {'in': 'formData', 'description': 'application/json, body required'},
+            # You can add formData columns if needed.
     })
     class delete_Curriculums(Resource):
 
@@ -197,7 +204,6 @@ class Curriculums:
                 db.session.rollback()
                 return {'message': 'Something went wrong'}, 500
     # ---------------------------------------------------------------------------  
-# -------------------------------------------------------------------------------
 
 
     # ----------------[ Get Curriculums, joined to Members counts ]--------------
@@ -210,7 +216,16 @@ class Curriculums:
             memberCount = MembersModel.query.with_entities(MembersModel.curriculumNo, func.count(MembersModel.phoneNo).label('MemberCount')).filter(MembersModel.attendanceCheck == 'Y').group_by(MembersModel.curriculumNo).subquery()
             memberCompleteCount = MembersModel.query.with_entities(MembersModel.curriculumNo, func.count(MembersModel.phoneNo).label('MemberCompleteCount')).filter(MembersModel.curriculumComplete == 'Y').group_by(MembersModel.curriculumNo).subquery()
             memberEmploymentCount = MembersModel.query.with_entities(MembersModel.curriculumNo, func.count(MembersModel.phoneNo).label('MemberEmploymentCount')).filter(MembersModel.employment == 'Y').group_by(MembersModel.curriculumNo).subquery()
-            query = db.session.query(curriculumList).with_entities(curriculumList, func.ifnull(applicantCount.c.ApplicantCount, 0).label('ApplicantCount'), func.ifnull(memberCount.c.MemberCount, 0).label('MemberCount'), func.ifnull(memberCompleteCount.c.MemberCompleteCount, 0).label('MemberCompleteCount'), func.ifnull(memberEmploymentCount.c.MemberEmploymentCount, 0).label('MemberEmploymentCount')).outerjoin(applicantCount, curriculumList.c.curriculumNo == applicantCount.c.curriculumNo).outerjoin(memberCount, curriculumList.c.curriculumNo == memberCount.c.curriculumNo).outerjoin(memberCompleteCount, curriculumList.c.curriculumNo == memberCompleteCount.c.curriculumNo).outerjoin(memberEmploymentCount, curriculumList.c.curriculumNo == memberEmploymentCount.c.curriculumNo)
+            query = db.session.query(curriculumList).with_entities( \
+                                                        curriculumList, \
+                                                        func.ifnull(applicantCount.c.ApplicantCount, 0).label('ApplicantCount'), \
+                                                        func.ifnull(memberCount.c.MemberCount, 0).label('MemberCount'), \
+                                                        func.ifnull(memberCompleteCount.c.MemberCompleteCount, 0).label('MemberCompleteCount'), \
+                                                        func.ifnull(memberEmploymentCount.c.MemberEmploymentCount, 0).label('MemberEmploymentCount'))   \
+                                                    .outerjoin(applicantCount, curriculumList.c.curriculumNo == applicantCount.c.curriculumNo)  \
+                                                    .outerjoin(memberCount, curriculumList.c.curriculumNo == memberCount.c.curriculumNo)    \
+                                                    .outerjoin(memberCompleteCount, curriculumList.c.curriculumNo == memberCompleteCount.c.curriculumNo)    \
+                                                    .outerjoin(memberEmploymentCount, curriculumList.c.curriculumNo == memberEmploymentCount.c.curriculumNo)    \
 
             df = pd.read_sql(query.statement, db.get_engine(bind= 'mysql'))
             output = convertDataframeToDictsList(df)
@@ -380,6 +395,84 @@ class Members:
 
             return {'return': {'items': output, 'total': total}}, 200
     # -----------------------------------------------------------------------------
+
+
+    # ----------------[ Get Curriculums ]---------------------------------------
+    @apiRestful.route('/resource/members/list')
+    @apiRestful.doc(params= {
+            'filters': {'in': 'query', 'description': 'URL parameter, optional'},
+            'sort': {'in': 'query', 'description': 'URL parameter, optional'},
+            'pagination': {'in': 'query', 'description': 'URL parameter, optional'},
+            # You can add query filter columns if needed.
+    })
+    class get_Members_List(Resource):
+
+        def get(self):
+            queryParams = {key: loads(request.args[key]) for key in request.args}
+
+            ormQueryFilters = createOrmModelQueryFiltersDict(queryParams['filters'])
+            # ormQuerySort = createOrmModelQueryFiltersDict(queryParams['sort'])
+
+            memberFilters = (getattr(MembersModel, target) == value for target, value in ormQueryFilters['MembersModel'].items())
+            # memberSort = (getattr(MembersModel, target) == value for target, value in ormQuerySort['MembersModel'].items())
+            curriculumLikeFilters = (getattr(CurriculumsModel, target).like(f'%{value}%') for target, value in ormQueryFilters['CurriculumsModel'].items())
+            # curriculumSort = (getattr(MembersModel, target) == value for target, value in ormQuerySort['CurriculumsModel'].items())
+            applicantLikeFilters = (getattr(ApplicantsModel, target).like(f'%{value}%') for target, value in ormQueryFilters['ApplicantsModel'].items())
+            # applicantSort = (getattr(MembersModel, target) == value for target, value in ormQuerySort['ApplicantsModel'].items())
+
+            membersQuery = MembersModel.query.with_entities(
+                                            MembersModel.phoneNo,
+                                            MembersModel.curriculumNo,
+                                            MembersModel.attendancePass,
+                                            MembersModel.attendanceCheck,
+                                            MembersModel.curriculumComplete,
+                                            MembersModel.employment,
+                                        ).filter(and_(*memberFilters))  \
+                                        .subquery()
+            curriculumsQuery = CurriculumsModel.query.filter(and_(*curriculumLikeFilters))  \
+                                        .subquery()
+            applicantsQuery = ApplicantsModel.query.filter(and_(*applicantLikeFilters)) \
+                                        .subquery()
+
+            paginationFromClient = queryParams['pagination']
+            pagenum, limit = paginationFromClient['pagenum'], paginationFromClient['limit']
+            start, stop = (pagenum-1)*limit, pagenum*limit
+
+            query = db.session.query(membersQuery).with_entities(
+                                            membersQuery,
+                                            curriculumsQuery.c.ordinalNo,
+                                            curriculumsQuery.c.curriculumName,
+                                            curriculumsQuery.c.curriculumCategory,
+                                            curriculumsQuery.c.startDate,
+                                            curriculumsQuery.c.endDate,
+                                            applicantsQuery.c.applicantName,
+                                            applicantsQuery.c.birthDate,
+                                            applicantsQuery.c.email,
+                                            applicantsQuery.c.affiliation,
+                                            applicantsQuery.c.department,
+                                            applicantsQuery.c.position,
+                                            applicantsQuery.c.job,
+                                            applicantsQuery.c.purposeSelection,
+                                            applicantsQuery.c.careerDuration,
+                                            applicantsQuery.c.agreeWithPersonalinfo,
+                                            applicantsQuery.c.agreeWithMktMailSubscription,
+                                            applicantsQuery.c.operationMemo,
+                                        ).outerjoin(curriculumsQuery, curriculumsQuery.c.curriculumNo == membersQuery.c.curriculumNo)  \
+                                        .outerjoin(applicantsQuery, and_(applicantsQuery.c.curriculumNo == membersQuery.c.curriculumNo, applicantsQuery.c.phoneNo == membersQuery.c.phoneNo))
+            query = query.slice(start, stop)
+
+            # sortFromClient = queryParams['sort']
+            # sortTarget, sortOption = sortFromClient['target'], sortFromClient['value']
+            # sort = getattr(getattr(query, sortTarget), sortOption)()      # AttributeError: 'BaseQuery' object has no attribute 'phoneNo'
+            # query = query.order_by(sort).slice(start, stop)
+
+            df = pd.read_sql(query.statement, db.get_engine(bind= 'mysql'))
+            output = convertDataframeToDictsList(df)
+
+            total = query.count()
+
+            return {'return': {'items': output, 'total': total}}, 200
+    # ---------------------------------------------------------------------------
 
 
     # ----------------[ Update members' Info ]-------------------------------------
