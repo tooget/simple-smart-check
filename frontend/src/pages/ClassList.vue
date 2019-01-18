@@ -29,7 +29,7 @@ export default {
       list: [],
       listQuery: {
         filters: { curriculumName: undefined, curriculumCategory: undefined },
-        sort: { target: 'curriculumNo', value: 'desc' },
+        sort: { curriculumNo: 'desc' },
         pagination: { pagenum: 1, limit: 20 }
       },
     };

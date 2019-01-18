@@ -147,7 +147,7 @@ export default {
       listLoading: true,
       listQuery: {
         filters: { curriculumName: undefined, curriculumCategory: undefined },
-        sort: { target: 'curriculumNo', value: 'desc' },
+        sort: { curriculumNo: 'desc' },
         pagination: { pagenum: 1, limit: 20 }
       },
       curriculumCategoryOptions,
@@ -206,19 +206,13 @@ export default {
       row.status = status
     },
     sortChange(data) {
+      const sortOption = { ascending: 'asc', descending: 'desc' }
       const { prop, order } = data
       if (prop === 'curriculumNo') {
-        this.sortByProp(prop, order)
+        this.listQuery.sort = { curriculumNo: sortOption[order] }
       }
       if (prop === 'startDate') {
-        this.sortByProp(prop, order)
-      }
-    },
-    sortByProp(prop, order) {
-      if (order === 'ascending') {
-        this.listQuery.sort = { target: prop, value: 'asc' }
-      } else {
-        this.listQuery.sort = { target: prop, value: 'desc' }
+        this.listQuery.sort = { startDate: sortOption[order] }
       }
       this.handleFilter()
     },

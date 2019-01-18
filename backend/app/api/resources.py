@@ -51,7 +51,9 @@ class Curriculums:
             queryParams = {key: loads(request.args[key]) for key in request.args}
 
             ormQueryFilters = createOrmModelQueryFiltersDict(queryParams['filters'])
-            filters = (getattr(CurriculumsModel, target).like(f'%{value}%') for target, value in ormQueryFilters['CurriculumsModel'].items())
+            print(queryParams)
+            print(ormQueryFilters)
+            filters = (getattr(CurriculumsModel, target).like(f'%{value}%') for target, value in ormQueryFilters.get('CurriculumsModel', {}).items())
 
             ormQuerySort = createOrmModelQueryFiltersDict(queryParams['sort'])
             sortingTargetColumn = list(ormQuerySort[list(ormQuerySort.keys())[0]].keys())[0]
