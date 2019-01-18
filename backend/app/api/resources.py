@@ -10,6 +10,7 @@ from flask_restplus import Resource     # Reference : http://flask-restplus.read
 from json import dumps, loads
 from operator import attrgetter
 from sqlalchemy import and_, func
+from sqlalchemy_utils import sort_query
 from copy import deepcopy
 import pandas as pd
 
@@ -411,14 +412,16 @@ class Members:
             queryParams = {key: loads(request.args[key]) for key in request.args}
 
             ormQueryFilters = createOrmModelQueryFiltersDict(queryParams['filters'])
-            # ormQuerySort = createOrmModelQueryFiltersDict(queryParams['sort'])
+            ormQuerySort = createOrmModelQueryFiltersDict(queryParams['sort'])
+            sortingTargetColumn = list(ormQuerySort[list(ormQuerySort.keys())[0]].keys())[0]
+            sortingOrderDirection = '-' if list(ormQuerySort[list(ormQuerySort.keys())[0]].values())[0] == 'desc' else ''
+
+            pagenum, limit = int(queryParams['pagination']['pagenum']), int(queryParams['pagination']['limit'])
+            start, stop = (pagenum-1)*limit, pagenum*limit
 
             memberFilters = (getattr(MembersModel, target) == value for target, value in ormQueryFilters['MembersModel'].items())
-            # memberSort = (getattr(MembersModel, target) == value for target, value in ormQuerySort['MembersModel'].items())
             curriculumLikeFilters = (getattr(CurriculumsModel, target).like(f'%{value}%') for target, value in ormQueryFilters['CurriculumsModel'].items())
-            # curriculumSort = (getattr(MembersModel, target) == value for target, value in ormQuerySort['CurriculumsModel'].items())
             applicantLikeFilters = (getattr(ApplicantsModel, target).like(f'%{value}%') for target, value in ormQueryFilters['ApplicantsModel'].items())
-            # applicantSort = (getattr(MembersModel, target) == value for target, value in ormQuerySort['ApplicantsModel'].items())
 
             membersQuery = MembersModel.query.with_entities(
                                             MembersModel.phoneNo,
@@ -433,10 +436,6 @@ class Members:
                                         .subquery()
             applicantsQuery = ApplicantsModel.query.filter(and_(*applicantLikeFilters)) \
                                         .subquery()
-
-            paginationFromClient = queryParams['pagination']
-            pagenum, limit = paginationFromClient['pagenum'], paginationFromClient['limit']
-            start, stop = (pagenum-1)*limit, pagenum*limit
 
             query = db.session.query(membersQuery).with_entities(
                                             membersQuery,
@@ -459,12 +458,7 @@ class Members:
                                             applicantsQuery.c.operationMemo,
                                         ).outerjoin(curriculumsQuery, curriculumsQuery.c.curriculumNo == membersQuery.c.curriculumNo)  \
                                         .outerjoin(applicantsQuery, and_(applicantsQuery.c.curriculumNo == membersQuery.c.curriculumNo, applicantsQuery.c.phoneNo == membersQuery.c.phoneNo))
-            query = query.slice(start, stop)
-
-            # sortFromClient = queryParams['sort']
-            # sortTarget, sortOption = sortFromClient['target'], sortFromClient['value']
-            # sort = getattr(getattr(query, sortTarget), sortOption)()      # AttributeError: 'BaseQuery' object has no attribute 'phoneNo'
-            # query = query.order_by(sort).slice(start, stop)
+            query = sort_query(query, sortingTargetColumn + sortingTargetColumn).slice(start, stop)
 
             df = pd.read_sql(query.statement, db.get_engine(bind= 'mysql'))
             output = convertDataframeToDictsList(df)

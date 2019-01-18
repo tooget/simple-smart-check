@@ -19,6 +19,7 @@ sqlalchemy = "*"
 flask-marshmallow = "*"
 marshmallow-sqlalchemy = "*"
 xlrd = "*"
+sqlalchemy-utils = "*"
 
 [dev-packages]
 pytest = "*"

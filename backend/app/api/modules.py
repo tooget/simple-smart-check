@@ -27,8 +27,9 @@ def createOrmModelQueryFiltersDict(request_args_filters):
         if type(ormModel).__module__ == 'flask_sqlalchemy.model' and ormModel.__bind_key__ == 'mysql':
             ormModelTableColumns = set(ormModel.__table__.columns.keys())
             totalOrmModelTableColumns = totalOrmModelTableColumns | ormModelTableColumns
-            columnIntersections = request_args_filters_columns & ormModelTableColumns
-            queryFiltersByEachOrmModel[ormClassName] = {column: request_args_filters[column] for column in columnIntersections}
+            columnIntersections = request_args_filters_columns & ormModelTableColumns       # when a column from client exists
+            if bool(columnIntersections) == True:
+                queryFiltersByEachOrmModel[ormClassName] = {column: request_args_filters[column] for column in columnIntersections}
 
     columnDifference = request_args_filters_columns - totalOrmModelTableColumns     # checking when columns are not used
     if bool(columnDifference) == True:      # If unknown columns remain
