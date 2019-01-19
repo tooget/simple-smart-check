@@ -4,14 +4,18 @@ from app.config import Config
 from app.extensions import db
 from app.ormmodels import AttendanceLogsModel, ApplicantsModel, CurriculumsModel, MembersModel
 from app.ormmodels import AttendanceLogsModelSchema, ApplicantsModelSchema, CurriculumsModelSchema, MembersModelSchema
+from base64 import b64encode, b64decode
+from copy import deepcopy
 from datetime import datetime, timedelta
-from flask import request
+from flask import request, send_file
 from flask_restplus import Resource     # Reference : http://flask-restplus.readthedocs.io
+from io import BytesIO
 from json import dumps, loads
 from operator import attrgetter
 from sqlalchemy import and_, func
 from sqlalchemy_utils import sort_query
-from copy import deepcopy
+from PIL import Image
+from zlib import compress, decompress
 import pandas as pd
 
 
@@ -194,10 +198,16 @@ class Curriculums:
             infoFromClient = request.form
             curriculumNoFromClient = int(infoFromClient['curriculumNo'])
             requestedBody = { "curriculumNo": curriculumNoFromClient }
-            curriculums = CurriculumsModel.query.filter_by(**requestedBody).one()
+            targetCurriculumRecord = CurriculumsModel.query.filter_by(**requestedBody).one()
+            targetApplicants = ApplicantsModel.query.filter(curriculumNo= curriculumNoFromClient)
+            targetMembers = MembersModel.query.filter(curriculumNo= curriculumNoFromClient)
+            targetAttendanceLogs = AttendanceLogsModel.filter(curriculumNo= curriculumNoFromClient)
 
             try:
-                db.session.delete(curriculums)      # session.delete() : A kind of DELETE, http://flask-sqlalchemy.pocoo.org/latest/queries/#deleting-records
+                db.session.delete(targetCurriculumRecord)      # session.delete() : A kind of DELETE, http://flask-sqlalchemy.pocoo.org/latest/queries/#deleting-records
+                db.session.delete(targetApplicants)
+                db.session.delete(targetMembers)
+                db.session.delete(targetAttendanceLogs)
                 db.session.commit()
                 return {'message': {'title': '成功', 'content': '删除成功'}}, 201
             except:
@@ -283,6 +293,7 @@ class AttendanceLogs:
             # Pivot Attendance Check-Table for now.
             attendanceLogsDf = pd.read_sql(attendanceLogs.statement, db.get_engine(bind= 'mysql'))
             attendanceLogsDf['attendanceDate'] = attendanceLogsDf['attendanceDate'].astype(str)
+            attendanceLogsDf['signature'] = attendanceLogsDf['signature'].apply( lambda x: 'signed' )
             pivot = attendanceLogsDf.set_index(['phoneNo', 'checkInOut', 'attendanceDate'])[['signature', 'insertedTimestamp']]
             pivot['signatureTimestamp'] = pivot['signature'] + '\n' + pivot['insertedTimestamp'].dt.strftime('%Y-%m-%dT%H:%M:%SZ').astype(str)
             pivot = pivot.drop(columns= ['signature', 'insertedTimestamp']).unstack(level= [2, 1]).sort_index(axis= 'columns', level= 1)
@@ -330,6 +341,83 @@ class AttendanceLogs:
     # ---------------------------------------------------------------------------
 
 
+    # ----------------[ Get attendance list of a specific curriculum ]-----------
+    @apiRestful.route('/resource/attendancelogs/listfile')
+    @apiRestful.doc(params= {
+            'curriculumNo': {'in': 'query', 'description': 'URL parameter, reqired'},
+    })
+    class get_AttendanceLogs_Listfile(Resource):
+
+        def get(self):
+            queryFilter = request.args
+            
+            attendanceLogs = AttendanceLogsModel.query.filter_by(**queryFilter)
+            # Get full duration of a curriculum.
+            curriculumDuration = CurriculumsModel.query.with_entities(CurriculumsModel.startDate, CurriculumsModel.endDate).filter_by(**queryFilter).first()
+            startDate, endDate = curriculumDuration.startDate.strftime('%Y-%m-%dT%H:%M:%SZ'), curriculumDuration.endDate.strftime('%Y-%m-%dT%H:%M:%SZ')
+            curriculumDuration = set([date.strftime('%Y-%m-%d') for date in pd.date_range(start= startDate, end= endDate, freq= 'B')])
+            # Get entire members list of a curriculum.
+            membersPhoneNoList = MembersModelSchema(many= True).dump( MembersModel.query.with_entities(MembersModel.phoneNo).filter_by(**queryFilter, attendanceCheck= 'Y').all() )
+            membersPhoneNoList = set([phoneNoDict['phoneNo'] for phoneNoDict in membersPhoneNoList])
+
+            # Pivot Attendance Check-Table for now.
+            attendanceLogsDf = pd.read_sql(attendanceLogs.statement, db.get_engine(bind= 'mysql'))
+            attendanceLogsDf['attendanceDate'] = attendanceLogsDf['attendanceDate'].astype(str)
+            attendanceLogsDf['signature'] = attendanceLogsDf['signature'].apply( lambda x: decompress(b64decode(x)).decode() )
+            pivot = attendanceLogsDf.set_index(['phoneNo', 'checkInOut', 'attendanceDate'])[['signature', 'insertedTimestamp']]
+            # pivot['signatureTimestamp'] = pivot['signature'] + '\n' + pivot['insertedTimestamp'].dt.strftime('%Y-%m-%dT%H:%M:%SZ').astype(str)
+            pivot['signatureTimestamp'] = pivot['signature']
+            pivot = pivot.drop(columns= ['signature', 'insertedTimestamp']).unstack(level= [2, 1]).sort_index(axis= 'columns', level= 1)
+
+            # Create Full Attendance Check-Table with Nan values.
+            iterables = [
+                list(set(pivot.columns.get_level_values(0))),
+                curriculumDuration,
+                list(set(pivot.columns.get_level_values(2))),
+            ]
+            emptyAttendanceTableDF = pd.DataFrame(
+                index= membersPhoneNoList,
+                columns= pd.MultiIndex.from_product(iterables, names= pivot.columns.names),
+            )
+            emptyAttendanceTableDF.index.name = pivot.index.name
+            # Overlay and Update the pivot table.
+            pivot = pivot.combine_first(emptyAttendanceTableDF)
+
+            #create an output stream
+            output = BytesIO()
+            writer = pd.ExcelWriter(output, engine='xlsxwriter')
+            pivot.to_excel(writer, sheet_name= 'Sheet1')        # taken from the original question
+
+            workbook  = writer.book
+            worksheet = writer.sheets['Sheet1']
+
+            # Make width of columns and height of rows fit to signature images.
+            for rownum in range(pivot.index.size + 4):
+                if rownum > 3:
+                    worksheet.set_row(rownum, 110)              # Make Height of rows larger
+            
+            worksheet.set_column(1, pivot.columns.size, 25)     # Make Width of Columns after B much larger
+            worksheet.set_column(0, 0, 15)                      # Make Width of A column larger
+
+            # Insert images to each cell and delete each cell value.
+            cells = [(x,y) for x in range(pivot.index.size) for y in range(pivot.columns.size)]
+            for rownum, colnum in cells:
+                # print( rownum, colnum, str(pivot.iat[rownum, colnum])[:10], type(pivot.iat[rownum,colnum]), bool(pivot.iat[rownum,colnum]) )
+                try:
+                    signatureImg = BytesIO(b64decode( pivot.iat[rownum,colnum].encode() ))      # Make Image from Base64 String.
+                    worksheet.write_string(4+rownum, 1+colnum, '')
+                    worksheet.insert_image(4+rownum, 1+colnum, f'signature_{4+rownum}_{1+colnum}.png', {'image_data': signatureImg, 'x_scale': 0.15, 'y_scale': 0.15})
+                except AttributeError:
+                    continue
+
+            writer.close()              #the writer has done its job
+            output.seek(0)              #go back to the beginning of the stream
+
+            #finally return the file
+            return send_file(output, attachment_filename="attendance.xlsx", as_attachment=True)
+    # ---------------------------------------------------------------------------
+
+
     # ----------------[ Create a new Attendance log ]----------------------------
     @apiRestful.route('/resource/attendancelogs/new')
     @apiRestful.doc(params= {
@@ -346,7 +434,13 @@ class AttendanceLogs:
             phoneNoFromClient = infoFromClient['phoneNo']               # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand."), https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
             curriculumNoFromClient = infoFromClient['curriculumNo']
             checkInOutFromClient = infoFromClient['checkInOut']
-            signatureFromClient = infoFromClient['signature'].split(',')[-1].strip()
+            
+            rawSignatureStrFromClient = infoFromClient['signature'].split(',')[-1].strip()
+            signatureFromClient = compress(                   # use 'compress' to reduce about 30% of binary size : https://stackoverflow.com/questions/28641731/decode-gzip-compressed-and-base64-encoded-data-to-a-readable-format
+                                          rawSignatureStrFromClient.encode(),
+                                          level= 9,         # -1 ~ 9, maximum compression
+                                  )
+
             attendanceDate = (datetime.utcnow() + timedelta(hours= 9)).strftime('%Y-%m-%d')     # Calculate Korea Standard Time(KST), date only
 
             requestedBody = {
