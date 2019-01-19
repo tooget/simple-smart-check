@@ -60,13 +60,13 @@ class Curriculums:
             start, stop = (pagenum-1)*limit, pagenum*limit
 
             query = CurriculumsModel.query.filter(and_(*filters))
+            total = query.count()
+            
             query = sort_query(query, *ormQuerySort).slice(start, stop)
             curriculums = query.all()
 
             curriculumsSchema = CurriculumsModelSchema(many= True)
             output = curriculumsSchema.dump(curriculums)
-
-            total = query.count()
 
             return {'return': {'items': output, 'total': total}}, 200
     # ---------------------------------------------------------------------------
@@ -453,14 +453,13 @@ class Members:
                                             applicantsQuery.c.agreeWithPersonalinfo,
                                             applicantsQuery.c.agreeWithMktMailSubscription,
                                             applicantsQuery.c.operationMemo,
-                                        ).outerjoin(curriculumsQuery, curriculumsQuery.c.curriculumNo == membersQuery.c.curriculumNo)  \
-                                        .outerjoin(applicantsQuery, and_(applicantsQuery.c.curriculumNo == membersQuery.c.curriculumNo, applicantsQuery.c.phoneNo == membersQuery.c.phoneNo))
+                                        ).join(curriculumsQuery, curriculumsQuery.c.curriculumNo == membersQuery.c.curriculumNo)  \
+                                        .join(applicantsQuery, and_(applicantsQuery.c.curriculumNo == membersQuery.c.curriculumNo, applicantsQuery.c.phoneNo == membersQuery.c.phoneNo))
+            total = query.count()
             query = sort_query(query, *ormQuerySort).slice(start, stop)
-
+            
             df = pd.read_sql(query.statement, db.get_engine(bind= 'mysql'))
             output = convertDataframeToDictsList(df)
-
-            total = query.count()
 
             return {'return': {'items': output, 'total': total}}, 200
     # ---------------------------------------------------------------------------
@@ -480,22 +479,40 @@ class Members:
     class put_Members_Info(Resource):
 
         def put(self):
-            infoFromClient = request.form
+            # Convert empty string to None
+            emptyStringToNone = lambda x: x if bool(x) == True else None
+            # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand.")
+            # Reference : https://scotch.io/bar-talk/processing-incoming-request-data-in-flask         
+            infoFromClient = {key: emptyStringToNone(request.form[key]) for key in request.form}
+            phoneNoFromClient = infoFromClient['phoneNo']
+            curriculumNoFromClient = int(infoFromClient['curriculumNo'])
+            attendancePassFromClient = infoFromClient['attendancePass']
+            attendanceCheckFromClient = infoFromClient['attendanceCheck']
+            curriculumCompleteFromClient = infoFromClient['curriculumComplete']
+            employmentFromClient = infoFromClient['employment']
+            
             requestedBody = {
-                'phoneNo': infoFromClient['phoneNo'],                   # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand."), https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
-                'curriculumNo': infoFromClient['curriculumNo'],
-                'attendancePass': infoFromClient['attendancePass'],
-                'attendanceCheck': infoFromClient['attendanceCheck'],
-                'curriculumComplete': infoFromClient['curriculumComplete'],
-                'employment': infoFromClient['employment'],
+                'phoneNo': phoneNoFromClient,
+                'curriculumNo': curriculumNoFromClient,
+                'attendancePass': attendancePassFromClient,
+                'attendanceCheck': attendanceCheckFromClient,
+                'curriculumComplete': curriculumCompleteFromClient,
+                'employment': employmentFromClient,
             }
 
-            memberInfo = MembersModel(**requestedBody)
+            membersData = MembersModel(**requestedBody)
 
             try:
-                db.session.merge(memberInfo)      # session.merge() : A kind of UPSERT, https://docs.sqlalchemy.org/en/latest/orm/session_state_management.html#merging
+                db.session.merge(membersData)      # session.merge() : A kind of UPSERT, https://docs.sqlalchemy.org/en/latest/orm/session_state_management.html#merging
                 db.session.commit()
-                return {'message': f'MemberInfo updated : {requestedBody}'}, 201
+                members = MembersModel.query.filter_by(**requestedBody).one()
+                membersSchema = MembersModelSchema(many= False)
+                argument = membersSchema.dump(members)
+                argumentToJson = dumps(argument)
+                return {'message': { 'title': '成功', 'content': '操作成功', },
+                        'return': {
+                            'argument': f'{argumentToJson}'
+                        }}, 201
             except:
                 db.session.rollback()
                 return {'message': 'Something went wrong'}, 500
@@ -564,9 +581,9 @@ class Applicants:
                 db.session.add_all(newBulkApplicants)
                 db.session.add_all(newBulkMembers)
                 db.session.commit()
-                return {'message': f'Applicants/Members Bulk : curriculumNo {curriculumNoFromClient}, {len(newBulkApplicants)} records are inserted.'}, 201
+                return {'message': { 'title': '成功', 'content': '创建成功', }}, 201
             except:
                 db.session.rollback()
-                return {'message': 'Something went wrong'}, 500
+                return {'message': { 'title': '失敗', 'content': '创建失敗', }}, 500
     # -----------------------------------------------------------------------------
 # ---------------------------------------------------------------------------------

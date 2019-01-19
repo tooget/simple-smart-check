@@ -61,8 +61,8 @@
       </el-table-column>
       <el-table-column :label="$t('table.browse')" align="center" width="150" class-name="small-padding fixed-width">
         <template slot-scope="scope">
-          <input ref="excel-upload-input" class="excel-upload-input" type="file" accept=".xlsx, .xls" @change="handleClick">
-          <el-button :loading="uploadExcelLoading" style="margin-left:16px;" size="mini" type="primary" @click="handleUpload(scope.row)">{{ $t('table.browse') }}</el-button>
+          <input ref="excel-upload-input" class="excel-upload-input" type="file" accept=".xlsx, .xls" @change="handleFileUpload">
+          <el-button :loading="uploadExcelLoading" style="margin-left:16px;" size="mini" type="primary" @click="handleFileSubmit(scope.row)">{{ $t('table.browse') }}</el-button>
         </template>
       </el-table-column>
       <el-table-column v-if="showDelete" :label="$t('table.delete')" align="center" width="100" class-name="small-padding fixed-width">
@@ -116,6 +116,7 @@
 
 <script>
 import { fetchCurriculumList, createCurriculumData, updateCurriculumData, deleteCurriculumData } from '@/api/resource/curriculums'
+import { createApplicantsBulk } from '@/api/resource/applicants'
 import waves from '@/directive/waves' // Waves directive
 import Pagination from '@/components/Pagination' // Secondary package based on el-pagination
 
@@ -224,7 +225,8 @@ export default {
         curriculumName: '',
         curriculumType: '',
         startDate: new Date(),
-        endDate: new Date()
+        endDate: new Date(),
+        applicantsBulkXlsxFile: undefined
       }
     },
     handleCreate() {
@@ -316,30 +318,37 @@ export default {
         })
       })
     },
-    handleUpload(row) {
+    handleFileSubmit(row) {
       this.temp = Object.assign({}, row) // copy obj
       this.temp.curriculumNo = row.curriculumNo
       this.temp.startDate = new Date(this.temp.startDate)
       this.temp.endDate = new Date(this.temp.endDate)
       this.$refs['excel-upload-input'].click()
     },
-    handleClick(e) {
+    handleFileUpload(e) {
       const files = e.target.files
-      const rawFile = files[0] // only use files[0]
-      if (!rawFile) return
-      this.upload(rawFile)
+      const rawFile = files[0]
+      this.temp.applicantsBulkXlsxFile = rawFile
+      this.createApplicantsData()
     },
-    upload(rawFile) {
-      this.$refs['excel-upload-input'].value = null // fix can't select the same excel
-
-      if (!this.beforeUpload) {
-        this.readerData(rawFile)
-        return
-      }
-      const before = this.beforeUpload(rawFile)
-      if (before) {
-        this.readerData(rawFile)
-      }
+    createApplicantsData() {
+      createApplicantsBulk(this.temp).then(response => {
+        const message = response.data.message
+        this.$notify({
+          title: message.title,
+          message: message.content,
+          type: 'success',
+          duration: 2000
+        })
+      }).catch(error => {
+        const message = error.response.data.message
+        this.$notify({
+          title: message.title,
+          message: message.content,
+          type: 'warn',
+          duration: 2000
+        })
+      })
     }
   }
 }

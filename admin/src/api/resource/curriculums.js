@@ -8,22 +8,6 @@ export function fetchCurriculumList(query) {
   })
 }
 
-export function fetchArticle(id) {
-  return request({
-    url: '/article/detail',
-    method: 'get',
-    params: { id }
-  })
-}
-
-export function fetchPv(pv) {
-  return request({
-    url: '/article/pv',
-    method: 'get',
-    params: { pv }
-  })
-}
-
 export function createCurriculumData(data) {
   const requestBody = new FormData()
   requestBody.append('curriculumCategory', data.curriculumCategory)

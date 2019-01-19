@@ -130,8 +130,8 @@ export default {
     cancel: 'Cancel',
     confirm: 'Confirm',
     curriculums: {
-      curriculumNo: 'ID',
-      curriculumCategory: 'Category',
+      curriculumNo: 'curriculumNo',
+      curriculumCategory: 'curriculumCategory',
       ordinalNo: 'ordinalNo',
       curriculumName: 'curriculumName',
       curriculumType: 'curriculumType',
@@ -140,6 +140,59 @@ export default {
       applicantsBulkInserted: 'applicantsBulkInserted',
       insertedTimestamp: 'insertedTimestamp',
       updatedTimestamp: 'updatedTimestamp'
+    },
+    members: {
+      phoneNo: 'phoneNo',
+      curriculumNo: 'curriculumNo',
+      attendancePass: {
+        name: 'attendancePass',
+        status: {
+          Y: 'Y',
+          N: 'N',
+          null: 'undefined'
+        }
+      },
+      attendanceCheck: {
+        name: 'attendanceCheck',
+        status: {
+          Y: 'Y',
+          N: 'N',
+          null: 'undefined'
+        }
+      },
+      curriculumComplete: {
+        name: 'curriculumComplete',
+        status: {
+          Y: 'Y',
+          N: 'N',
+          null: 'undefined'
+        }
+      },
+      employment: {
+        name: 'employment',
+        status: {
+          Y: 'Y',
+          N: 'N',
+          null: 'undefined'
+        }
+      },
+      ordinalNo: 'ordinalNo',
+      curriculumName: 'curriculumName',
+      curriculumCategory: 'curriculumCategory',
+      startDate: 'startDate',
+      endDate: 'endDate',
+      applicantName: 'applicantName',
+      birthDate: 'birthDate',
+      email: 'email',
+      affiliation: 'affiliation',
+      department: 'department',
+      position: 'position',
+      job: 'job',
+      purposeSelection: 'purposeSelection',
+      careerDuration: 'careerDuration',
+      agreeWithPersonalinfo: 'agreeWithPersonalinfo',
+      agreeWithMktMailSubscription: 'agreeWithMktMailSubscription',
+      operationMemo: 'operationMemo'
     }
   },
   errorLog: {
