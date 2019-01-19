@@ -56,16 +56,16 @@ class Curriculums:
 
             ormQueryFilters = createOrmModelQueryFiltersDict(queryParams['filters'])
             filters = (getattr(CurriculumsModel, target).like(f'%{value}%') for target, value in ormQueryFilters['CurriculumsModel'].items())
-
-            ormQuerySort = createOrmModelQuerySortDict(queryParams['sort'])
-            
-            paginationFromClient = queryParams['pagination']
-            pagenum, limit = paginationFromClient['pagenum'], paginationFromClient['limit']
-            start, stop = (pagenum-1)*limit, pagenum*limit
-
             query = CurriculumsModel.query.filter(and_(*filters))
             total = query.count()
             
+            paginationLimitConverter = lambda x: x if bool(x) == True else total
+            paginationFromClient = queryParams['pagination']
+            pagenum = paginationFromClient['pagenum']
+            limit = paginationLimitConverter(paginationFromClient['limit'])
+            start, stop = (pagenum-1)*limit, pagenum*limit
+
+            ormQuerySort = createOrmModelQuerySortDict(queryParams['sort'])
             query = sort_query(query, *ormQuerySort).slice(start, stop)
             curriculums = query.all()
 
