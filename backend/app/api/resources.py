@@ -199,15 +199,18 @@ class Curriculums:
             curriculumNoFromClient = int(infoFromClient['curriculumNo'])
             requestedBody = { "curriculumNo": curriculumNoFromClient }
             targetCurriculumRecord = CurriculumsModel.query.filter_by(**requestedBody).one()
-            targetApplicants = ApplicantsModel.query.filter(curriculumNo= curriculumNoFromClient)
-            targetMembers = MembersModel.query.filter(curriculumNo= curriculumNoFromClient)
-            targetAttendanceLogs = AttendanceLogsModel.filter(curriculumNo= curriculumNoFromClient)
+            targetApplicants = ApplicantsModel.query.filter_by(curriculumNo= curriculumNoFromClient).all()
+            targetMembers = MembersModel.query.filter_by(curriculumNo= curriculumNoFromClient).all()
+            targetAttendanceLogs = AttendanceLogsModel.query.filter_by(curriculumNo= curriculumNoFromClient).all()
 
             try:
-                db.session.delete(targetCurriculumRecord)      # session.delete() : A kind of DELETE, http://flask-sqlalchemy.pocoo.org/latest/queries/#deleting-records
-                db.session.delete(targetApplicants)
-                db.session.delete(targetMembers)
-                db.session.delete(targetAttendanceLogs)
+                db.session.delete(targetCurriculumRecord)           # session.delete() : A kind of DELETE, http://flask-sqlalchemy.pocoo.org/latest/queries/#deleting-records
+                for record in targetApplicants:
+                    db.session.delete(record)
+                for record in targetMembers:
+                    db.session.delete(record)
+                for record in targetAttendanceLogs:
+                    db.session.delete(record)
                 db.session.commit()
                 return {'message': {'title': '成功', 'content': '删除成功'}}, 201
             except:
@@ -649,29 +652,33 @@ class Applicants:
     class post_Applicants_Bulk(Resource):
 
         def post(self):
-            curriculumNoFromClient = request.form['curriculumNo']               # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand."), https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
-            applicantsbulkFromClient = request.files['applicantsBulkXlsxFile']
+            queryParams = {'curriculumNo': int(request.form['curriculumNo'])}               # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand."), https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
+            applicantsBulkFromClient = request.files['applicantsBulkXlsxFile']
 
-            applicantsDf = pd.read_excel(applicantsbulkFromClient)
+            applicantsDf = pd.read_excel(applicantsBulkFromClient)
             applicantsDf.columns = applicantsDf.columns.map(lambda x: Config.XLSX_COLUMNS_TO_SCHEMA_MAP[ x[:4]+'_'+str(len(x)//19) ])       # Convert column names, Using "x[:4]+'_'+str(len(x)//19)" as a unique key
-            applicantsDf['curriculumNo'] = curriculumNoFromClient
+            applicantsDf['curriculumNo'] = queryParams['curriculumNo']
             membersDf = applicantsDf[['phoneNo', 'curriculumNo']]
 
             applicantsDictsList = convertDataframeToDictsList(applicantsDf)
             membersDictsList = convertDataframeToDictsList(membersDf)
 
-            oldBulkApplicants = ApplicantsModel.query.filter(curriculumNo= curriculumNoFromClient)
-            oldBulkMembers = MembersModel.query.filter(curriculumNo= curriculumNoFromClient)
-            oldBulkAttendanceLogs = AttendanceLogsModel.filter(curriculumNo= curriculumNoFromClient)
+            oldBulkApplicants = ApplicantsModel.query.filter_by(curriculumNo= queryParams['curriculumNo']).all()
+            oldBulkMembers = MembersModel.query.filter_by(curriculumNo= queryParams['curriculumNo']).all()
+            oldBulkAttendanceLogs = AttendanceLogsModel.query.filter_by(curriculumNo= queryParams['curriculumNo']).all()
+
             newBulkApplicants = [ApplicantsModel(**applicant) for applicant in applicantsDictsList]
             newBulkMembers = [MembersModel(**member) for member in membersDictsList]
 
             try:
                 # Delete old applicants/members of a curriculumn.
-                db.session.delete(oldBulkApplicants.all())
-                db.session.delete(oldBulkMembers.all())
-                db.session.delete(oldBulkAttendanceLogs.all())
-                # Add new applicants/members of a curriculumn.
+                for record in oldBulkApplicants:
+                    db.session.delete(record)
+                for record in oldBulkMembers:
+                    db.session.delete(record)
+                for record in oldBulkAttendanceLogs:
+                    db.session.delete(record)
+                # # Add new applicants/members of a curriculumn.
                 db.session.add_all(newBulkApplicants)
                 db.session.add_all(newBulkMembers)
                 db.session.commit()
