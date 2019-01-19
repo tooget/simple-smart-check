@@ -28,14 +28,22 @@ def createOrmModelQueryFiltersDict(request_args_filters):
             ormModelTableColumns = set(ormModel.__table__.columns.keys())
             totalOrmModelTableColumns = totalOrmModelTableColumns | ormModelTableColumns
             columnIntersections = request_args_filters_columns & ormModelTableColumns       # when a column from client exists
-            if bool(columnIntersections) == True:
-                queryFiltersByEachOrmModel[ormClassName] = {column: request_args_filters[column] for column in columnIntersections}
+            queryFiltersByEachOrmModel[ormClassName] = {column: request_args_filters[column] for column in columnIntersections}       # return empty dictionary if there no column inspected in a certain orm model 
 
     columnDifference = request_args_filters_columns - totalOrmModelTableColumns     # checking when columns are not used
     if bool(columnDifference) == True:      # If unknown columns remain
         raise KeyError(f'app.ormmodels.py does not have columns : {columnDifference}')
 
     return queryFiltersByEachOrmModel       # return dict
+
+
+def createOrmModelQuerySortDict(request_args_sort):
+    # Making filter dictionary
+    # {'ORM Schema Table1': {'column1': value, 'column2': value}, 'ORM Scheam Table2': {'column1': value, 'column2': value}}
+    sortQueryDirection = {'desc': '-', 'asc': '+'}
+    querySortByOrmModel = [''.join([sortQueryDirection[value], target]) for target, value in request_args_sort.items()]
+
+    return querySortByOrmModel       # return dict
 # -------------------------------------------------------------------------------
 
 

@@ -1,5 +1,5 @@
 from app.api import apiRestful
-from app.api.modules import requireAuth, convertDataframeToDictsList, createOrmModelQueryFiltersDict
+from app.api.modules import requireAuth, convertDataframeToDictsList, createOrmModelQueryFiltersDict, createOrmModelQuerySortDict
 from app.config import Config
 from app.extensions import db
 from app.ormmodels import AttendanceLogsModel, ApplicantsModel, CurriculumsModel, MembersModel
@@ -51,20 +51,16 @@ class Curriculums:
             queryParams = {key: loads(request.args[key]) for key in request.args}
 
             ormQueryFilters = createOrmModelQueryFiltersDict(queryParams['filters'])
-            print(queryParams)
-            print(ormQueryFilters)
-            filters = (getattr(CurriculumsModel, target).like(f'%{value}%') for target, value in ormQueryFilters.get('CurriculumsModel', {}).items())
+            filters = (getattr(CurriculumsModel, target).like(f'%{value}%') for target, value in ormQueryFilters['CurriculumsModel'].items())
 
-            ormQuerySort = createOrmModelQueryFiltersDict(queryParams['sort'])
-            sortingTargetColumn = list(ormQuerySort[list(ormQuerySort.keys())[0]].keys())[0]
-            sortingOrderDirection = '-' if list(ormQuerySort[list(ormQuerySort.keys())[0]].values())[0] == 'desc' else ''
-
+            ormQuerySort = createOrmModelQuerySortDict(queryParams['sort'])
+            
             paginationFromClient = queryParams['pagination']
             pagenum, limit = paginationFromClient['pagenum'], paginationFromClient['limit']
             start, stop = (pagenum-1)*limit, pagenum*limit
 
             query = CurriculumsModel.query.filter(and_(*filters))
-            query = sort_query(query, sortingOrderDirection + sortingTargetColumn).slice(start, stop)
+            query = sort_query(query, *ormQuerySort).slice(start, stop)
             curriculums = query.all()
 
             curriculumsSchema = CurriculumsModelSchema(many= True)
@@ -415,9 +411,7 @@ class Members:
             queryParams = {key: loads(request.args[key]) for key in request.args}
 
             ormQueryFilters = createOrmModelQueryFiltersDict(queryParams['filters'])
-            ormQuerySort = createOrmModelQueryFiltersDict(queryParams['sort'])
-            sortingTargetColumn = list(ormQuerySort[list(ormQuerySort.keys())[0]].keys())[0]
-            sortingOrderDirection = '-' if list(ormQuerySort[list(ormQuerySort.keys())[0]].values())[0] == 'desc' else ''
+            ormQuerySort = createOrmModelQuerySortDict(queryParams['sort'])
 
             pagenum, limit = int(queryParams['pagination']['pagenum']), int(queryParams['pagination']['limit'])
             start, stop = (pagenum-1)*limit, pagenum*limit
@@ -461,7 +455,7 @@ class Members:
                                             applicantsQuery.c.operationMemo,
                                         ).outerjoin(curriculumsQuery, curriculumsQuery.c.curriculumNo == membersQuery.c.curriculumNo)  \
                                         .outerjoin(applicantsQuery, and_(applicantsQuery.c.curriculumNo == membersQuery.c.curriculumNo, applicantsQuery.c.phoneNo == membersQuery.c.phoneNo))
-            query = sort_query(query, sortingTargetColumn + sortingTargetColumn).slice(start, stop)
+            query = sort_query(query, *ormQuerySort).slice(start, stop)
 
             df = pd.read_sql(query.statement, db.get_engine(bind= 'mysql'))
             output = convertDataframeToDictsList(df)
