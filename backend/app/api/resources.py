@@ -494,7 +494,35 @@ class Members:
     # -----------------------------------------------------------------------------
 
 
-    # ----------------[ Get Curriculums ]---------------------------------------
+    # ----------------[ Get summary of members count ]-----------------------------
+    @apiRestful.route('/resource/members/summarycount')
+    @apiRestful.doc(params= {
+            'curriculumNo': {'in': 'query', 'description': 'URL parameter, optional'},
+            # You can add query filter columns if needed.
+    })
+    class get_Members_Summarycount(Resource):
+
+        def get(self):
+            queryFilter = request.args
+
+            applicants = MembersModel.query.filter_by(**queryFilter)
+            members = MembersModel.query.filter_by(**queryFilter, attendancePass= 'Y')
+            membersComplete = MembersModel.query.filter_by(**queryFilter, curriculumComplete= 'Y')
+
+            output = {
+                **queryFilter,
+                'applicants_count': applicants.count(),
+                'members_count': members.count(),
+                'membersComplete_count': membersComplete.count()
+            }
+
+            total = len(output)
+
+            return {'return': {'items': output, 'total': total}}, 200
+    # -----------------------------------------------------------------------------
+
+
+    # -----------------------[ Get Members ]---------------------------------------
     @apiRestful.route('/resource/members/list')
     @apiRestful.doc(params= {
             'filters': {'in': 'query', 'description': 'URL parameter, optional'},
@@ -559,7 +587,7 @@ class Members:
             output = convertDataframeToDictsList(df)
 
             return {'return': {'items': output, 'total': total}}, 200
-    # ---------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------
 
 
     # ----------------[ Update members' Info ]-------------------------------------
