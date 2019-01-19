@@ -349,10 +349,12 @@ class AttendanceLogs:
     @apiRestful.doc(params= {
             'curriculumNo': {'in': 'query', 'description': 'URL parameter, reqired'},
     })
+    # Almost same with @apiRestful.route('/resource/attendancelogs/list')
     class get_AttendanceLogs_Listfile(Resource):
 
         def get(self):
             queryFilter = request.args
+            print(request.args['curriculumNo'])
             
             attendanceLogs = AttendanceLogsModel.query.filter_by(**queryFilter)
             # Get full duration of a curriculum.
@@ -366,7 +368,8 @@ class AttendanceLogs:
             # Pivot Attendance Check-Table for now.
             attendanceLogsDf = pd.read_sql(attendanceLogs.statement, db.get_engine(bind= 'mysql'))
             attendanceLogsDf['attendanceDate'] = attendanceLogsDf['attendanceDate'].astype(str)
-            attendanceLogsDf['signature'] = attendanceLogsDf['signature'].apply( lambda x: decompress(b64decode(x)).decode() )
+            # attendanceLogsDf['signature'] = attendanceLogsDf['signature'].apply( lambda x: 'signed' )
+            attendanceLogsDf['signature'] = attendanceLogsDf['signature'].apply( lambda x: decompress(b64decode(x)).decode() )      # Different from @apiRestful.route('/resource/attendancelogs/list')
             pivot = attendanceLogsDf.set_index(['phoneNo', 'checkInOut', 'attendanceDate'])[['signature', 'insertedTimestamp']]
             # pivot['signatureTimestamp'] = pivot['signature'] + '\n' + pivot['insertedTimestamp'].dt.strftime('%Y-%m-%dT%H:%M:%SZ').astype(str)
             pivot['signatureTimestamp'] = pivot['signature']
@@ -386,7 +389,10 @@ class AttendanceLogs:
             # Overlay and Update the pivot table.
             pivot = pivot.combine_first(emptyAttendanceTableDF)
 
-            #create an output stream
+            # -------------------------------------------------------------------
+            # Different from 'GET @apiRestful.route('/resource/attendancelogs/list')'
+            # -------------------------------------------------------------------
+            # create an output stream
             output = BytesIO()
             writer = pd.ExcelWriter(output, engine='xlsxwriter')
             pivot.to_excel(writer, sheet_name= 'Sheet1')        # taken from the original question
@@ -418,6 +424,7 @@ class AttendanceLogs:
 
             #finally return the file
             return send_file(output, attachment_filename="attendance.xlsx", as_attachment=True)
+            # -------------------------------------------------------------------
     # ---------------------------------------------------------------------------
 
 
@@ -505,15 +512,11 @@ class Members:
         def get(self):
             queryFilter = request.args
 
-            applicants = MembersModel.query.filter_by(**queryFilter)
-            members = MembersModel.query.filter_by(**queryFilter, attendancePass= 'Y')
-            membersComplete = MembersModel.query.filter_by(**queryFilter, curriculumComplete= 'Y')
-
             output = {
                 **queryFilter,
-                'applicants_count': applicants.count(),
-                'members_count': members.count(),
-                'membersComplete_count': membersComplete.count()
+                'applicants_count': MembersModel.query.filter_by(**queryFilter).count(),
+                'members_count': MembersModel.query.filter_by(**queryFilter, attendancePass= 'Y').count(),
+                'membersComplete_count': MembersModel.query.filter_by(**queryFilter, curriculumComplete= 'Y').count(),
             }
 
             total = len(output)
@@ -525,9 +528,9 @@ class Members:
     # -----------------------[ Get Members ]---------------------------------------
     @apiRestful.route('/resource/members/list')
     @apiRestful.doc(params= {
-            'filters': {'in': 'query', 'description': 'URL parameter, optional'},
-            'sort': {'in': 'query', 'description': 'URL parameter, optional'},
-            'pagination': {'in': 'query', 'description': 'URL parameter, optional'},
+            'filters': {'in': 'query', 'description': 'URL parameter, required'},
+            'sort': {'in': 'query', 'description': 'URL parameter, required'},
+            'pagination': {'in': 'query', 'description': 'URL parameter, required'},
             # You can add query filter columns if needed.
     })
     class get_Members_List(Resource):
@@ -587,6 +590,88 @@ class Members:
             output = convertDataframeToDictsList(df)
 
             return {'return': {'items': output, 'total': total}}, 200
+    # -----------------------------------------------------------------------------
+
+
+    # -----------------------[ Get Members xlsx file ]-----------------------------
+    @apiRestful.route('/resource/members/listfile')
+    @apiRestful.doc(params= {
+            'filters': {'in': 'query', 'description': 'URL parameter, required'},
+            'sort': {'in': 'query', 'description': 'URL parameter, required'},
+            # 'pagination': {'in': 'query', 'description': 'URL parameter, optional'},
+            # You can add query filter columns if needed.
+    })
+    # Almost same with @apiRestful.route('/resource/members/list')
+    class get_Members_Listfile(Resource):
+
+        def get(self):
+            queryParams = {key: loads(request.args[key]) for key in request.args}
+
+            ormQueryFilters = createOrmModelQueryFiltersDict(queryParams['filters'])
+            ormQuerySort = createOrmModelQuerySortDict(queryParams['sort'])
+
+            # pagenum, limit = int(queryParams['pagination']['pagenum']), int(queryParams['pagination']['limit'])       # Different from @apiRestful.route('/resource/members/list')
+            # start, stop = (pagenum-1)*limit, pagenum*limit                                                            # Different from @apiRestful.route('/resource/members/list')
+
+            memberFilters = (getattr(MembersModel, target) == value for target, value in ormQueryFilters['MembersModel'].items())
+            curriculumLikeFilters = (getattr(CurriculumsModel, target).like(f'%{value}%') for target, value in ormQueryFilters['CurriculumsModel'].items())
+            applicantLikeFilters = (getattr(ApplicantsModel, target).like(f'%{value}%') for target, value in ormQueryFilters['ApplicantsModel'].items())
+
+            membersQuery = MembersModel.query.with_entities(
+                                            MembersModel.phoneNo,
+                                            MembersModel.curriculumNo,
+                                            MembersModel.attendancePass,
+                                            MembersModel.attendanceCheck,
+                                            MembersModel.curriculumComplete,
+                                            MembersModel.employment,
+                                        ).filter(and_(*memberFilters))  \
+                                        .subquery()
+            curriculumsQuery = CurriculumsModel.query.filter(and_(*curriculumLikeFilters))  \
+                                        .subquery()
+            applicantsQuery = ApplicantsModel.query.filter(and_(*applicantLikeFilters)) \
+                                        .subquery()
+
+            query = db.session.query(membersQuery).with_entities(
+                                            membersQuery,
+                                            curriculumsQuery.c.ordinalNo,
+                                            curriculumsQuery.c.curriculumName,
+                                            curriculumsQuery.c.curriculumCategory,
+                                            curriculumsQuery.c.startDate,
+                                            curriculumsQuery.c.endDate,
+                                            applicantsQuery.c.applicantName,
+                                            applicantsQuery.c.birthDate,
+                                            applicantsQuery.c.email,
+                                            applicantsQuery.c.affiliation,
+                                            applicantsQuery.c.department,
+                                            applicantsQuery.c.position,
+                                            applicantsQuery.c.job,
+                                            applicantsQuery.c.purposeSelection,
+                                            applicantsQuery.c.careerDuration,
+                                            applicantsQuery.c.agreeWithPersonalinfo,
+                                            applicantsQuery.c.agreeWithMktMailSubscription,
+                                            applicantsQuery.c.operationMemo,
+                                        ).join(curriculumsQuery, curriculumsQuery.c.curriculumNo == membersQuery.c.curriculumNo)  \
+                                        .join(applicantsQuery, and_(applicantsQuery.c.curriculumNo == membersQuery.c.curriculumNo, applicantsQuery.c.phoneNo == membersQuery.c.phoneNo))
+            total = query.count()
+            # query = sort_query(query, *ormQuerySort).slice(start, stop)       # Different from @apiRestful.route('/resource/members/list')
+            query = sort_query(query, *ormQuerySort)
+            
+            df = pd.read_sql(query.statement, db.get_engine(bind= 'mysql'))
+
+            # ---------------------------------------------------------------------
+            # Different from @apiRestful.route('/resource/members/list')
+            # ---------------------------------------------------------------------
+            # create an output stream
+            output = BytesIO()
+            writer = pd.ExcelWriter(output, engine='xlsxwriter')
+            df.to_excel(writer, sheet_name= 'Sheet1')        # taken from the original question
+
+            writer.close()              # the writer has done its job
+            output.seek(0)              # go back to the beginning of the stream
+
+            #finally return the file
+            return send_file(output, attachment_filename="members.xlsx", as_attachment=True)
+            # ---------------------------------------------------------------------
     # -----------------------------------------------------------------------------
 
 
