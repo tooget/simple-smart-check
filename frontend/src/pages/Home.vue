@@ -1,9 +1,5 @@
 <template>
   <v-ons-page>
-    <p class="intro">
-      This is a kitchen sink example that shows off the Vue bindings for Onsen UI.<br><br>
-    </p>
-
     <v-ons-card v-for="page of pages" :key="page.label"
       @click="push(page.component, page.label)"
     >
@@ -22,8 +18,8 @@ export default {
       pages: [
         {
           component: ClassList,
-          label: 'ClassList',
-          desc: 'Class List: "Short-term" and "Long-term".'
+          label: '출석부',
+          desc: '(해당 교육과정 클릭 후 입/퇴실 여부를 확인해 주세요)'
         }
       ]
     };
@@ -47,14 +43,6 @@ export default {
 </script>
 
 <style>
-.intro {
-  text-align: left;
-  padding: 0 22px;
-  margin-top: 20px;
-  font-size: 14px;
-  line-height: 1.4;
-  color: rgba(0, 0, 0, .54);
-}
 ons-card {
   cursor: pointer;
   color: #333;

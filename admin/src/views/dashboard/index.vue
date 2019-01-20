@@ -32,12 +32,12 @@
           <span>{{ scope.row.ordinalNo }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="$t('table.dashboard.curriculumName')" min-width="150px">
+      <el-table-column :label="$t('table.dashboard.curriculumName')" width="150px" align="center">
         <template slot-scope="scope">
           <span>{{ scope.row.curriculumName }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="$t('table.dashboard.curriculumPeriod')" min-width="150px">
+      <el-table-column :label="$t('table.dashboard.curriculumPeriod')" width="150px" align="center">
         <template slot-scope="scope">
           <span>{{ scope.row.curriculumPeriod }}</span>
         </template>

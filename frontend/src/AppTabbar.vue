@@ -40,7 +40,7 @@ export default {
       topPosition: 0,
       tabs: [
         {
-          label: this.md ? null : 'Settings',
+          label: this.md ? null : '설정',
           icon: 'ion-android-settings, material:ion-android-settings',
           page: Settings,
           theme: green,
@@ -48,7 +48,7 @@ export default {
           // top: -105 // Toolbar + Tabbar heights
         },
         {
-          label: this.md ? null : 'Home',
+          label: this.md ? null : '출석부',
           icon: 'ion-ios-pricetags, material:ion-ios-pricetags',
           page: Home,
           theme: green

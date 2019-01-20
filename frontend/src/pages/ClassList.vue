@@ -15,7 +15,7 @@ import ClassItem from './ClassItem.vue';
 import axios from 'axios'
 
 const HTTP = axios.create({
-    baseURL: `http://localhost:5000/api`,
+    baseURL: `https://backend.smartcheck.ml/api`,
     timeout: 5000,
     headers: {
       'Content-Type': 'application/json',
@@ -30,7 +30,7 @@ export default {
       listQuery: {
         filters: { curriculumName: undefined, curriculumCategory: undefined },
         sort: { curriculumNo: 'desc' },
-        pagination: { pagenum: 1, limit: 20 }
+        pagination: { pagenum: 1, limit: '' }
       },
     };
   },

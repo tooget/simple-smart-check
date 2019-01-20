@@ -29,29 +29,29 @@
       </el-table-column>
       <el-table-column :label="$t('table.members.attendancePass.name')" width="110px" align="center">
         <template slot-scope="scope">
-          <el-button v-if="scope.row.attendancePass=='Y'" size="mini" @click="handleModifyStatus(scope.row, 'attendancePass', 'N')">{{ $t('table.members.attendancePass.status.Y') }}</el-button>
-          <el-button v-else-if="scope.row.attendancePass=='N'" size="mini" @click="handleModifyStatus(scope.row, 'attendancePass', '')">{{ $t('table.members.attendancePass.status.N') }}</el-button>
+          <el-button v-if="scope.row.attendancePass=='Y'" :type="scope.row.attendancePass | statusFilter" size="mini" @click="handleModifyStatus(scope.row, 'attendancePass', 'N')">{{ $t('table.members.attendancePass.status.Y') }}</el-button>
+          <el-button v-else-if="scope.row.attendancePass=='N'" :type="scope.row.attendancePass | statusFilter" size="mini" @click="handleModifyStatus(scope.row, 'attendancePass', '')">{{ $t('table.members.attendancePass.status.N') }}</el-button>
           <el-button v-else size="mini" @click="handleModifyStatus(scope.row, 'attendancePass', 'Y')">{{ $t('table.members.attendancePass.status.null') }}</el-button>
         </template>
       </el-table-column>
       <el-table-column :label="$t('table.members.attendanceCheck.name')" width="110px" align="center">
         <template slot-scope="scope">
-          <el-button v-if="scope.row.attendanceCheck=='Y'" size="mini" @click="handleModifyStatus(scope.row, 'attendanceCheck', 'N')">{{ $t('table.members.attendanceCheck.status.Y') }}</el-button>
-          <el-button v-else-if="scope.row.attendanceCheck=='N'" size="mini" @click="handleModifyStatus(scope.row, 'attendanceCheck', '')">{{ $t('table.members.attendanceCheck.status.N') }}</el-button>
+          <el-button v-if="scope.row.attendanceCheck=='Y'" :type="scope.row.attendanceCheck | statusFilter" size="mini" @click="handleModifyStatus(scope.row, 'attendanceCheck', 'N')">{{ $t('table.members.attendanceCheck.status.Y') }}</el-button>
+          <el-button v-else-if="scope.row.attendanceCheck=='N'" :type="scope.row.attendanceCheck | statusFilter" size="mini" @click="handleModifyStatus(scope.row, 'attendanceCheck', '')">{{ $t('table.members.attendanceCheck.status.N') }}</el-button>
           <el-button v-else size="mini" @click="handleModifyStatus(scope.row, 'attendanceCheck', 'Y')">{{ $t('table.members.attendanceCheck.status.null') }}</el-button>
         </template>
       </el-table-column>
       <el-table-column :label="$t('table.members.curriculumComplete.name')" width="110px" align="center">
         <template slot-scope="scope">
-          <el-button v-if="scope.row.curriculumComplete=='Y'" size="mini" @click="handleModifyStatus(scope.row, 'curriculumComplete', 'N')">{{ $t('table.members.curriculumComplete.status.Y') }}</el-button>
-          <el-button v-else-if="scope.row.curriculumComplete=='N'" size="mini" @click="handleModifyStatus(scope.row, 'curriculumComplete', '')">{{ $t('table.members.curriculumComplete.status.N') }}</el-button>
+          <el-button v-if="scope.row.curriculumComplete=='Y'" :type="scope.row.curriculumComplete | statusFilter" size="mini" @click="handleModifyStatus(scope.row, 'curriculumComplete', 'N')">{{ $t('table.members.curriculumComplete.status.Y') }}</el-button>
+          <el-button v-else-if="scope.row.curriculumComplete=='N'" :type="scope.row.curriculumComplete | statusFilter" size="mini" @click="handleModifyStatus(scope.row, 'curriculumComplete', '')">{{ $t('table.members.curriculumComplete.status.N') }}</el-button>
           <el-button v-else size="mini" @click="handleModifyStatus(scope.row, 'curriculumComplete', 'Y')">{{ $t('table.members.curriculumComplete.status.null') }}</el-button>
         </template>
       </el-table-column>
       <el-table-column :label="$t('table.members.employment.name')" width="110px" align="center">
         <template slot-scope="scope">
-          <el-button v-if="scope.row.employment=='Y'" size="mini" @click="handleModifyStatus(scope.row, 'employment', 'N')">{{ $t('table.members.employment.status.Y') }}</el-button>
-          <el-button v-else-if="scope.row.employment=='N'" size="mini" @click="handleModifyStatus(scope.row, 'employment', '')">{{ $t('table.members.employment.status.N') }}</el-button>
+          <el-button v-if="scope.row.employment=='Y'" :type="scope.row.employment | statusFilter" size="mini" @click="handleModifyStatus(scope.row, 'employment', 'N')">{{ $t('table.members.employment.status.Y') }}</el-button>
+          <el-button v-else-if="scope.row.employment=='N'" :type="scope.row.employment | statusFilter" size="mini" @click="handleModifyStatus(scope.row, 'employment', '')">{{ $t('table.members.employment.status.N') }}</el-button>
           <el-button v-else size="mini" @click="handleModifyStatus(scope.row, 'employment', 'Y')">{{ $t('table.members.employment.status.null') }}</el-button>
         </template>
       </el-table-column>
@@ -60,7 +60,7 @@
           <span>{{ scope.row.ordinalNo }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="$t('table.members.curriculumName')" min-width="150px">
+      <el-table-column :label="$t('table.members.curriculumName')" width="150px" align="center">
         <template slot-scope="scope">
           <span>{{ scope.row.curriculumName }}</span>
         </template>
@@ -160,9 +160,8 @@ export default {
   filters: {
     statusFilter(status) {
       const statusMap = {
-        published: 'success',
-        draft: 'info',
-        deleted: 'danger'
+        Y: 'success',
+        N: 'danger'
       }
       return statusMap[status]
     }

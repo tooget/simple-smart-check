@@ -36,7 +36,7 @@
           <span>{{ scope.row.ordinalNo }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="$t('table.curriculums.curriculumName')" min-width="150px">
+      <el-table-column :label="$t('table.curriculums.curriculumName')" width="150px" align="center">
         <template slot-scope="scope">
           <span class="link-type" @click="handleUpdate(scope.row)">{{ scope.row.curriculumName }}</span>
         </template>
@@ -119,6 +119,7 @@
 <script>
 import { fetchCurriculumList, createCurriculumData, updateCurriculumData, deleteCurriculumData } from '@/api/resource/curriculums'
 import { createApplicantsBulk } from '@/api/resource/applicants'
+import { fetchAttendanceLogsListfile } from '@/api/resource/attendanceLogs'
 import waves from '@/directive/waves' // Waves directive
 import Pagination from '@/components/Pagination' // Secondary package based on el-pagination
 
@@ -347,10 +348,10 @@ export default {
     handleFileDownload(row) {
       this.temp = Object.assign({}, row) // copy obj
       this.temp.curriculumNo = row.curriculumNo
-      this.createAttendanceLogsFile()
+      this.downloadAttendanceLogsListfile()
     },
-    createAttendanceLogsFile() {
-      createApplicantsBulk(this.temp).then(response => {
+    downloadAttendanceLogsListfile() {
+      fetchAttendanceLogsListfile({ curriculumNo: this.temp.curriculumNo }).then(response => {
         const message = response.data.message
         this.$notify({
           title: message.title,

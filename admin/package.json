@@ -11,7 +11,8 @@
     "build:report": "npm_config_report=true npm run build",
     "lint": "eslint --ext .js,.vue src",
     "test": "npm run lint",
-    "svgo": "svgo -f src/icons/svg --config=src/icons/svgo.yml"
+    "svgo": "svgo -f src/icons/svg --config=src/icons/svgo.yml",
+    "deploy": "npm run build && aws s3 sync ./dist s3://admin.smartcheck.ml"
   },
   "dependencies": {
     "axios": "0.18.0",

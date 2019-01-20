@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const HTTP = axios.create({
-    baseURL: `http://localhost:5000/api`,
+    baseURL: `https://backend.smartcheck.ml/api`,
     timeout: 5000,
     headers: {
       'Content-Type': 'multipart/form-data',

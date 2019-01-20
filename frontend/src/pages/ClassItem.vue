@@ -4,7 +4,7 @@
             modifier="chevron"
             @click="transition(item)"
         >
-            {{ item.curriculumName }}
+            {{ item.curriculumName +' ('+ item.startDate +'~'+ item.endDate +')' }}
         </v-ons-list-item>
     </v-ons-list>
 </template>

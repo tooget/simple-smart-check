@@ -24,7 +24,8 @@ const i18n = new VueI18n({
   // options: en | ko
   locale: Cookies.get('language') || 'ko',
   // set locale messages
-  messages
+  messages: messages,
+  silentTranslationWarn: true
 })
 
 export default i18n

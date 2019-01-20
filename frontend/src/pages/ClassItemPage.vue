@@ -1,69 +1,14 @@
  <template>   
     <v-ons-page>
       <custom-toolbar backLabel="Back">
-        {{ item.curriculumName }}
+        {{ item.curriculumName +' '+ item.ordinalNo +' ('+ item.startDate +'~'+ item.endDate +')' }}
       </custom-toolbar>
 
       <v-ons-list>
-        <v-ons-list-header>Class Information</v-ons-list-header>
+        <v-ons-list-header>전화번호</v-ons-list-header>
         <v-ons-list-item :modifier="md ? 'nodivider' : ''">
           <div class="left">
-            curriculumCategory:
-          </div>
-          <label class="center">
-            {{ item.curriculumCategory }}
-          </label>
-        </v-ons-list-item>
-
-        <v-ons-list-item :modifier="md ? 'nodivider' : ''">
-          <div class="left">
-            ordinalNo:
-          </div>
-          <div class="center">
-            {{ item.ordinalNo }}
-          </div>
-        </v-ons-list-item>
-
-        <v-ons-list-item :modifier="md ? 'nodivider' : ''">
-          <div class="left">
-            curriculumName:
-          </div>
-          <div class="center">
-            {{ item.curriculumName }}
-          </div>
-        </v-ons-list-item>
-
-        <v-ons-list-item :modifier="md ? 'nodivider' : ''">
-          <div class="left">
-            curriculumType:
-          </div>
-          <div class="center">
-            {{ item.curriculumType }}
-          </div>
-        </v-ons-list-item>
-
-        <v-ons-list-item :modifier="md ? 'nodivider' : ''">
-          <div class="left">
-            startDate:
-          </div>
-          <div class="center">
-            {{ item.startDate }}
-          </div>
-        </v-ons-list-item>
-
-        <v-ons-list-item :modifier="md ? 'nodivider' : ''">
-          <div class="left">
-            endDate:
-          </div>
-          <div class="center">
-            {{ item.endDate }}
-          </div>
-        </v-ons-list-item>
-
-        <v-ons-list-header>phoneNo</v-ons-list-header>
-        <v-ons-list-item :modifier="md ? 'nodivider' : ''">
-          <div class="left">
-            phoneNo:
+            전화번호:
           </div>
           <label class="center">
             <v-ons-input float maxlength="20"
@@ -74,7 +19,7 @@
           </label>
         </v-ons-list-item>
 
-        <v-ons-list-header>attendanceType</v-ons-list-header>
+        <v-ons-list-header>입실/퇴실 여부</v-ons-list-header>
         <v-ons-list-item v-for="(attendanceType, $index) in attendanceTypes" :key="attendanceType"
           tappable
           :modifier="($index === attendanceTypes.length - 1) ? 'longdivider' : ''"
@@ -88,15 +33,12 @@
             </v-ons-radio>
           </label>
           <label :for="'radio-' + $index" class="center">
-            {{ attendanceType }}
+            {{ attendanceType | attendanceTypeFilter }}
           </label>
         </v-ons-list-item>
 
-        <v-ons-list-header>signaturePad</v-ons-list-header>
+        <v-ons-list-header>서명</v-ons-list-header>
         <v-ons-list-item :modifier="md ? 'nodivider' : ''">
-          <div class="left">
-            signaturePad:
-          </div>
           <label class="center">
             <div class="col-12 mt-2">
               <VueSignaturePad
@@ -111,7 +53,7 @@
                 class="btn btn-outline-secondary float-right"
                 @click="undo"
               >
-                Undo
+                재서명
               </button>
             </div>
             <div class="col-6 mt-2">
@@ -119,7 +61,7 @@
                 class="btn btn-outline-primary float-left"
                 @click="handleSubmit"
               >
-                Save
+                출석확인
               </button>
             </div>
           </label>
@@ -131,6 +73,15 @@
 
 <script>
 export default {
+  filters: {
+    attendanceTypeFilter(status) {
+      const statusMap = {
+        In: '입실',
+        Out: '퇴실'
+      }
+      return statusMap[status]
+    }
+  },
   computed: {
     checkInOut () {
       return this.$store.state.attendanceLog.status.checkInOut;
