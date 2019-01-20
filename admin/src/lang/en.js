@@ -193,6 +193,15 @@ export default {
       agreeWithPersonalinfo: 'agreeWithPersonalinfo',
       agreeWithMktMailSubscription: 'agreeWithMktMailSubscription',
       operationMemo: 'operationMemo'
+    },
+    attendanceLogs: {
+      attendanceLogs: 'attendanceLogs',
+      phoneNo: 'phoneNo',
+      signatureTimestamp: 'signatureTimestamp',
+      attendanceDate: 'attendanceDate',
+      In: 'In',
+      Out: 'Out',
+      curriculumCategory: 'curriculumCategory'
     }
   },
   errorLog: {

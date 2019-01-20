@@ -40,7 +40,7 @@ def createOrmModelQueryFiltersDict(request_args_filters):
 def createOrmModelQuerySortDict(request_args_sort):
     # Making filter dictionary
     # {'ORM Schema Table1': {'column1': value, 'column2': value}, 'ORM Scheam Table2': {'column1': value, 'column2': value}}
-    sortQueryDirection = {'desc': '-', 'asc': '+'}
+    sortQueryDirection = {'desc': '-', 'asc': ''}
     querySortByOrmModel = [''.join([sortQueryDirection[value], target]) for target, value in request_args_sort.items()]
 
     return querySortByOrmModel       # return dict

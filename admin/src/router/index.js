@@ -56,6 +56,12 @@ export const constantRouterMap = [
         name: 'members',
         component: () => import('@/views/table/members'),
         meta: { title: 'members', icon: 'table' }
+      },
+      {
+        path: 'attendanceLogs',
+        name: 'attendanceLogs',
+        component: () => import('@/views/table/attendanceLogs'),
+        meta: { title: 'attendanceLogs', icon: 'table' }
       }
     ]
   },
