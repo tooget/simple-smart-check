@@ -512,14 +512,26 @@ class Members:
         def get(self):
             queryFilter = request.args
 
+            curriculumsQuery = CurriculumsModel.query.with_entities(
+                                                CurriculumsModel.curriculumNo,
+                                                CurriculumsModel.curriculumName,
+                                                CurriculumsModel.curriculumCategory,
+                                                CurriculumsModel.ordinalNo,
+                                                CurriculumsModel.startDate,
+                                                CurriculumsModel.endDate,
+                                            ).filter_by(**queryFilter)
+            curriculumsSchema = CurriculumsModelSchema(many= True)
+            curriculumsInfo = curriculumsSchema.dump(curriculumsQuery.all())
+            targetCurriculumsCount = curriculumsQuery.count()
+
             output = {
-                **queryFilter,
+                'curriculumInfo': curriculumsInfo,
                 'applicants_count': MembersModel.query.filter_by(**queryFilter).count(),
                 'members_count': MembersModel.query.filter_by(**queryFilter, attendancePass= 'Y').count(),
                 'membersComplete_count': MembersModel.query.filter_by(**queryFilter, curriculumComplete= 'Y').count(),
             }
 
-            total = len(output)
+            total = targetCurriculumsCount
 
             return {'return': {'items': output, 'total': total}}, 200
     # -----------------------------------------------------------------------------
