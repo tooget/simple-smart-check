@@ -119,13 +119,13 @@ class Curriculums:
                 curriculumsSchema = CurriculumsModelSchema(many= False)
                 argument = curriculumsSchema.dump(curriculums)
                 argumentToJson = dumps(argument)
-                return {'message': { 'title': '成功', 'content': '创建成功', },
+                return {'message': { 'title': 'Succeeded', 'content': 'New Curriculum Created', },
                         'return': { 
                             'argument': f'{argumentToJson}'
                         }}, 201
             except:
                 db.session.rollback()
-                return {'message': { 'title': '失敗', 'content': '创建失敗', }}, 500
+                return {'message': { 'title': 'Failed', 'content': 'New Curriculum creation failed', }}, 500
     # ---------------------------------------------------------------------------
 
 
@@ -174,13 +174,13 @@ class Curriculums:
                 curriculumsSchema = CurriculumsModelSchema(many= False)
                 argument = curriculumsSchema.dump(curriculums)
                 argumentToJson = dumps(argument)
-                return {'message': { 'title': '成功', 'content': '更新成功', },
+                return {'message': { 'title': 'Succeeded', 'content': 'Curriculum info updated', },
                         'return': {
                             'argument': f'{argumentToJson}'
                         }}, 201
             except:
                 db.session.rollback()
-                return {'message': { 'title': '失敗', 'content': '更新失敗', }}, 500
+                return {'message': { 'title': 'Failed', 'content': 'Updating Curriculum info failed', }}, 500
     # ---------------------------------------------------------------------------
 
 
@@ -212,7 +212,7 @@ class Curriculums:
                 for record in targetAttendanceLogs:
                     db.session.delete(record)
                 db.session.commit()
-                return {'message': {'title': '成功', 'content': '删除成功'}}, 201
+                return {'message': {'title': 'Succeeded', 'content': 'Curriculum/all the relavant data deleted'}}, 201
             except:
                 db.session.rollback()
                 return {'message': 'Something went wrong'}, 500
@@ -264,11 +264,42 @@ class AttendanceLogs:
     class get_AttendanceLogs_Filter(Resource):
 
         def get(self):
-            queryFilter = request.args
-            attendanceLogs = AttendanceLogsModel.query.filter_by(**queryFilter)
-            attendanceLogsSchema = AttendanceLogsModelSchema(many= True)
-            output = attendanceLogsSchema.dump(attendanceLogs.all())
-            total = attendanceLogs.count()
+            queryFilter = createOrmModelQueryFiltersDict(request.args)
+            attendanceLogsFilter = queryFilter['AttendanceLogsModel']
+            applicantsFilter = queryFilter['ApplicantsModel']
+            curriculumsFilter = queryFilter['CurriculumsModel']
+
+            attendanceLogs = AttendanceLogsModel.query.with_entities(
+                                                        AttendanceLogsModel.phoneNo,
+                                                        AttendanceLogsModel.curriculumNo,
+                                                        AttendanceLogsModel.checkInOut,
+                                                        AttendanceLogsModel.attendanceDate,
+                                                        AttendanceLogsModel.insertedTimestamp,
+                                                    ).filter_by(**attendanceLogsFilter)    \
+                                                    .subquery()
+            applicnats = ApplicantsModel.query.with_entities(
+                                                        ApplicantsModel.curriculumNo,
+                                                        ApplicantsModel.phoneNo,
+                                                        ApplicantsModel.applicantName,
+                                                    ).filter_by(**applicantsFilter)    \
+                                                    .subquery()
+            curriculums = CurriculumsModel.query.with_entities(
+                                                        CurriculumsModel.curriculumNo,
+                                                        CurriculumsModel.curriculumName,
+                                                    ).filter_by(**curriculumsFilter)   \
+                                                    .subquery()
+
+            query = db.session.query(attendanceLogs).with_entities(
+                                                        attendanceLogs,
+                                                        applicnats.c.applicantName,
+                                                        curriculums.c.curriculumName,
+                                                    ).outerjoin(applicnats, and_(applicnats.c.curriculumNo == attendanceLogs.c.curriculumNo, applicnats.c.phoneNo == attendanceLogs.c.phoneNo))  \
+                                                    .outerjoin(curriculums, curriculums.c.curriculumNo == attendanceLogs.c.curriculumNo)
+
+            df = pd.read_sql(query.statement, db.get_engine(bind= 'mysql'))
+            output = convertDataframeToDictsList(df)
+
+            total = query.count()
 
             return {'return': {'items': output, 'total': total}}, 200
     # ---------------------------------------------------------------------------
@@ -356,8 +387,20 @@ class AttendanceLogs:
             queryFilter = request.args
             print(request.args['curriculumNo'])
             
-            attendanceLogs = AttendanceLogsModel.query.filter_by(**queryFilter)
+            attendanceLogs = AttendanceLogsModel.query.filter_by(**queryFilter).subquery()
+            applicants = ApplicantsModel.query.with_entities(
+                                                        ApplicantsModel.applicantName,
+                                                        ApplicantsModel.curriculumNo,
+                                                        ApplicantsModel.phoneNo,
+                                                    ).filter_by(**queryFilter)  \
+                                                    .subquery()
+            query = db.session.query(attendanceLogs).with_entities(
+                                                        attendanceLogs,
+                                                        applicants.c.applicantName
+                                                    ).outerjoin(applicants, and_(applicants.c.curriculumNo == attendanceLogs.c.curriculumNo, applicants.c.phoneNo == attendanceLogs.c.phoneNo))
+
             # Get full duration of a curriculum.
+            curriculumName = CurriculumsModel.query.with_entities(CurriculumsModel.curriculumName).filter_by(**queryFilter).first()
             curriculumDuration = CurriculumsModel.query.with_entities(CurriculumsModel.startDate, CurriculumsModel.endDate).filter_by(**queryFilter).first()
             startDate, endDate = curriculumDuration.startDate.strftime('%Y-%m-%dT%H:%M:%SZ'), curriculumDuration.endDate.strftime('%Y-%m-%dT%H:%M:%SZ')
             curriculumDuration = set([date.strftime('%Y-%m-%d') for date in pd.date_range(start= startDate, end= endDate, freq= 'B')])
@@ -366,11 +409,11 @@ class AttendanceLogs:
             membersPhoneNoList = set([phoneNoDict['phoneNo'] for phoneNoDict in membersPhoneNoList])
 
             # Pivot Attendance Check-Table for now.
-            attendanceLogsDf = pd.read_sql(attendanceLogs.statement, db.get_engine(bind= 'mysql'))
+            attendanceLogsDf = pd.read_sql(query.statement, db.get_engine(bind= 'mysql'))
             attendanceLogsDf['attendanceDate'] = attendanceLogsDf['attendanceDate'].astype(str)
             # attendanceLogsDf['signature'] = attendanceLogsDf['signature'].apply( lambda x: 'signed' )
             attendanceLogsDf['signature'] = attendanceLogsDf['signature'].apply( lambda x: decompress(b64decode(x)).decode() )      # Different from @apiRestful.route('/resource/attendancelogs/list')
-            pivot = attendanceLogsDf.set_index(['phoneNo', 'checkInOut', 'attendanceDate'])[['signature', 'insertedTimestamp']]
+            pivot = attendanceLogsDf.set_index(['applicantName', 'phoneNo', 'checkInOut', 'attendanceDate'])[['signature', 'insertedTimestamp']]
             # pivot['signatureTimestamp'] = pivot['signature'] + '\n' + pivot['insertedTimestamp'].dt.strftime('%Y-%m-%dT%H:%M:%SZ').astype(str)
             pivot['signatureTimestamp'] = pivot['signature']
             pivot = pivot.drop(columns= ['signature', 'insertedTimestamp']).unstack(level= [2, 1]).sort_index(axis= 'columns', level= 1)
@@ -405,8 +448,8 @@ class AttendanceLogs:
                 if rownum > 3:
                     worksheet.set_row(rownum, 110)              # Make Height of rows larger
             
-            worksheet.set_column(1, pivot.columns.size, 25)     # Make Width of Columns after B much larger
-            worksheet.set_column(0, 0, 15)                      # Make Width of A column larger
+            worksheet.set_column(2, pivot.columns.size, 25)     # Make Width of Columns after B much larger
+            worksheet.set_column(0, 1, 15)                      # Make Width of A column larger
 
             # Insert images to each cell and delete each cell value.
             cells = [(x,y) for x in range(pivot.index.size) for y in range(pivot.columns.size)]
@@ -731,7 +774,7 @@ class Members:
                 membersSchema = MembersModelSchema(many= False)
                 argument = membersSchema.dump(members)
                 argumentToJson = dumps(argument)
-                return {'message': { 'title': '成功', 'content': '操作成功', },
+                return {'message': { 'title': 'Succeeded', 'content': 'Personal info updated', },
                         'return': {
                             'argument': f'{argumentToJson}'
                         }}, 201
@@ -807,9 +850,9 @@ class Applicants:
                 db.session.add_all(newBulkApplicants)
                 db.session.add_all(newBulkMembers)
                 db.session.commit()
-                return {'message': { 'title': '成功', 'content': '创建成功', }}, 201
+                return {'message': { 'title': 'Succeeded', 'content': 'Created/Replaced all the relavant data', }}, 201
             except:
                 db.session.rollback()
-                return {'message': { 'title': '失敗', 'content': '创建失敗', }}, 500
+                return {'message': { 'title': 'Failed', 'content': 'Creating/Replacing all the relavant data failed', }}, 500
     # -----------------------------------------------------------------------------
 # ---------------------------------------------------------------------------------
