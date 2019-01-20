@@ -20,7 +20,7 @@
           <span>{{ scope.row.phoneNo }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="$t('table.attendanceLogs.attendanceLogs')" align="center">
+      <el-table-column :label="$t('table.attendanceLogs.name')" align="center">
         <template slot-scope="scope">
           <el-table-column v-for="(item, index) in scope.row.signatureTimestamp" :key="index" :label="item.attendanceDate" prop="signatureTimestamp" align="center">
             {{ scope.row.signatureTimestamp[0].attending }}

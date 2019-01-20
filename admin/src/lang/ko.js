@@ -1,76 +1,14 @@
 export default {
   route: {
     dashboard: 'Dashboard',
-    introduction: 'Introduction',
-    documentation: 'Documentation',
-    guide: 'Guide',
-    permission: 'Permission',
-    pagePermission: 'Page Permission',
-    directivePermission: 'Directive Permission',
-    icons: 'Icons',
-    components: 'Components',
-    componentIndex: 'Introduction',
-    tinymce: 'Tinymce',
-    markdown: 'Markdown',
-    jsonEditor: 'JSON Editor',
-    dndList: 'Dnd List',
-    splitPane: 'SplitPane',
-    avatarUpload: 'Avatar Upload',
-    dropzone: 'Dropzone',
-    sticky: 'Sticky',
-    countTo: 'CountTo',
-    componentMixin: 'Mixin',
-    backToTop: 'BackToTop',
-    dragDialog: 'Drag Dialog',
-    dragSelect: 'Drag Select',
-    dragKanban: 'Drag Kanban',
-    charts: 'Charts',
-    keyboardChart: 'Keyboard Chart',
-    lineChart: 'Line Chart',
-    mixChart: 'Mix Chart',
-    example: 'Example',
-    nested: 'Nested Routes',
-    menu1: 'Menu 1',
-    'menu1-1': 'Menu 1-1',
-    'menu1-2': 'Menu 1-2',
-    'menu1-2-1': 'Menu 1-2-1',
-    'menu1-2-2': 'Menu 1-2-2',
-    'menu1-3': 'Menu 1-3',
-    menu2: 'Menu 2',
-    Table: 'Table',
-    dynamicTable: 'Dynamic Table',
-    dragTable: 'Drag Table',
-    inlineEditTable: 'Inline Edit',
-    complexTable: 'Complex Table',
-    treeTable: 'Tree Table',
-    customTreeTable: 'Custom TreeTable',
-    tab: 'Tab',
-    form: 'Form',
-    createArticle: 'Create Article',
-    editArticle: 'Edit Article',
-    articleList: 'Article List',
-    errorPages: 'Error Pages',
-    page401: '401',
-    page404: '404',
-    errorLog: 'Error Log',
-    excel: 'Excel',
-    exportExcel: 'Export Excel',
-    selectExcel: 'Export Selected',
-    uploadExcel: 'Upload Excel',
-    zip: 'Zip',
-    exportZip: 'Export Zip',
-    theme: 'Theme',
-    clipboardDemo: 'Clipboard',
-    i18n: 'I18n',
-    externalLink: 'External Link'
+    manage: 'Manage',
+    curriculums: 'curriculums',
+    members: 'members',
+    attendanceLogs: 'attendanceLogs'
   },
   navbar: {
-    logOut: 'Log Out',
-    dashboard: 'Dashboard',
-    github: 'Github',
-    screenfull: 'Screenfull',
-    theme: 'Theme',
-    size: 'Global Size'
+    logOut: 'LogOut',
+    dashboard: 'Dashboard'
   },
   login: {
     title: 'Login Form',
@@ -81,89 +19,110 @@ export default {
     thirdparty: 'Or connect with',
     thirdpartyTips: 'Can not be simulated on local, so please combine you own business simulation! ! !'
   },
-  documentation: {
-    documentation: 'Documentation',
-    github: 'Github Repository'
-  },
-  permission: {
-    roles: 'Your roles',
-    switchRoles: 'Switch roles',
-    tips: 'In some cases it is not suitable to use v-permission, such as element Tab component or el-table-column and other asynchronous rendering dom cases which can only be achieved by manually setting the v-if.'
-  },
-  guide: {
-    description: 'The guide page is useful for some people who entered the project for the first time. You can briefly introduce the features of the project. Demo is based on ',
-    button: 'Show Guide'
-  },
-  components: {
-    documentation: 'Documentation',
-    tinymceTips: 'Rich text editor is a core part of management system, but at the same time is a place with lots of problems. In the process of selecting rich texts, I also walked a lot of detours. The common rich text editors in the market are basically used, and the finally chose Tinymce. See documentation for more detailed rich text editor comparisons and introductions.',
-    dropzoneTips: 'Because my business has special needs, and has to upload images to qiniu, so instead of a third party, I chose encapsulate it by myself. It is very simple, you can see the detail code in @/components/Dropzone.',
-    stickyTips: 'when the page is scrolled to the preset position will be sticky on the top.',
-    backToTopTips1: 'When the page is scrolled to the specified position, the Back to Top button appears in the lower right corner',
-    backToTopTips2: 'You can customize the style of the button, show / hide, height of appearance, height of the return. If you need a text prompt, you can use element-ui el-tooltip elements externally',
-    imageUploadTips: 'Since I was using only the vue@1 version, and it is not compatible with mockjs at the moment, I modified it myself, and if you are going to use it, it is better to use official version.'
-  },
   table: {
-    dynamicTips1: 'Fixed header, sorted by header order',
-    dynamicTips2: 'Not fixed header, sorted by click order',
-    dragTips1: 'The default order',
-    dragTips2: 'The after dragging order',
-    title: 'Title',
-    importance: 'Imp',
-    type: 'Type',
-    remark: 'Remark',
-    search: 'Search',
-    add: 'Add',
+    browse: 'Browse',
+    search: '검색',
+    add: '추가',
     export: 'Export',
-    reviewer: 'reviewer',
-    id: 'ID',
-    date: 'Date',
-    author: 'Author',
-    readings: 'Readings',
     status: 'Status',
     actions: 'Actions',
     edit: 'Edit',
     publish: 'Publish',
     draft: 'Draft',
     delete: 'Delete',
+    download: 'Download',
     cancel: 'Cancel',
     confirm: 'Confirm',
+    dashboard: {
+      name: 'Dashboard',
+      curriculumNo: '과정ID',
+      curriculumName: '과정명',
+      curriculumCategory: '과정분류',
+      ordinalNo: '기수',
+      curriculumPeriod: '기간',
+      curriculumType: '특징',
+      ApplicantCount: '지원자(명)',
+      MemberCount: '수강자(명)',
+      MemberCompleteCount: '수료자(명)',
+      MemberEmploymentCount: '취업자(명)'
+    },
     curriculums: {
-      curriculumNo: 'ID',
-      curriculumCategory: 'Category',
-      ordinalNo: 'ordinalNo',
-      curriculumName: 'curriculumName',
-      curriculumType: 'curriculumType',
-      startDate: 'startDate',
-      endDate: 'endDate'
+      name: '교육과정',
+      delete: '데이터(전체) 삭제',
+      donwnloadAtendanceLogs: '출석부 다운로드',
+      curriculumNo: '과정ID',
+      curriculumCategory: '과정분류',
+      ordinalNo: '기수',
+      curriculumName: '과정명',
+      curriculumType: '특징',
+      startDate: '시작일',
+      endDate: '종료일',
+      applicantsBulkInserted: '명단(EXCEL) 입력',
+      insertedTimestamp: '입력시간',
+      updatedTimestamp: '수정시간'
+    },
+    members: {
+      name: '수강자',
+      phoneNo: '전화번호',
+      curriculumNo: '과정ID',
+      attendancePass: {
+        name: '선발여부',
+        status: {
+          Y: '선발',
+          N: '탈락',
+          null: '알수없음'
+        }
+      },
+      attendanceCheck: {
+        name: '참석여부',
+        status: {
+          Y: '참석',
+          N: '불참',
+          null: '알수없음'
+        }
+      },
+      curriculumComplete: {
+        name: '수료여부',
+        status: {
+          Y: '수료',
+          N: '미수료',
+          null: '알수없음'
+        }
+      },
+      employment: {
+        name: '취업여부',
+        status: {
+          Y: '취업',
+          N: '미취업',
+          null: '알수없음'
+        }
+      },
+      ordinalNo: '기수',
+      curriculumName: '과정명',
+      curriculumCategory: '과정분류',
+      startDate: '시작일',
+      endDate: '종료일',
+      applicantName: '지원자명',
+      birthDate: '생년월일',
+      email: '이메일',
+      affiliation: '소속(회사/학교)',
+      department: '부서(전공)',
+      position: '직급(학년)',
+      job: '지원자 상태',
+      purposeSelection: '수강목적',
+      careerDuration: '개발경력(기간)',
+      agreeWithPersonalinfo: '개인정보 제공동의',
+      agreeWithMktMailSubscription: '핀테크 기술지원센터 소식 수신여부',
+      operationMemo: '비고'
+    },
+    attendanceLogs: {
+      name: '출석부',
+      phoneNo: '전화번호',
+      signatureTimestamp: '서명',
+      attendanceDate: '출석일',
+      In: '입실',
+      Out: '퇴실',
+      curriculumCategory: '과정분류'
     }
-  },
-  errorLog: {
-    tips: 'Please click the bug icon in the upper right corner',
-    description: 'Now the management system are basically the form of the spa, it enhances the user experience, but it also increases the possibility of page problems, a small negligence may lead to the entire page deadlock. Fortunately Vue provides a way to catch handling exceptions, where you can handle errors or report exceptions.',
-    documentation: 'Document introduction'
-  },
-  excel: {
-    export: 'Export',
-    selectedExport: 'Export Selected Items',
-    placeholder: 'Please enter the file name(default excel-list)'
-  },
-  zip: {
-    export: 'Export',
-    placeholder: 'Please enter the file name(default file)'
-  },
-  pdf: {
-    tips: 'Here we use window.print() to implement the feature of downloading pdf.'
-  },
-  theme: {
-    change: 'Change Theme',
-    documentation: 'Theme documentation',
-    tips: 'Tips: It is different from the theme-pick on the navbar is two different skinning methods, each with different application scenarios. Refer to the documentation for details.'
-  },
-  tagsView: {
-    refresh: 'Refresh',
-    close: 'Close',
-    closeOthers: 'Close Others',
-    closeAll: 'Close All'
   }
 }

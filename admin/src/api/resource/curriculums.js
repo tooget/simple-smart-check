@@ -51,3 +51,11 @@ export function deleteCurriculumData(curriculumNo) {
     data: requestBody
   })
 }
+
+export function fetchCurriculumWithMemberCountList(query) {
+  return request({
+    url: '/resource/curriculums/withmembercount',
+    method: 'get',
+    params: query
+  })
+}

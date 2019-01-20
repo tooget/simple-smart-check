@@ -224,25 +224,39 @@ class Curriculums:
     class get_Curriculums_WithMemberCount(Resource):
 
         def get(self):
-            curriculumList = CurriculumsModel.query.with_entities(CurriculumsModel.curriculumNo, CurriculumsModel.curriculumCategory, CurriculumsModel.ordinalNo, CurriculumsModel.curriculumName, func.concat(CurriculumsModel.startDate, '~', CurriculumsModel.endDate).label('curriculumPeriod'), CurriculumsModel.curriculumType).subquery()
-            applicantCount = ApplicantsModel.query.with_entities(ApplicantsModel.curriculumNo, func.count(ApplicantsModel.phoneNo).label('ApplicantCount')).group_by(ApplicantsModel.curriculumNo).subquery()
-            memberCount = MembersModel.query.with_entities(MembersModel.curriculumNo, func.count(MembersModel.phoneNo).label('MemberCount')).filter(MembersModel.attendanceCheck == 'Y').group_by(MembersModel.curriculumNo).subquery()
-            memberCompleteCount = MembersModel.query.with_entities(MembersModel.curriculumNo, func.count(MembersModel.phoneNo).label('MemberCompleteCount')).filter(MembersModel.curriculumComplete == 'Y').group_by(MembersModel.curriculumNo).subquery()
-            memberEmploymentCount = MembersModel.query.with_entities(MembersModel.curriculumNo, func.count(MembersModel.phoneNo).label('MemberEmploymentCount')).filter(MembersModel.employment == 'Y').group_by(MembersModel.curriculumNo).subquery()
-            query = db.session.query(curriculumList).with_entities( \
-                                                        curriculumList, \
-                                                        func.ifnull(applicantCount.c.ApplicantCount, 0).label('ApplicantCount'), \
-                                                        func.ifnull(memberCount.c.MemberCount, 0).label('MemberCount'), \
-                                                        func.ifnull(memberCompleteCount.c.MemberCompleteCount, 0).label('MemberCompleteCount'), \
+            queryParams = {key: loads(request.args[key]) for key in request.args}
+
+            ormQueryFilters = createOrmModelQueryFiltersDict(queryParams['filters'])
+            # ormQuerySort = createOrmModelQuerySortDict(queryParams['sort'])
+
+            pagenum, limit = int(queryParams['pagination']['pagenum']), int(queryParams['pagination']['limit'])
+            start, stop = (pagenum-1)*limit, pagenum*limit
+
+            curriculumLikeFilters = (getattr(CurriculumsModel, target).like(f'%{value}%') for target, value in ormQueryFilters['CurriculumsModel'].items())
+            applicantLikeFilters = (getattr(ApplicantsModel, target).like(f'%{value}%') for target, value in ormQueryFilters['ApplicantsModel'].items())
+            memberFilters = (getattr(MembersModel, target) == value for target, value in ormQueryFilters['MembersModel'].items())
+
+            curriculumList = CurriculumsModel.query.with_entities(CurriculumsModel.curriculumNo, CurriculumsModel.curriculumCategory, CurriculumsModel.ordinalNo, CurriculumsModel.curriculumName, func.concat(CurriculumsModel.startDate, '~', CurriculumsModel.endDate).label('curriculumPeriod'), CurriculumsModel.curriculumType).filter(and_(*curriculumLikeFilters)).subquery()
+            applicantCount = ApplicantsModel.query.with_entities(ApplicantsModel.curriculumNo, func.count(ApplicantsModel.phoneNo).label('ApplicantCount')).filter(and_(*applicantLikeFilters)).group_by(ApplicantsModel.curriculumNo).subquery()
+            memberCount = MembersModel.query.with_entities(MembersModel.curriculumNo, func.count(MembersModel.phoneNo).label('MemberCount')).filter(and_(MembersModel.attendanceCheck == 'Y', *memberFilters)).group_by(MembersModel.curriculumNo).subquery()
+            memberCompleteCount = MembersModel.query.with_entities(MembersModel.curriculumNo, func.count(MembersModel.phoneNo).label('MemberCompleteCount')).filter(and_(MembersModel.curriculumComplete == 'Y', *memberFilters)).group_by(MembersModel.curriculumNo).subquery()
+            memberEmploymentCount = MembersModel.query.with_entities(MembersModel.curriculumNo, func.count(MembersModel.phoneNo).label('MemberEmploymentCount')).filter(and_(MembersModel.employment == 'Y', *memberFilters)).group_by(MembersModel.curriculumNo).subquery()
+            query = db.session.query(curriculumList).with_entities(
+                                                        curriculumList,
+                                                        func.ifnull(applicantCount.c.ApplicantCount, 0).label('ApplicantCount'),
+                                                        func.ifnull(memberCount.c.MemberCount, 0).label('MemberCount'),
+                                                        func.ifnull(memberCompleteCount.c.MemberCompleteCount, 0).label('MemberCompleteCount'),
                                                         func.ifnull(memberEmploymentCount.c.MemberEmploymentCount, 0).label('MemberEmploymentCount'))   \
                                                     .outerjoin(applicantCount, curriculumList.c.curriculumNo == applicantCount.c.curriculumNo)  \
-                                                    .outerjoin(memberCount, curriculumList.c.curriculumNo == memberCount.c.curriculumNo)    \
-                                                    .outerjoin(memberCompleteCount, curriculumList.c.curriculumNo == memberCompleteCount.c.curriculumNo)    \
-                                                    .outerjoin(memberEmploymentCount, curriculumList.c.curriculumNo == memberEmploymentCount.c.curriculumNo)    \
-
+                                                    .outerjoin(memberCount, curriculumList.c.curriculumNo == memberCount.c.curriculumNo)  \
+                                                    .outerjoin(memberCompleteCount, curriculumList.c.curriculumNo == memberCompleteCount.c.curriculumNo)  \
+                                                    .outerjoin(memberEmploymentCount, curriculumList.c.curriculumNo == memberEmploymentCount.c.curriculumNo)
+            total = query.count()
+            query = query.slice(start, stop)
+            # query = sort_query(query, *ormQuerySort).slice(start, stop)
+            
             df = pd.read_sql(query.statement, db.get_engine(bind= 'mysql'))
             output = convertDataframeToDictsList(df)
-            total = query.count()
 
             return {'return': {'items': output, 'total': total}}, 200
     # ---------------------------------------------------------------------------

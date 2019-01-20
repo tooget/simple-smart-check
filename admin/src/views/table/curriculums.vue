@@ -7,7 +7,9 @@
       </el-select>
       <el-button v-waves class="filter-item" type="primary" icon="el-icon-search" @click="handleFilter">{{ $t('table.search') }}</el-button>
       <el-button class="filter-item" style="margin-left: 10px;" type="primary" icon="el-icon-edit" @click="handleCreate">{{ $t('table.add') }}</el-button>
-      <el-checkbox v-model="showDelete" class="filter-item" style="margin-left:15px;" @change="tableKey=tableKey+1">{{ $t('table.delete') }}</el-checkbox>
+      <el-checkbox v-model="showApplicantsBulkInserted" class="filter-item" style="margin-left:15px;" @change="tableKey=tableKey+1">{{ $t($t('table.curriculums.applicantsBulkInserted')) }}</el-checkbox>
+      <el-checkbox v-model="showDonwnloadAtendanceLogs" class="filter-item" style="margin-left:15px;" @change="tableKey=tableKey+1">{{ $t($t('table.curriculums.donwnloadAtendanceLogs')) }}</el-checkbox>
+      <el-checkbox v-model="showDelete" class="filter-item" style="margin-left:15px;" @change="tableKey=tableKey+1">{{ $t($t('table.curriculums.delete')) }}</el-checkbox>
     </div>
 
     <el-table
@@ -54,18 +56,18 @@
           <span>{{ scope.row.endDate | parseTime('{y}-{m}-{d}') }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="$t('table.curriculums.applicantsBulkInserted')" width="150px" align="center">
-        <template slot-scope="scope">
-          <span>{{ scope.row.applicantsBulkInserted | parseTime('{y}-{m}-{d} {h}:{i}:{s}') }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column :label="$t('table.browse')" align="center" width="150" class-name="small-padding fixed-width">
+      <el-table-column v-if="showApplicantsBulkInserted" :label="$t('table.curriculums.applicantsBulkInserted')" align="center" width="150" class-name="small-padding fixed-width">
         <template slot-scope="scope">
           <input ref="excel-upload-input" class="excel-upload-input" type="file" accept=".xlsx, .xls" @change="handleFileUpload">
-          <el-button :loading="uploadExcelLoading" style="margin-left:16px;" size="mini" type="primary" @click="handleFileSubmit(scope.row)">{{ $t('table.browse') }}</el-button>
+          <el-button :loading="uploadExcelLoading" size="mini" type="primary" @click="handleFileSubmit(scope.row)">{{ $t('table.browse') }}</el-button>
         </template>
       </el-table-column>
-      <el-table-column v-if="showDelete" :label="$t('table.delete')" align="center" width="100" class-name="small-padding fixed-width">
+      <el-table-column v-if="showDonwnloadAtendanceLogs" :label="$t('table.curriculums.donwnloadAtendanceLogs')" align="center" width="150" class-name="small-padding fixed-width">
+        <template slot-scope="scope">
+          <el-button size="mini" type="primary" @click="handleFileDownload(scope.row)">{{ $t('table.download') }}</el-button>
+        </template>
+      </el-table-column>
+      <el-table-column v-if="showDelete" :label="$t('table.curriculums.delete')" align="center" width="100" class-name="small-padding fixed-width">
         <template slot-scope="scope">
           <el-button type="danger" size="mini" @click="handleDelete(scope.row)">{{ $t('table.delete') }}</el-button>
         </template>
@@ -130,16 +132,6 @@ export default {
   name: 'ComplexTable',
   components: { Pagination },
   directives: { waves },
-  filters: {
-    statusFilter(status) {
-      const statusMap = {
-        published: 'success',
-        draft: 'info',
-        deleted: 'danger'
-      }
-      return statusMap[status]
-    }
-  },
   data() {
     return {
       tableKey: 0,
@@ -152,6 +144,8 @@ export default {
         pagination: { pagenum: 1, limit: 20 }
       },
       curriculumCategoryOptions,
+      showApplicantsBulkInserted: false,
+      showDonwnloadAtendanceLogs: false,
       showDelete: false,
       temp: {
         curriculumNo: undefined,
@@ -332,6 +326,30 @@ export default {
       this.createApplicantsData()
     },
     createApplicantsData() {
+      createApplicantsBulk(this.temp).then(response => {
+        const message = response.data.message
+        this.$notify({
+          title: message.title,
+          message: message.content,
+          type: 'success',
+          duration: 2000
+        })
+      }).catch(error => {
+        const message = error.response.data.message
+        this.$notify({
+          title: message.title,
+          message: message.content,
+          type: 'warn',
+          duration: 2000
+        })
+      })
+    },
+    handleFileDownload(row) {
+      this.temp = Object.assign({}, row) // copy obj
+      this.temp.curriculumNo = row.curriculumNo
+      this.createAttendanceLogsFile()
+    },
+    createAttendanceLogsFile() {
       createApplicantsBulk(this.temp).then(response => {
         const message = response.data.message
         this.$notify({

@@ -135,9 +135,9 @@
           <span>{{ scope.row.agreeWithMktMailSubscription }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="$t('table.members.agreeWithMktMailSubscription')" width="150px" align="center">
+      <el-table-column :label="$t('table.members.operationMemo')" width="150px" align="center">
         <template slot-scope="scope">
-          <span>{{ scope.row.agreeWithMktMailSubscription }}</span>
+          <span>{{ scope.row.operationMemo }}</span>
         </template>
       </el-table-column>
     </el-table>
