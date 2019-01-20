@@ -43,7 +43,7 @@ def createOrmModelQuerySortDict(request_args_sort):
     sortQueryDirection = {'desc': '-', 'asc': ''}
     querySortByOrmModel = [''.join([sortQueryDirection[value], target]) for target, value in request_args_sort.items()]
 
-    return querySortByOrmModel       # return dict
+    return querySortByOrmModel       # return list
 # -------------------------------------------------------------------------------
 
 
