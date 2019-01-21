@@ -21,6 +21,7 @@ marshmallow-sqlalchemy = "*"
 xlrd = "*"
 sqlalchemy-utils = "*"
 pillow = "*"
+xlsxwriter = "*"
 
 [dev-packages]
 pytest = "*"

@@ -334,8 +334,14 @@ class AttendanceLogs:
             curriculumDuration = CurriculumsModel.query.with_entities(CurriculumsModel.startDate, CurriculumsModel.endDate).filter_by(**queryFilter).first()
             startDate, endDate = curriculumDuration.startDate.strftime('%Y-%m-%dT%H:%M:%SZ'), curriculumDuration.endDate.strftime('%Y-%m-%dT%H:%M:%SZ')
             curriculumDuration = set([date.strftime('%Y-%m-%d') for date in pd.date_range(start= startDate, end= endDate, freq= 'B')])
-            # Get entire members and phoneNo list of a curriculum.
-            applicantsNameAndphoneNoList = pd.read_sql(ApplicantsModel.query.with_entities(ApplicantsModel.phoneNo, ApplicantsModel.applicantName).filter_by(**queryFilter).statement, db.get_engine(bind= 'mysql'), index_col= 'phoneNo')
+            # Get only attendancePassed members and phoneNo list of a curriculum.
+            membersAttendancePassOnlyQuery = MembersModel.query.with_entities(MembersModel.phoneNo).filter_by(**queryFilter, attendancePass= 'Y').subquery()
+            applicantNameQuery = ApplicantsModel.query.with_entities(ApplicantsModel.phoneNo, ApplicantsModel.applicantName).filter_by(**queryFilter).subquery()
+            applicantsNameAndphoneNoQuery = db.session.query(membersAttendancePassOnlyQuery).with_entities(
+                                                        membersAttendancePassOnlyQuery,
+                                                        applicantNameQuery.c.applicantName
+                                                    ).outerjoin(applicantNameQuery, membersAttendancePassOnlyQuery.c.phoneNo == applicantNameQuery.c.phoneNo)
+            applicantsNameAndphoneNoList = pd.read_sql(applicantsNameAndphoneNoQuery.statement, db.get_engine(bind= 'mysql'), index_col= 'phoneNo')
             membersPhoneNoList = list(applicantsNameAndphoneNoList.index)
             membersNameList = list(applicantsNameAndphoneNoList['applicantName'])
             if len(membersPhoneNoList) != len(set(membersPhoneNoList)):
@@ -415,8 +421,14 @@ class AttendanceLogs:
             curriculumDuration = CurriculumsModel.query.with_entities(CurriculumsModel.startDate, CurriculumsModel.endDate).filter_by(**queryFilter).first()
             startDate, endDate = curriculumDuration.startDate.strftime('%Y-%m-%dT%H:%M:%SZ'), curriculumDuration.endDate.strftime('%Y-%m-%dT%H:%M:%SZ')
             curriculumDuration = set([date.strftime('%Y-%m-%d') for date in pd.date_range(start= startDate, end= endDate, freq= 'B')])
-            # Get entire members and phoneNo list of a curriculum.
-            applicantsNameAndphoneNoList = pd.read_sql(ApplicantsModel.query.with_entities(ApplicantsModel.phoneNo, ApplicantsModel.applicantName).filter_by(**queryFilter).statement, db.get_engine(bind= 'mysql'), index_col= 'phoneNo')
+            # Get only attendancePassed members and phoneNo list of a curriculum.
+            membersAttendancePassOnlyQuery = MembersModel.query.with_entities(MembersModel.phoneNo).filter_by(**queryFilter, attendancePass= 'Y').subquery()
+            applicantNameQuery = ApplicantsModel.query.with_entities(ApplicantsModel.phoneNo, ApplicantsModel.applicantName).filter_by(**queryFilter).subquery()
+            applicantsNameAndphoneNoQuery = db.session.query(membersAttendancePassOnlyQuery).with_entities(
+                                                        membersAttendancePassOnlyQuery,
+                                                        applicantNameQuery.c.applicantName
+                                                    ).outerjoin(applicantNameQuery, membersAttendancePassOnlyQuery.c.phoneNo == applicantNameQuery.c.phoneNo)
+            applicantsNameAndphoneNoList = pd.read_sql(applicantsNameAndphoneNoQuery.statement, db.get_engine(bind= 'mysql'), index_col= 'phoneNo')
             membersPhoneNoList = list(applicantsNameAndphoneNoList.index)
             membersNameList = list(applicantsNameAndphoneNoList['applicantName'])
             if len(membersPhoneNoList) != len(set(membersPhoneNoList)):
