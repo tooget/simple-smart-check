@@ -372,6 +372,9 @@ class AttendanceLogs:
                 columns= pd.MultiIndex.from_product(iterables, names= pivot.columns.names),
             )
             emptyAttendanceTableDF.index.name = pivot.index.name
+            # Check attendancePassed members and actually attended applicants who were not attendancePassed.
+            attendanceLogsOfapplicantsWithoutAttendnacePass = pivot.index.difference(emptyAttendanceTableDF.index)
+            pivot = pivot.drop(attendanceLogsOfapplicantsWithoutAttendnacePass)
             # Overlay and Update the pivot table.
             pivot = pivot.combine_first(emptyAttendanceTableDF)
 
@@ -382,7 +385,8 @@ class AttendanceLogs:
             signatureTimestampListItem = dict()
             vueElementUiListedJsonItem = dict()
             signatureTimestampList = list()
-            for phoneNo, row in pivot.iterrows():
+            for phoneNoAndNameIdx, row in pivot.iterrows():
+                # tuple 'phoneNoAndNameIdx' has phoneNo 'phoneNoAndNameIdx[0]' and applicantName 'phoneNoAndNameIdx[1]'
                 for signatureTimestampLabel, insertedTimestampLabel, checkInOutLabel in zip(*pivot.columns.labels):
                     level1 = signatureTimestampLevel[signatureTimestampLabel]
                     level2 = insertedTimestampLevel[insertedTimestampLabel]
@@ -393,14 +397,22 @@ class AttendanceLogs:
                     if checkInOutLabel == 1:
                         signatureTimestampList.append(deepcopy(signatureTimestampListItem))
 
-                vueElementUiListedJsonItem.update({'phoneNo': phoneNo})
+                vueElementUiListedJsonItem.update({'phoneNo': phoneNoAndNameIdx[0]})
+                vueElementUiListedJsonItem.update({'applicantName': phoneNoAndNameIdx[1]})
                 vueElementUiListedJsonItem.update({'signatureTimestamp': deepcopy(signatureTimestampList)})
                 vueElementUiListedJson.append(deepcopy(vueElementUiListedJsonItem))
+                print(phoneNoAndNameIdx[0], type(phoneNoAndNameIdx[0]), phoneNoAndNameIdx[1],type(phoneNoAndNameIdx[1]))
 
-            output = vueElementUiListedJson
+            # output = vueElementUiListedJson
             total = attendanceLogs.count()
+            output = loads(dumps(
+                            {'return': {'items': vueElementUiListedJson, 'total': total}},
+                            indent= 2,
+                            ensure_ascii= False,
+                     ))
 
-            return {'return': {'items': output, 'total': total}}, 200
+            # return {'return': {'items': output, 'total': total}}, 200
+            return output, 200
     # ---------------------------------------------------------------------------
 
 
@@ -461,6 +473,9 @@ class AttendanceLogs:
                 columns= pd.MultiIndex.from_product(iterables, names= pivot.columns.names),
             )
             emptyAttendanceTableDF.index.name = pivot.index.name
+            # Check attendancePassed members and actually attended applicants who were not attendancePassed.
+            attendanceLogsOfapplicantsWithoutAttendnacePass = pivot.index.difference(emptyAttendanceTableDF.index)
+            pivot = pivot.drop(attendanceLogsOfapplicantsWithoutAttendnacePass)
             # Overlay and Update the pivot table.
             pivot = pivot.combine_first(emptyAttendanceTableDF)
 
@@ -472,7 +487,6 @@ class AttendanceLogs:
             writer = pd.ExcelWriter(output, engine='xlsxwriter')
             pivot.to_excel(writer, sheet_name= 'Sheet1')        # taken from the original question
 
-            workbook  = writer.book
             worksheet = writer.sheets['Sheet1']
 
             baseCellx, baseCelly = 4, 2     # Data starts from C5 on Spreadsheet

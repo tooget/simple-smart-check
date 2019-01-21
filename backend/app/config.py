@@ -10,6 +10,8 @@ class Config(object):
     FLASK_ENV = os.getenv('FLASK_ENV', 'production')
     # Set FLASK_SECRET on your production Environment
     SECRET_KEY = os.getenv('FLASK_SECRET', 'Secret')
+    # Set Flaks Return type as a Unicode, not ASCII
+    JSON_AS_ASCII = False
 
     # flask_sqlalchemy app.config for db.init_app()
     # Set SQLALCHEMY env on your production Environment
