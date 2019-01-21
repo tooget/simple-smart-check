@@ -6,6 +6,7 @@
         <el-option v-for="(item, index) in curriculumOptionlist" :key="index" :label="item.curriculumName+'('+item.ordinalNo+')'" :value="item.curriculumNo"/>
       </el-select>
       <el-button v-waves class="filter-item" type="primary" icon="el-icon-search" @click="handleFilter">{{ $t('table.search') }}</el-button>
+      <el-button v-waves :loading="downloadLoading" class="filter-item" type="primary" icon="el-icon-download" @click="handleDownload">{{ $t('table.download') }}</el-button>
     </div>
 
     <el-table
@@ -148,7 +149,7 @@
 </template>
 
 <script>
-import { fetchMembersList, updateMembersData } from '@/api/resource/members'
+import { fetchMembersList, fetchMembersListfile, updateMembersData } from '@/api/resource/members'
 import { fetchCurriculumList } from '@/api/resource/curriculums'
 import waves from '@/directive/waves' // Waves directive
 import Pagination from '@/components/Pagination' // Secondary package based on el-pagination
@@ -172,6 +173,7 @@ export default {
       list: null,
       curriculumOptionlist: null,
       total: 0,
+      downloadLoading: false,
       listLoading: true,
       listQuery: {
         filters: { applicantName: undefined, curriculumNo: undefined },
@@ -259,6 +261,33 @@ export default {
         this.$notify({
           title: message.title,
           message: message.content,
+          type: 'warn',
+          duration: 2000
+        })
+      })
+    },
+    handleDownload() {
+      const query = Object.assign({}, this.listQuery)
+      delete query.pagination
+      fetchMembersListfile(query).then(response => {
+        this.downloadLoading = true
+        const url = window.URL.createObjectURL(new Blob([response.data]))
+        const link = document.createElement('a')
+        link.href = url
+        link.setAttribute('download', 'members.xlsx')
+        document.body.appendChild(link)
+        link.click()
+        this.downloadLoading = false
+        this.$notify({
+          title: 'Succeeded',
+          message: 'Members List(excel file) downloaded',
+          type: 'success',
+          duration: 2000
+        })
+      }).catch(() => {
+        this.$notify({
+          title: 'Failed',
+          message: 'Members List(excel file) missing',
           type: 'warn',
           duration: 2000
         })

@@ -8,6 +8,15 @@ export function fetchMembersList(query) {
   })
 }
 
+export function fetchMembersListfile(query) {
+  return request({
+    url: '/resource/members/listfile',
+    method: 'get',
+    params: query,
+    responseType: 'blob'
+  })
+}
+
 export function updateMembersData(data) {
   const requestBody = new FormData()
   requestBody.append('phoneNo', data.phoneNo)

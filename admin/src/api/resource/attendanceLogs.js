@@ -5,6 +5,6 @@ export function fetchAttendanceLogsListfile(query) {
     url: '/resource/attendancelogs/listfile',
     method: 'get',
     params: query,
-    responseType: 'blob' // important
+    responseType: 'blob'
   })
 }

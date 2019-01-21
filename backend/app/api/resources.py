@@ -741,7 +741,7 @@ class Members:
                                             applicantsQuery.c.operationMemo,
                                         ).join(curriculumsQuery, curriculumsQuery.c.curriculumNo == membersQuery.c.curriculumNo)  \
                                         .join(applicantsQuery, and_(applicantsQuery.c.curriculumNo == membersQuery.c.curriculumNo, applicantsQuery.c.phoneNo == membersQuery.c.phoneNo))
-            total = query.count()
+            # total = query.count()
             # query = sort_query(query, *ormQuerySort).slice(start, stop)       # Different from @apiRestful.route('/resource/members/list')
             query = sort_query(query, *ormQuerySort)
             

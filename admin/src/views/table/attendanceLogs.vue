@@ -9,6 +9,7 @@
 
     <el-table
       v-loading="listLoading"
+      v-if="list.length > 0"
       :key="tableKey"
       :data="list"
       border
@@ -21,11 +22,8 @@
         </template>
       </el-table-column>
       <el-table-column :label="$t('table.attendanceLogs.name')" align="center">
-        <template slot-scope="scope">
-          <el-table-column v-for="(item, index) in scope.row.signatureTimestamp" :key="index" :label="item.attendanceDate" prop="signatureTimestamp" align="center">
-            {{ scope.row.signatureTimestamp[0].attending }}
-          </el-table-column>
-        </template>
+        <!-- <el-table-column v-for="(header,index) of list" :prop="header.prop" :label="header.label" :width="header.width" :key="index">
+        </el-table-column> -->
       </el-table-column>
     </el-table>
 
@@ -55,10 +53,10 @@ export default {
   data() {
     return {
       tableKey: 0,
-      list: null,
+      list: [],
       curriculumOptionlist: null,
       total: 0,
-      listLoading: true,
+      listLoading: false,
       listQuery: {
         filters: { curriculumNo: undefined },
         sort: { curriculumNo: 'desc' },
@@ -84,7 +82,6 @@ export default {
     }
   },
   created() {
-    this.getList()
     this.getCurriculumList()
   },
   methods: {

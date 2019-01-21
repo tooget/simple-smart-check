@@ -64,7 +64,7 @@
       </el-table-column>
       <el-table-column v-if="showDonwnloadAtendanceLogs" :label="$t('table.curriculums.donwnloadAtendanceLogs')" align="center" width="150" class-name="small-padding fixed-width">
         <template slot-scope="scope">
-          <el-button size="mini" type="primary" @click="handleFileDownload(scope.row)">{{ $t('table.download') }}</el-button>
+          <el-button v-waves :loading="downloadLoading" size="mini" type="primary" @click="handleFileDownload(scope.row)">{{ $t('table.download') }}</el-button>
         </template>
       </el-table-column>
       <el-table-column v-if="showDelete" :label="$t('table.curriculums.delete')" align="center" width="100" class-name="small-padding fixed-width">
@@ -138,6 +138,7 @@ export default {
       tableKey: 0,
       list: null,
       total: 0,
+      downloadLoading: false,
       listLoading: true,
       listQuery: {
         filters: { curriculumName: undefined, curriculumCategory: undefined },
@@ -351,19 +352,27 @@ export default {
       this.downloadAttendanceLogsListfile()
     },
     downloadAttendanceLogsListfile() {
-      fetchAttendanceLogsListfile({ curriculumNo: this.temp.curriculumNo }).then(response => {
-        const message = response.data.message
+      const query = { curriculumNo: this.temp.curriculumNo }
+      fetchAttendanceLogsListfile(query).then(response => {
+        this.downloadLoading = true
+        const curriculumNoFromServer = response.config.params.curriculumNo
+        const url = window.URL.createObjectURL(new Blob([response.data]))
+        const link = document.createElement('a')
+        link.href = url
+        link.setAttribute('download', 'attendance_ID_' + curriculumNoFromServer + '.xlsx')
+        document.body.appendChild(link)
+        link.click()
+        this.downloadLoading = false
         this.$notify({
-          title: message.title,
-          message: message.content,
+          title: 'Succeeded',
+          message: 'Attendance Table(excel file) downloaded',
           type: 'success',
           duration: 2000
         })
-      }).catch(error => {
-        const message = error.response.data.message
+      }).catch(() => {
         this.$notify({
-          title: message.title,
-          message: message.content,
+          title: 'Failed',
+          message: 'Attendance Table(excel file) missing',
           type: 'warn',
           duration: 2000
         })
