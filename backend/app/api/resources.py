@@ -399,37 +399,29 @@ class AttendanceLogs:
 
         def get(self):
             queryFilter = request.args
-            print(request.args['curriculumNo'])
-            
-            attendanceLogs = AttendanceLogsModel.query.filter_by(**queryFilter).subquery()
-            applicants = ApplicantsModel.query.with_entities(
-                                                        ApplicantsModel.applicantName,
-                                                        ApplicantsModel.curriculumNo,
-                                                        ApplicantsModel.phoneNo,
-                                                    ).filter_by(**queryFilter)  \
-                                                    .subquery()
-            query = db.session.query(attendanceLogs).with_entities(
-                                                        attendanceLogs,
-                                                        applicants.c.applicantName
-                                                    ).outerjoin(applicants, and_(applicants.c.curriculumNo == attendanceLogs.c.curriculumNo, applicants.c.phoneNo == attendanceLogs.c.phoneNo))
+            curriculumNo = queryFilter['curriculumNo']
 
+            attendanceLogs = AttendanceLogsModel.query.filter_by(**queryFilter)
             # Get full duration of a curriculum.
-            curriculumName = CurriculumsModel.query.with_entities(CurriculumsModel.curriculumName).filter_by(**queryFilter).first()
             curriculumDuration = CurriculumsModel.query.with_entities(CurriculumsModel.startDate, CurriculumsModel.endDate).filter_by(**queryFilter).first()
             startDate, endDate = curriculumDuration.startDate.strftime('%Y-%m-%dT%H:%M:%SZ'), curriculumDuration.endDate.strftime('%Y-%m-%dT%H:%M:%SZ')
             curriculumDuration = set([date.strftime('%Y-%m-%d') for date in pd.date_range(start= startDate, end= endDate, freq= 'B')])
-            # Get entire members list of a curriculum.
+            # # Get entire members list of a curriculum.
             membersPhoneNoList = MembersModelSchema(many= True).dump( MembersModel.query.with_entities(MembersModel.phoneNo).filter_by(**queryFilter, attendanceCheck= 'Y').all() )
             membersPhoneNoList = set([phoneNoDict['phoneNo'] for phoneNoDict in membersPhoneNoList])
+            # Get Name of applicants and phoneNo to add index after pivot.
+            applicantsNameAndphoneNoList = pd.read_sql(ApplicantsModel.query.with_entities(ApplicantsModel.phoneNo, ApplicantsModel.applicantName).filter_by(**queryFilter).statement, db.get_engine(bind= 'mysql'), index_col= 'phoneNo')      ##
 
             # Pivot Attendance Check-Table for now.
-            attendanceLogsDf = pd.read_sql(query.statement, db.get_engine(bind= 'mysql'))
+            attendanceLogsDf = pd.read_sql(attendanceLogs.statement, db.get_engine(bind= 'mysql'))
             attendanceLogsDf['attendanceDate'] = attendanceLogsDf['attendanceDate'].astype(str)
             # attendanceLogsDf['signature'] = attendanceLogsDf['signature'].apply( lambda x: 'signed' )
             attendanceLogsDf['signature'] = attendanceLogsDf['signature'].apply( lambda x: decompress(b64decode(x)).decode() )      # Different from @apiRestful.route('/resource/attendancelogs/list')
-            pivot = attendanceLogsDf.set_index(['applicantName', 'phoneNo', 'checkInOut', 'attendanceDate'])[['signature', 'insertedTimestamp']]
+            pivot = attendanceLogsDf.set_index(['phoneNo', 'checkInOut', 'attendanceDate'])[['signature', 'insertedTimestamp']]
             # pivot['signatureTimestamp'] = pivot['signature'] + '\n' + pivot['insertedTimestamp'].dt.strftime('%Y-%m-%dT%H:%M:%SZ').astype(str)
             pivot['signatureTimestamp'] = pivot['signature']
+            pivot = pivot.join(applicantsNameAndphoneNoList, on= 'phoneNo')     ##
+            pivot = pivot.set_index('applicantName', append= True)              ##
             pivot = pivot.drop(columns= ['signature', 'insertedTimestamp']).unstack(level= [2, 1]).sort_index(axis= 'columns', level= 1)
 
             # Create Full Attendance Check-Table with Nan values.
@@ -439,7 +431,7 @@ class AttendanceLogs:
                 list(set(pivot.columns.get_level_values(2))),
             ]
             emptyAttendanceTableDF = pd.DataFrame(
-                index= membersPhoneNoList,
+                index= pivot.index,     ##
                 columns= pd.MultiIndex.from_product(iterables, names= pivot.columns.names),
             )
             emptyAttendanceTableDF.index.name = pivot.index.name
@@ -457,13 +449,15 @@ class AttendanceLogs:
             workbook  = writer.book
             worksheet = writer.sheets['Sheet1']
 
+            baseCellx, baseCelly = 4, 2     # Data starts from C5 on Spreadsheet
+
             # Make width of columns and height of rows fit to signature images.
-            for rownum in range(pivot.index.size + 4):
+            for rownum in range(pivot.index.size + baseCellx):
                 if rownum > 3:
-                    worksheet.set_row(rownum, 110)              # Make Height of rows larger
+                    worksheet.set_row(rownum, 110)                          # Make Height of rows larger
             
-            worksheet.set_column(2, pivot.columns.size, 25)     # Make Width of Columns after B much larger
-            worksheet.set_column(0, 1, 15)                      # Make Width of A column larger
+            worksheet.set_column(baseCelly, pivot.columns.size + 1, 25)     # Make Width of Columns after C much larger
+            worksheet.set_column(0, baseCelly - 1, 15)                      # Make Width of A:B column larger
 
             # Insert images to each cell and delete each cell value.
             cells = [(x,y) for x in range(pivot.index.size) for y in range(pivot.columns.size)]
@@ -471,8 +465,8 @@ class AttendanceLogs:
                 # print( rownum, colnum, str(pivot.iat[rownum, colnum])[:10], type(pivot.iat[rownum,colnum]), bool(pivot.iat[rownum,colnum]) )
                 try:
                     signatureImg = BytesIO(b64decode( pivot.iat[rownum,colnum].encode() ))      # Make Image from Base64 String.
-                    worksheet.write_string(4+rownum, 1+colnum, '')
-                    worksheet.insert_image(4+rownum, 1+colnum, f'signature_{4+rownum}_{1+colnum}.png', {'image_data': signatureImg, 'x_scale': 0.15, 'y_scale': 0.15})
+                    worksheet.write_string(baseCellx + rownum, baseCelly + colnum, '')
+                    worksheet.insert_image(baseCellx + rownum, baseCelly + colnum, f'signature_{baseCellx + rownum}_{baseCelly + colnum}.png', {'image_data': signatureImg, 'x_scale': 0.15, 'y_scale': 0.15})
                 except AttributeError:
                     continue
 
@@ -480,7 +474,7 @@ class AttendanceLogs:
             output.seek(0)              #go back to the beginning of the stream
 
             #finally return the file
-            return send_file(output, attachment_filename="attendance.xlsx", as_attachment=True)
+            return send_file(output, attachment_filename= f'attendance_ID_{curriculumNo}.xlsx', as_attachment=True)
             # -------------------------------------------------------------------
     # ---------------------------------------------------------------------------
 
