@@ -12,7 +12,7 @@ from flask_restplus import Resource     # Reference : http://flask-restplus.read
 from io import BytesIO
 from json import dumps, loads
 from operator import attrgetter
-from sqlalchemy import and_, func
+from sqlalchemy import and_, func, null
 from sqlalchemy_utils import sort_query
 from PIL import Image
 from zlib import compress, decompress
@@ -377,6 +377,8 @@ class AttendanceLogs:
             pivot = pivot.drop(attendanceLogsOfapplicantsWithoutAttendnacePass)
             # Overlay and Update the pivot table.
             pivot = pivot.combine_first(emptyAttendanceTableDF)
+            # Convert NaN to None.
+            pivot = pivot.where((pd.notnull(pivot)), None)
 
             # Make ListedJson for Vue Element-Ui to visualize a multicolumn Table.
             pivotLebels = list(map(lambda x: x.tolist(), pivot.columns.levels))
@@ -401,18 +403,11 @@ class AttendanceLogs:
                 vueElementUiListedJsonItem.update({'applicantName': phoneNoAndNameIdx[1]})
                 vueElementUiListedJsonItem.update({'signatureTimestamp': deepcopy(signatureTimestampList)})
                 vueElementUiListedJson.append(deepcopy(vueElementUiListedJsonItem))
-                print(phoneNoAndNameIdx[0], type(phoneNoAndNameIdx[0]), phoneNoAndNameIdx[1],type(phoneNoAndNameIdx[1]))
 
-            # output = vueElementUiListedJson
+            output = vueElementUiListedJson
             total = attendanceLogs.count()
-            output = loads(dumps(
-                            {'return': {'items': vueElementUiListedJson, 'total': total}},
-                            indent= 2,
-                            ensure_ascii= False,
-                     ))
 
-            # return {'return': {'items': output, 'total': total}}, 200
-            return output, 200
+            return {'return': {'items': output, 'total': total}}, 200
     # ---------------------------------------------------------------------------
 
 
