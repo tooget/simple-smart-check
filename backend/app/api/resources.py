@@ -334,9 +334,12 @@ class AttendanceLogs:
             curriculumDuration = CurriculumsModel.query.with_entities(CurriculumsModel.startDate, CurriculumsModel.endDate).filter_by(**queryFilter).first()
             startDate, endDate = curriculumDuration.startDate.strftime('%Y-%m-%dT%H:%M:%SZ'), curriculumDuration.endDate.strftime('%Y-%m-%dT%H:%M:%SZ')
             curriculumDuration = set([date.strftime('%Y-%m-%d') for date in pd.date_range(start= startDate, end= endDate, freq= 'B')])
-            # Get entire members list of a curriculum.
-            membersPhoneNoList = MembersModelSchema(many= True).dump( MembersModel.query.with_entities(MembersModel.phoneNo).filter_by(**queryFilter, attendanceCheck= 'Y').all() )
-            membersPhoneNoList = set([phoneNoDict['phoneNo'] for phoneNoDict in membersPhoneNoList])
+            # Get entire members and phoneNo list of a curriculum.
+            applicantsNameAndphoneNoList = pd.read_sql(ApplicantsModel.query.with_entities(ApplicantsModel.phoneNo, ApplicantsModel.applicantName).filter_by(**queryFilter).statement, db.get_engine(bind= 'mysql'), index_col= 'phoneNo')
+            membersPhoneNoList = list(applicantsNameAndphoneNoList.index)
+            membersNameList = list(applicantsNameAndphoneNoList['applicantName'])
+            if len(membersPhoneNoList) != len(set(membersPhoneNoList)):
+                raise KeyError(f'Duplicate PhoneNo exists in curriculum ID {curriculumNo}.')
 
             # Pivot Attendance Check-Table for now.
             attendanceLogsDf = pd.read_sql(attendanceLogs.statement, db.get_engine(bind= 'mysql'))
@@ -344,6 +347,8 @@ class AttendanceLogs:
             attendanceLogsDf['signature'] = attendanceLogsDf['signature'].apply( lambda x: 'signed' )
             pivot = attendanceLogsDf.set_index(['phoneNo', 'checkInOut', 'attendanceDate'])[['signature', 'insertedTimestamp']]
             pivot['signatureTimestamp'] = pivot['signature'] + '\n' + pivot['insertedTimestamp'].dt.strftime('%Y-%m-%dT%H:%M:%SZ').astype(str)
+            pivot = pivot.join(applicantsNameAndphoneNoList, on= 'phoneNo')     ##
+            pivot = pivot.set_index('applicantName', append= True)              ##
             pivot = pivot.drop(columns= ['signature', 'insertedTimestamp']).unstack(level= [2, 1]).sort_index(axis= 'columns', level= 1)
 
             # Create Full Attendance Check-Table with Nan values.
@@ -352,8 +357,12 @@ class AttendanceLogs:
                 curriculumDuration,
                 list(set(pivot.columns.get_level_values(2))),
             ]
+            phoneNoAndNameIndex = pd.MultiIndex.from_arrays(
+                                        [membersPhoneNoList, membersNameList],
+                                        names= ('phoneNo', 'applicantName'),
+                                  )
             emptyAttendanceTableDF = pd.DataFrame(
-                index= membersPhoneNoList,
+                index= phoneNoAndNameIndex,
                 columns= pd.MultiIndex.from_product(iterables, names= pivot.columns.names),
             )
             emptyAttendanceTableDF.index.name = pivot.index.name
@@ -406,11 +415,12 @@ class AttendanceLogs:
             curriculumDuration = CurriculumsModel.query.with_entities(CurriculumsModel.startDate, CurriculumsModel.endDate).filter_by(**queryFilter).first()
             startDate, endDate = curriculumDuration.startDate.strftime('%Y-%m-%dT%H:%M:%SZ'), curriculumDuration.endDate.strftime('%Y-%m-%dT%H:%M:%SZ')
             curriculumDuration = set([date.strftime('%Y-%m-%d') for date in pd.date_range(start= startDate, end= endDate, freq= 'B')])
-            # # Get entire members list of a curriculum.
-            membersPhoneNoList = MembersModelSchema(many= True).dump( MembersModel.query.with_entities(MembersModel.phoneNo).filter_by(**queryFilter, attendanceCheck= 'Y').all() )
-            membersPhoneNoList = set([phoneNoDict['phoneNo'] for phoneNoDict in membersPhoneNoList])
-            # Get Name of applicants and phoneNo to add index after pivot.
-            applicantsNameAndphoneNoList = pd.read_sql(ApplicantsModel.query.with_entities(ApplicantsModel.phoneNo, ApplicantsModel.applicantName).filter_by(**queryFilter).statement, db.get_engine(bind= 'mysql'), index_col= 'phoneNo')      ##
+            # Get entire members and phoneNo list of a curriculum.
+            applicantsNameAndphoneNoList = pd.read_sql(ApplicantsModel.query.with_entities(ApplicantsModel.phoneNo, ApplicantsModel.applicantName).filter_by(**queryFilter).statement, db.get_engine(bind= 'mysql'), index_col= 'phoneNo')
+            membersPhoneNoList = list(applicantsNameAndphoneNoList.index)
+            membersNameList = list(applicantsNameAndphoneNoList['applicantName'])
+            if len(membersPhoneNoList) != len(set(membersPhoneNoList)):
+                raise KeyError(f'Duplicate PhoneNo exists in curriculum ID {curriculumNo}.')
 
             # Pivot Attendance Check-Table for now.
             attendanceLogsDf = pd.read_sql(attendanceLogs.statement, db.get_engine(bind= 'mysql'))
@@ -420,8 +430,8 @@ class AttendanceLogs:
             pivot = attendanceLogsDf.set_index(['phoneNo', 'checkInOut', 'attendanceDate'])[['signature', 'insertedTimestamp']]
             # pivot['signatureTimestamp'] = pivot['signature'] + '\n' + pivot['insertedTimestamp'].dt.strftime('%Y-%m-%dT%H:%M:%SZ').astype(str)
             pivot['signatureTimestamp'] = pivot['signature']
-            pivot = pivot.join(applicantsNameAndphoneNoList, on= 'phoneNo')     ##
-            pivot = pivot.set_index('applicantName', append= True)              ##
+            pivot = pivot.join(applicantsNameAndphoneNoList, on= 'phoneNo')
+            pivot = pivot.set_index('applicantName', append= True)
             pivot = pivot.drop(columns= ['signature', 'insertedTimestamp']).unstack(level= [2, 1]).sort_index(axis= 'columns', level= 1)
 
             # Create Full Attendance Check-Table with Nan values.
@@ -430,8 +440,12 @@ class AttendanceLogs:
                 curriculumDuration,
                 list(set(pivot.columns.get_level_values(2))),
             ]
+            phoneNoAndNameIndex = pd.MultiIndex.from_arrays(
+                                        [membersPhoneNoList, membersNameList],
+                                        names= ('phoneNo', 'applicantName'),
+                                  )
             emptyAttendanceTableDF = pd.DataFrame(
-                index= pivot.index,     ##
+                index= phoneNoAndNameIndex,
                 columns= pd.MultiIndex.from_product(iterables, names= pivot.columns.names),
             )
             emptyAttendanceTableDF.index.name = pivot.index.name
