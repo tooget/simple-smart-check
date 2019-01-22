@@ -1,48 +1,46 @@
 import axios from 'axios'
 
-const HTTP = axios.create({
-  baseURL: `https://backend.smartcheck.ml/api/`,
-  timeout: 5000,
-  headers: {
-    'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*'
+// 创建axios实例
+const service = axios.create({
+  baseURL: 'http://localhost:5000/api', // api 的 base_url
+  timeout: 60000 // 请求超时时间
+})
+
+// request拦截器
+service.interceptors.request.use(
+  config => {
+    if (localStorage.token) {
+      config.headers['Authorization'] = 'Bearer ' + localStorage.token
+    }
+    return config
+  },
+  error => {
+    // Do something with request error
+    console.log(error) // for debug
+    Promise.reject(error)
   }
-})
+)
 
-// Request Interceptor
-HTTP.interceptors.request.use(function (config) {
-  config.headers['Authorization'] = 'Bearer ' + localStorage.token
-  return config
-})
-
-// Response Interceptor to handle and log errors
-HTTP.interceptors.response.use(function (response) {
-  return response
-}, function (error) {
-  // Handle Error
-  console.log(error)
-  return Promise.reject(error)
-})
-
-export default {
-
-  fetchResource () {
-    return HTTP.get(`resource/xxx`)
-      .then(response => response.data)
-  },
-
-  fetchSecureResource () {
-    return HTTP.get(`secure-resource/zzz`)
-      .then(response => response.data)
-  },
-
-  fetchSecureResourceContract (email, className) {
-    return HTTP.get(`secure-resource/contract`, {
-      params: {
-          email: email,
-          className: className
+// response 拦截器
+service.interceptors.response.use(
+  response => {
+    /**
+     * code为非20000是抛错 可结合自己业务进行修改
+     */
+    if (response.status !== 200 || response.status !== 201) {
+      // 50008:非法的token; 50012:其他客户端登录了;  50014:Token 过期了;
+      if (response.status === 500 || response.status === 501 || response.status === 502 || response.status === 503) {
+        return Promise.reject('response.status is not suitable')
+      } else {
+        return response
       }
-    })
-      .then(response => response.data)
+    } else {
+      return Promise.reject('response.status is undefined')
+    }
+  },
+  error => {
+    return Promise.reject(error)
   }
-}
+)
+
+export default service

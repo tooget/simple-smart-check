@@ -11,7 +11,9 @@ export function parseTime(time, cFormat) {
   if (typeof time === 'object') {
     date = time
   } else {
-    date = new Date(time)
+    const timezoneOffset = new Date().getTimezoneOffset()
+    const localTime = new Date(time)
+    date = new Date(localTime.getTime() + (timezoneOffset * 60 * 1000) + (9 * 60 * 60 * 1000))
   }
   try {
     const formatObj = {

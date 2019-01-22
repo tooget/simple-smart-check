@@ -565,10 +565,10 @@ class AttendanceLogs:
             try:
                 db.session.add(newAttendanceLog)
                 db.session.commit()
-                return {'message': f'New AttendanceLog created : {newAttendanceLogData}'}, 201
+                return {'message': {'title': 'Succeeded', 'content': 'AttendanceLog Inserted'}}, 201
             except:
                 db.session.rollback()
-                return {'message': 'Something went wrong'}, 500
+                return {'message': {'title': 'Failed', 'content': 'Something went wrong'}}, 500
     # ---------------------------------------------------------------------------
 # -------------------------------------------------------------------------------
 

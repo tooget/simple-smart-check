@@ -8,18 +8,21 @@ export const attendanceLog = {
     actions: {
         checkInOut({ commit }, { phoneNo, curriculumNo, checkInOut, signature }) {
             commit('postCheckInOutRequest');
-
-            attendanceLogService.checkInOut(phoneNo, curriculumNo, checkInOut, signature)
-                .then(
-                    response => {
-                        commit('postCheckInOutSuccess', response.data);
-                    }
-                )
-                .catch(
-                    error => {
-                        commit('postCheckInOutFailure', error.response.data);
-                    }
-                );
+            return new Promise((resolve, reject) => {
+                attendanceLogService.checkInOut(phoneNo, curriculumNo, checkInOut, signature)
+                    .then(
+                        response => {
+                            commit('postCheckInOutSuccess', response.data);
+                            resolve(response);
+                        }
+                    )
+                    .catch(
+                        error => {
+                            commit('postCheckInOutFailure', error.response.data);
+                            reject(error);
+                        }
+                    );
+            })  
         }
     },
     mutations: {

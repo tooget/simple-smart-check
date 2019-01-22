@@ -40,29 +40,39 @@
         <v-ons-list-header>서명</v-ons-list-header>
         <v-ons-list-item :modifier="md ? 'nodivider' : ''">
           <label class="center">
-            <div class="col-12 mt-2">
+            <div align="center">
               <VueSignaturePad
                 id="signature"
-                width="100%"
-                height="500px"
+                width="60%"
+                height="400px"
                 ref="signaturePad"
+                :options="{ 
+                  dotSize: (2 + 3) / 2,
+                  minWidth: 2,
+                  maxWidth: 3,
+                  throttle: 16,
+                  minDistance: 5,
+                  backgroundColor: 'rgba(0,0,0,0)',
+                  penColor: 'black',
+                  velocityFilterWeight: 0.8 
+                }"
               />
             </div>
             <div class="col-6 mt-2">
-              <button
+              <ons-button
                 class="btn btn-outline-secondary float-right"
                 @click="undo"
               >
                 재서명
-              </button>
+              </ons-button>
             </div>
             <div class="col-6 mt-2">
-              <button
+              <ons-button
                 class="btn btn-outline-primary float-left"
                 @click="handleSubmit"
               >
                 출석확인
-              </button>
+              </ons-button>
             </div>
           </label>
         </v-ons-list-item>
@@ -98,7 +108,14 @@ export default {
       const curriculumNo = this.item.curriculumNo;
       const checkInOut = this.selectAttendanceType;
       const signature = data;
-      dispatch('attendanceLog/checkInOut', { phoneNo, curriculumNo, checkInOut, signature });
+      dispatch('attendanceLog/checkInOut', { phoneNo, curriculumNo, checkInOut, signature }
+        ).then(response => {
+          const message = response.data.message
+          this.$ons.notification.toast(message.title +', '+ message.content, {timeout: 5000});
+        }).catch(error => {
+          const message = error.response.data.message
+          this.$ons.notification.alert(message.title +', '+ message.content);
+        })
     }
   }
 };
