@@ -5,16 +5,14 @@ from app.extensions import db
 from app.ormmodels import AttendanceLogsModel, ApplicantsModel, CurriculumsModel, MembersModel
 from app.ormmodels import AttendanceLogsModelSchema, ApplicantsModelSchema, CurriculumsModelSchema, MembersModelSchema
 from base64 import b64encode, b64decode
-from copy import deepcopy
 from datetime import datetime, timedelta
 from flask import request, send_file
 from flask_restplus import Resource     # Reference : http://flask-restplus.readthedocs.io
 from io import BytesIO
 from json import dumps, loads
-from operator import attrgetter
+from PIL import Image, ImageDraw, ImageFont
 from sqlalchemy import and_, func, null
 from sqlalchemy_utils import sort_query
-from PIL import Image
 from zlib import compress, decompress
 import pandas as pd
 
@@ -333,7 +331,7 @@ class AttendanceLogs:
             # Get full duration of a curriculum.
             curriculumDuration = CurriculumsModel.query.with_entities(CurriculumsModel.startDate, CurriculumsModel.endDate).filter_by(**queryFilter).first()
             startDate, endDate = curriculumDuration.startDate.strftime('%Y-%m-%dT%H:%M:%SZ'), curriculumDuration.endDate.strftime('%Y-%m-%dT%H:%M:%SZ')
-            curriculumDuration = set([date.strftime('%Y-%m-%d') for date in pd.date_range(start= startDate, end= endDate, freq= 'B')])
+            curriculumDuration = [date.strftime('%Y-%m-%d') for date in pd.date_range(start= startDate, end= endDate, freq= 'B')]
             # Get only attendancePassed members and phoneNo list of a curriculum.
             membersAttendancePassOnlyQuery = MembersModel.query.with_entities(MembersModel.phoneNo).filter_by(**queryFilter, attendancePass= 'Y').subquery()
             applicantNameQuery = ApplicantsModel.query.with_entities(ApplicantsModel.phoneNo, ApplicantsModel.applicantName).filter_by(**queryFilter).subquery()
@@ -350,31 +348,29 @@ class AttendanceLogs:
             # Pivot Attendance Check-Table for now.
             attendanceLogsDf = pd.read_sql(attendanceLogs.statement, db.get_engine(bind= 'mysql'))
             attendanceLogsDf['attendanceDate'] = attendanceLogsDf['attendanceDate'].astype(str)
-            attendanceLogsDf['signature'] = attendanceLogsDf['signature'].apply( lambda x: 'signed' )
             pivot = attendanceLogsDf.set_index(['phoneNo', 'checkInOut', 'attendanceDate'])[['signature', 'insertedTimestamp']]
-            pivot['signatureTimestamp'] = pivot['signature'] + '\n' + pivot['insertedTimestamp'].dt.strftime('%Y-%m-%dT%H:%M:%SZ').astype(str)
-            pivot = pivot.join(applicantsNameAndphoneNoList, on= 'phoneNo')     ##
-            pivot = pivot.set_index('applicantName', append= True)              ##
+            pivot['signatureTimestamp'] = pivot['insertedTimestamp'].dt.strftime('%Y-%m-%dT%H:%M:%SZ').astype(str)
+            pivot = pivot.join(applicantsNameAndphoneNoList, on= 'phoneNo')
+            pivot = pivot.set_index('applicantName', append= True)
             pivot = pivot.drop(columns= ['signature', 'insertedTimestamp']).unstack(level= [2, 1]).sort_index(axis= 'columns', level= 1)
 
             # Create Full Attendance Check-Table with Nan values.
-            iterables = [
-                list(set(pivot.columns.get_level_values(0))),
-                curriculumDuration,
-                list(set(pivot.columns.get_level_values(2))),
-            ]
             phoneNoAndNameIndex = pd.MultiIndex.from_arrays(
                                         [membersPhoneNoList, membersNameList],
                                         names= ('phoneNo', 'applicantName'),
                                   )
+            pivotedColumnsIndex = pd.MultiIndex.from_product(
+                                        [['signatureTimestamp'], curriculumDuration, ['In', 'Out']],
+                                        names= (None, 'attendanceDate', 'checkInOut')
+                                  )
             emptyAttendanceTableDF = pd.DataFrame(
-                index= phoneNoAndNameIndex,
-                columns= pd.MultiIndex.from_product(iterables, names= pivot.columns.names),
-            )
-            emptyAttendanceTableDF.index.name = pivot.index.name
+                                        index= phoneNoAndNameIndex,
+                                        columns= pivotedColumnsIndex,
+                                  )
             # Check attendancePassed members and actually attended applicants who were not attendancePassed.
             attendanceLogsOfapplicantsWithoutAttendnacePass = pivot.index.difference(emptyAttendanceTableDF.index)
             pivot = pivot.drop(attendanceLogsOfapplicantsWithoutAttendnacePass)
+
             # Overlay and Update the pivot table.
             pivot = pivot.combine_first(emptyAttendanceTableDF)
             # Convert NaN to None.
@@ -383,29 +379,33 @@ class AttendanceLogs:
             # Make ListedJson for Vue Element-Ui to visualize a multicolumn Table.
             pivotLebels = list(map(lambda x: x.tolist(), pivot.columns.levels))
             signatureTimestampLevel, insertedTimestampLevel, checkInOutLevel = pivotLebels
+
             vueElementUiListedJson = list()
-            signatureTimestampListItem = dict()
-            vueElementUiListedJsonItem = dict()
-            signatureTimestampList = list()
             for phoneNoAndNameIdx, row in pivot.iterrows():
                 # tuple 'phoneNoAndNameIdx' has phoneNo 'phoneNoAndNameIdx[0]' and applicantName 'phoneNoAndNameIdx[1]'
-                for signatureTimestampLabel, insertedTimestampLabel, checkInOutLabel in zip(*pivot.columns.labels):
-                    level1 = signatureTimestampLevel[signatureTimestampLabel]
-                    level2 = insertedTimestampLevel[insertedTimestampLabel]
-                    level3 = checkInOutLevel[checkInOutLabel]            
-                    value = row[level1][level2][level3]
-                    signatureTimestampListItem.update({'attendanceDate': level2})
-                    signatureTimestampListItem.update({level3: value})
-                    if checkInOutLabel == 1:
-                        signatureTimestampList.append(deepcopy(signatureTimestampListItem))
+                vueElementUiListedJsonItem = dict()
+                signatureTimestampList = list()
 
-                vueElementUiListedJsonItem.update({'phoneNo': phoneNoAndNameIdx[0]})
-                vueElementUiListedJsonItem.update({'applicantName': phoneNoAndNameIdx[1]})
-                vueElementUiListedJsonItem.update({'signatureTimestamp': deepcopy(signatureTimestampList)})
-                vueElementUiListedJson.append(deepcopy(vueElementUiListedJsonItem))
+                for level1 in signatureTimestampLevel:
+
+                    for level2 in insertedTimestampLevel:
+                        signatureTimestampListItem = dict()
+                        
+                        signatureTimestampListItem['attendanceDate'] = level2
+
+                        for level3 in checkInOutLevel:
+                            signatureTimestampListItem[level3] = row[level1][level2][level3]
+
+                        signatureTimestampList.append(signatureTimestampListItem)
+
+                    vueElementUiListedJsonItem['phoneNo'] = phoneNoAndNameIdx[0]
+                    vueElementUiListedJsonItem['applicantName'] = phoneNoAndNameIdx[1]
+                    vueElementUiListedJsonItem['signatureTimestamp'] = signatureTimestampList
+
+                vueElementUiListedJson.append(vueElementUiListedJsonItem)
 
             output = vueElementUiListedJson
-            total = attendanceLogs.count()
+            total = len(pivot)
 
             return {'return': {'items': output, 'total': total}}, 200
     # ---------------------------------------------------------------------------
@@ -422,12 +422,12 @@ class AttendanceLogs:
         def get(self):
             queryFilter = request.args
             curriculumNo = queryFilter['curriculumNo']
-
+            
             attendanceLogs = AttendanceLogsModel.query.filter_by(**queryFilter)
             # Get full duration of a curriculum.
             curriculumDuration = CurriculumsModel.query.with_entities(CurriculumsModel.startDate, CurriculumsModel.endDate).filter_by(**queryFilter).first()
             startDate, endDate = curriculumDuration.startDate.strftime('%Y-%m-%dT%H:%M:%SZ'), curriculumDuration.endDate.strftime('%Y-%m-%dT%H:%M:%SZ')
-            curriculumDuration = set([date.strftime('%Y-%m-%d') for date in pd.date_range(start= startDate, end= endDate, freq= 'B')])
+            curriculumDuration = [date.strftime('%Y-%m-%d') for date in pd.date_range(start= startDate, end= endDate, freq= 'B')]
             # Get only attendancePassed members and phoneNo list of a curriculum.
             membersAttendancePassOnlyQuery = MembersModel.query.with_entities(MembersModel.phoneNo).filter_by(**queryFilter, attendancePass= 'Y').subquery()
             applicantNameQuery = ApplicantsModel.query.with_entities(ApplicantsModel.phoneNo, ApplicantsModel.applicantName).filter_by(**queryFilter).subquery()
@@ -444,35 +444,33 @@ class AttendanceLogs:
             # Pivot Attendance Check-Table for now.
             attendanceLogsDf = pd.read_sql(attendanceLogs.statement, db.get_engine(bind= 'mysql'))
             attendanceLogsDf['attendanceDate'] = attendanceLogsDf['attendanceDate'].astype(str)
-            # attendanceLogsDf['signature'] = attendanceLogsDf['signature'].apply( lambda x: 'signed' )
-            attendanceLogsDf['signature'] = attendanceLogsDf['signature'].apply( lambda x: decompress(b64decode(x)).decode() )      # Different from @apiRestful.route('/resource/attendancelogs/list')
             pivot = attendanceLogsDf.set_index(['phoneNo', 'checkInOut', 'attendanceDate'])[['signature', 'insertedTimestamp']]
-            # pivot['signatureTimestamp'] = pivot['signature'] + '\n' + pivot['insertedTimestamp'].dt.strftime('%Y-%m-%dT%H:%M:%SZ').astype(str)
-            pivot['signatureTimestamp'] = pivot['signature']
+            pivot['signatureTimestamp'] = pivot['signature'].apply( lambda x: b64encode(decompress(x)).decode() )
             pivot = pivot.join(applicantsNameAndphoneNoList, on= 'phoneNo')
             pivot = pivot.set_index('applicantName', append= True)
             pivot = pivot.drop(columns= ['signature', 'insertedTimestamp']).unstack(level= [2, 1]).sort_index(axis= 'columns', level= 1)
 
             # Create Full Attendance Check-Table with Nan values.
-            iterables = [
-                list(set(pivot.columns.get_level_values(0))),
-                curriculumDuration,
-                list(set(pivot.columns.get_level_values(2))),
-            ]
             phoneNoAndNameIndex = pd.MultiIndex.from_arrays(
                                         [membersPhoneNoList, membersNameList],
                                         names= ('phoneNo', 'applicantName'),
                                   )
+            pivotedColumnsIndex = pd.MultiIndex.from_product(
+                                        [['signatureTimestamp'], curriculumDuration, ['In', 'Out']],
+                                        names= (None, 'attendanceDate', 'checkInOut')
+                                  )
             emptyAttendanceTableDF = pd.DataFrame(
-                index= phoneNoAndNameIndex,
-                columns= pd.MultiIndex.from_product(iterables, names= pivot.columns.names),
-            )
-            emptyAttendanceTableDF.index.name = pivot.index.name
+                                        index= phoneNoAndNameIndex,
+                                        columns= pivotedColumnsIndex,
+                                  )
             # Check attendancePassed members and actually attended applicants who were not attendancePassed.
             attendanceLogsOfapplicantsWithoutAttendnacePass = pivot.index.difference(emptyAttendanceTableDF.index)
             pivot = pivot.drop(attendanceLogsOfapplicantsWithoutAttendnacePass)
+
             # Overlay and Update the pivot table.
             pivot = pivot.combine_first(emptyAttendanceTableDF)
+            # Convert NaN to None.
+            pivot = pivot.where((pd.notnull(pivot)), None)
 
             # -------------------------------------------------------------------
             # Different from 'GET @apiRestful.route('/resource/attendancelogs/list')'
@@ -483,26 +481,25 @@ class AttendanceLogs:
             pivot.to_excel(writer, sheet_name= 'Sheet1')        # taken from the original question
 
             worksheet = writer.sheets['Sheet1']
-
             baseCellx, baseCelly = 4, 2     # Data starts from C5 on Spreadsheet
 
             # Make width of columns and height of rows fit to signature images.
             for rownum in range(pivot.index.size + baseCellx):
                 if rownum > 3:
-                    worksheet.set_row(rownum, 110)                          # Make Height of rows larger
+                    worksheet.set_row(rownum, 85)                          # Make Height of rows larger
             
             worksheet.set_column(baseCelly, pivot.columns.size + 1, 25)     # Make Width of Columns after C much larger
             worksheet.set_column(0, baseCelly - 1, 15)                      # Make Width of A:B column larger
 
             # Insert images to each cell and delete each cell value.
             cells = [(x,y) for x in range(pivot.index.size) for y in range(pivot.columns.size)]
+
             for rownum, colnum in cells:
-                # print( rownum, colnum, str(pivot.iat[rownum, colnum])[:10], type(pivot.iat[rownum,colnum]), bool(pivot.iat[rownum,colnum]) )
                 try:
-                    signatureImg = BytesIO(b64decode( pivot.iat[rownum,colnum].encode() ))      # Make Image from Base64 String.
+                    signatureImg = BytesIO(b64decode( pivot.iat[rownum, colnum] ))      # Make Image from Base64 String.
                     worksheet.write_string(baseCellx + rownum, baseCelly + colnum, '')
-                    worksheet.insert_image(baseCellx + rownum, baseCelly + colnum, f'signature_{baseCellx + rownum}_{baseCelly + colnum}.png', {'image_data': signatureImg, 'x_scale': 0.15, 'y_scale': 0.15})
-                except AttributeError:
+                    worksheet.insert_image(baseCellx + rownum, baseCelly + colnum, 'signatureImg', {'image_data': signatureImg, 'x_scale': 0.48, 'y_scale': 0.48})
+                except TypeError:
                     continue
 
             writer.close()              #the writer has done its job
@@ -530,29 +527,45 @@ class AttendanceLogs:
             phoneNoFromClient = infoFromClient['phoneNo']               # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand."), https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
             curriculumNoFromClient = infoFromClient['curriculumNo']
             checkInOutFromClient = infoFromClient['checkInOut']
+            signatureB64FromClient = infoFromClient['signature'].split(',')[-1].strip()
             
-            rawSignatureStrFromClient = infoFromClient['signature'].split(',')[-1].strip()
-            signatureFromClient = compress(                   # use 'compress' to reduce about 30% of binary size : https://stackoverflow.com/questions/28641731/decode-gzip-compressed-and-base64-encoded-data-to-a-readable-format
-                                          rawSignatureStrFromClient.encode(),
-                                          level= 9,         # -1 ~ 9, maximum compression
-                                  )
+            # Calculate Korea Standard Time(KST), AttendanceDate/Time must be shown as a KST for filtering etc.
+            attendanceTimestamp = datetime.utcnow() + timedelta(hours= 9)
+            attendanceDate = attendanceTimestamp.strftime('%Y-%m-%d')
+            imgTimestamp = attendanceTimestamp.strftime('%Y-%m-%d %H:%M:%S') + ' KST'
 
-            attendanceDate = (datetime.utcnow() + timedelta(hours= 9)).strftime('%Y-%m-%d')     # Calculate Korea Standard Time(KST), date only
+            # Resizing Signature Image(width: 500) and Putting timestamp on it.
+            signatureImg = Image.open(BytesIO(b64decode( signatureB64FromClient.encode() )))
+            imgRatio = signatureImg.height / signatureImg.width
+            baseWidthToResize = 400
 
-            requestedBody = {
+            resizedSignature = signatureImg.resize((baseWidthToResize, int(baseWidthToResize * imgRatio))).convert('RGBA')
+            del signatureImg, signatureB64FromClient
+            txt = Image.new('RGBA', resizedSignature.size, (255,255,255,0))
+            d = ImageDraw.Draw(txt)
+            d.text((resizedSignature.width * 0.1, resizedSignature.height * 0.9), imgTimestamp, fill= (0,0,0,255))
+            resizedSignature = Image.alpha_composite(resizedSignature, txt)
+            resizedSignature.show()
+
+            resizedImgBytes = BytesIO()
+            resizedSignature.save(resizedImgBytes, format='PNG')
+            resizedImgBytesCompressed = compress(resizedImgBytes.getvalue(), level= 9)      # use 'compress' to reduce about 30% of binary size : https://stackoverflow.com/questions/28641731/decode-gzip-compressed-and-base64-encoded-data-to-a-readable-format
+            del resizedImgBytes
+
+            # Create a new attendanceLogs record. 
+            newAttendanceLogData = {
                 "phoneNo": phoneNoFromClient,
                 "curriculumNo": curriculumNoFromClient,
                 "checkInOut": checkInOutFromClient,
-                "signature": signatureFromClient,
+                "signature": resizedImgBytesCompressed,
                 "attendanceDate": attendanceDate,
             }
-            
-            newAttendanceLog = AttendanceLogsModel(**requestedBody)
+            newAttendanceLog = AttendanceLogsModel(**newAttendanceLogData)
 
             try:
                 db.session.add(newAttendanceLog)
                 db.session.commit()
-                return {'message': f'New AttendanceLog created : {requestedBody}'}, 201
+                return {'message': f'New AttendanceLog created : {newAttendanceLogData}'}, 201
             except:
                 db.session.rollback()
                 return {'message': 'Something went wrong'}, 500

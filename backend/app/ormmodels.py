@@ -74,7 +74,7 @@ class AttendanceLogsModel(db.Model):
     curriculumNo = db.Column(db.Integer, nullable= False, primary_key= True)
     checkInOut = db.Column(db.String(5), nullable= False, primary_key= True)
     attendanceDate = db.Column(db.Date, nullable= False, primary_key= True)
-    signature = db.Column(db.Text, nullable= False)
+    signature = db.Column(db.LargeBinary, nullable= False)
     insertedTimestamp = db.Column(db.TIMESTAMP, nullable= False, server_default= text('CURRENT_TIMESTAMP'))
     updatedTimestamp = db.Column(db.TIMESTAMP, nullable= True, server_default= text('NULL ON UPDATE CURRENT_TIMESTAMP'))
 
