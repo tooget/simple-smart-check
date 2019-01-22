@@ -237,8 +237,11 @@ export default {
       this.$refs['dataForm'].validate((valid) => {
         if (valid) {
           const tempData = Object.assign({}, this.temp) // copy obj
-          tempData.startDate = +new Date(tempData.startDate) // change Thu Nov 30 2017 16:41:05 GMT+0800 (CST) to 1512031311464
-          tempData.endDate = +new Date(tempData.endDate) // change Thu Nov 30 2017 16:41:05 GMT+0800 (CST) to 1512031311464
+          const timezoneOffset = new Date().getTimezoneOffset()
+          tempData.startDate = tempData.startDate.setHours(10, 0, 0, 0)
+          tempData.endDate = tempData.endDate.setHours(18, 0, 0, 0)
+          tempData.startDate = +new Date(tempData.startDate + (timezoneOffset * 60 * 1000) + (9 * 60 * 60 * 1000))
+          tempData.endDate = +new Date(tempData.endDate + (timezoneOffset * 60 * 1000) + (9 * 60 * 60 * 1000))
           createCurriculumData(tempData).then(response => {
             const argument = JSON.parse(response.data.return.argument)
             const message = response.data.message
@@ -269,8 +272,11 @@ export default {
       this.$refs['dataForm'].validate((valid) => {
         if (valid) {
           const tempData = Object.assign({}, this.temp) // copy obj
-          tempData.startDate = +new Date(tempData.startDate) // change Thu Nov 30 2017 16:41:05 GMT+0800 (CST) to 1512031311464
-          tempData.endDate = +new Date(tempData.endDate) // change Thu Nov 30 2017 16:41:05 GMT+0800 (CST) to 1512031311464
+          const timezoneOffset = new Date().getTimezoneOffset()
+          tempData.startDate = tempData.startDate.setHours(10, 0, 0, 0)
+          tempData.endDate = tempData.endDate.setHours(18, 0, 0, 0)
+          tempData.startDate = +new Date(tempData.startDate + (timezoneOffset * 60 * 1000) + (9 * 60 * 60 * 1000))
+          tempData.endDate = +new Date(tempData.endDate + (timezoneOffset * 60 * 1000) + (9 * 60 * 60 * 1000))
           updateCurriculumData(tempData).then(response => {
             const argument = JSON.parse(response.data.return.argument)
             const message = response.data.message
@@ -317,8 +323,6 @@ export default {
     handleFileSubmit(row) {
       this.temp = Object.assign({}, row) // copy obj
       this.temp.curriculumNo = row.curriculumNo
-      this.temp.startDate = new Date(this.temp.startDate)
-      this.temp.endDate = new Date(this.temp.endDate)
       this.$refs['excel-upload-input'].click()
     },
     handleFileUpload(e) {
@@ -328,7 +332,11 @@ export default {
       this.createApplicantsData()
     },
     createApplicantsData() {
-      createApplicantsBulk(this.temp).then(response => {
+      const data = {
+        curriculumNo: this.temp.curriculumNo,
+        applicantsBulkXlsxFile: this.temp.applicantsBulkXlsxFile
+      }
+      createApplicantsBulk(data).then(response => {
         const message = response.data.message
         this.$notify({
           title: message.title,
