@@ -4,5 +4,5 @@ const prodEnv = require('./prod.env')
 
 module.exports = merge(prodEnv, {
   NODE_ENV: '"development"',
-  BASE_API: '"https://backend.smartcheck.ml/api"',
+  BASE_API: '"http://localhost:5000/api"',
 })

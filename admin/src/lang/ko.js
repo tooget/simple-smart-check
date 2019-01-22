@@ -118,6 +118,7 @@ export default {
     attendanceLogs: {
       name: '출석부',
       phoneNo: '전화번호',
+      applicantName: '지원자명',
       signatureTimestamp: '서명',
       attendanceDate: '출석일',
       In: '입실',
