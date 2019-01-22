@@ -12,16 +12,7 @@
 
 <script>
 import ClassItem from './ClassItem.vue';
-import axios from 'axios'
-
-const HTTP = axios.create({
-    baseURL: `https://backend.smartcheck.ml/api`,
-    timeout: 5000,
-    headers: {
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*'
-    }
-  })
+import { curriculumsService } from '../services';
 
 export default {
   data() {
@@ -35,7 +26,7 @@ export default {
     };
   },
   created () {
-    HTTP.get(`resource/curriculums/filter`, {params: this.listQuery})
+    curriculumsService.fetchCurriculmList(this.listQuery)
       .then(response => {
         this.list = response.data.return.items
       })
