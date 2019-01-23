@@ -20,14 +20,14 @@ from passlib.hash import django_pbkdf2_sha256
 # --------------------[ API to System Users/Admin and Auth ]-----------------------
 class Users:
 
-    # ----------------[ Register a New User ]--------------------------------------
-    @apiRestful.route('/users/new')
-    @apiRestful.doc(params= {
-            'username': {'in': 'formData', 'description': 'application/json, body required'},
-            'password': {'in': 'formData', 'description': 'application/json, body required'},
-    })
-    class post_Users_New(Resource):
+    @apiRestful.route('/users')
+    class Users(Resource):
 
+        # ----------------[ Register a New User ]--------------------------------------
+        @apiRestful.doc(params= {
+                'username': {'in': 'formData', 'description': 'application/json, body required'},
+                'password': {'in': 'formData', 'description': 'application/json, body required'},
+        })
         def post(self):
             infoFromClient = request.form
             usernameFromClient = infoFromClient['username']         # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand."), https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
@@ -55,7 +55,20 @@ class Users:
             except:
                 db.session.rollback()
                 return {'message': 'Something went wrong'}, 500
-    # -----------------------------------------------------------------------------
+        # -----------------------------------------------------------------------------
+
+
+        # ----------------[ Get Users ]------------------------------------------------
+        @apiRestful.doc(params= {
+                'username': {'in': 'query', 'description': 'URL parameter, optional'},
+        })
+        def get(self):
+            queryFilter = request.args
+            users = UsersModel.query.filter_by(**queryFilter).all()
+            usersSchema = UsersModelSchema(many= True)
+            output = usersSchema.dump(users)
+            return {'return': output}, 200
+        # -----------------------------------------------------------------------------
 
 
     # ----------------[ Login ]----------------------------------------------------
@@ -101,21 +114,5 @@ class Users:
             except:
                 db.session.rollback()
                 return {'message': 'Something went wrong'}, 500
-    # -----------------------------------------------------------------------------
-
-
-    # ----------------[ Get Users ]------------------------------------------------
-    @apiRestful.route('/users/filter')
-    @apiRestful.doc(params= {
-            'username': {'in': 'query', 'description': 'URL parameter, optional'},
-    })
-    class get_Users_Filter(Resource):
-        
-        def get(self):
-            queryFilter = request.args
-            users = UsersModel.query.filter_by(**queryFilter).all()
-            usersSchema = UsersModelSchema(many= True)
-            output = usersSchema.dump(users)
-            return {'return': output}, 200
     # -----------------------------------------------------------------------------
 # ---------------------------------------------------------------------------------

@@ -40,49 +40,12 @@ import pandas as pd
 # ------------------------[ API to manage Curriculums ]-------------------------
 class Curriculums:
 
-    # ----------------[ Get Curriculums ]---------------------------------------
-    @apiRestful.route('/resource/curriculums/filter')
-    @apiRestful.doc(params= {
-            'filters': {'in': 'query', 'description': 'URL parameter, required'},
-            'sort': {'in': 'query', 'description': 'URL parameter, required'},
-            'pagination': {'in': 'query', 'description': 'URL parameter, optional'},
-            # You can add query filter columns if needed.
-    })
-    class get_Curriculums_Filter(Resource):
 
-        def get(self):
-            infoFromClient = {key: loads(request.args[key]) for key in request.args}
-            try:
-                filterFromClient = infoFromClient['filters']        # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand."), https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
-                sortParamFromClient = infoFromClient['sort']
-            except KeyError:
-                return {'message': {'title': 'Failed', 'content': 'filters/sort args are required'}}, 400
+    @apiRestful.route('/resource/curriculums')
+    class Curriculums(Resource):
 
-            ormQueryFilters = createOrmModelQueryFiltersDict(filterFromClient)
-            ormQuerySort = createOrmModelQuerySortDict(sortParamFromClient)
-
-            filters = (getattr(CurriculumsModel, target).like(f'%{value}%') for target, value in ormQueryFilters['CurriculumsModel'].items())
-            query = CurriculumsModel.query.filter(and_(*filters))
-            query = sort_query(query, *ormQuerySort)
-            total = query.count()
-
-            try:
-                pagenum, limit = int(infoFromClient['pagination']['pagenum']), int(infoFromClient['pagination']['limit'])
-                start, stop = (pagenum - 1) * limit, pagenum * limit
-                query = query.slice(start, stop).all()
-            except:
-                query = query.all()
-
-            curriculumsSchema = CurriculumsModelSchema(many= True)
-            output = curriculumsSchema.dump(query)
-
-            return {'return': {'items': output, 'total': total}}, 200
-    # ---------------------------------------------------------------------------
-
-
-    # ----------------[ Create a new Curriculums data ]----------------------------
-    @apiRestful.route('/resource/curriculums/new')
-    @apiRestful.doc(params= {
+        # ----------------[ Create a new Curriculums data ]----------------------------
+        @apiRestful.doc(params= {
             'curriculumCategory': {'in': 'formData', 'description': 'application/json, body required'},
             'ordinalNo': {'in': 'formData', 'description': 'application/json, body required'},
             'curriculumName': {'in': 'formData', 'description': 'application/json, body required'},
@@ -90,9 +53,7 @@ class Curriculums:
             'startDate': {'in': 'formData', 'description': 'application/json, body required'},
             'endDate': {'in': 'formData', 'description': 'application/json, body required'},
             # You can add formData columns if needed.
-    })
-    class post_Curriculums_New(Resource):
-
+        })
         def post(self):
             infoFromClient = request.form
             try:
@@ -131,23 +92,20 @@ class Curriculums:
             except:
                 db.session.rollback()
                 return {'message': {'title': 'Failed', 'content': 'New Curriculum creation failed'}}, 500
-    # ---------------------------------------------------------------------------
+        # ---------------------------------------------------------------------------
 
 
-    # ----------------[ Update a new Curriculums data ]----------------------------
-    @apiRestful.route('/resource/curriculums/info')
-    @apiRestful.doc(params= {
-            'curriculumNo': {'in': 'formData', 'description': 'application/json, body required'},
-            'curriculumCategory': {'in': 'formData', 'description': 'application/json, body required'},
-            'ordinalNo': {'in': 'formData', 'description': 'application/json, body required'},
-            'curriculumName': {'in': 'formData', 'description': 'application/json, body required'},
-            'curriculumType': {'in': 'formData', 'description': 'application/json, body required'},
-            'startDate': {'in': 'formData', 'description': 'application/json, body required'},
-            'endDate': {'in': 'formData', 'description': 'application/json, body required'},
-            # You can add formData columns if needed.
-    })
-    class put_Curriculums_Info(Resource):
-
+        # ----------------[ Update a new Curriculums data ]----------------------------
+        @apiRestful.doc(params= {
+                'curriculumNo': {'in': 'formData', 'description': 'application/json, body required'},
+                'curriculumCategory': {'in': 'formData', 'description': 'application/json, body required'},
+                'ordinalNo': {'in': 'formData', 'description': 'application/json, body required'},
+                'curriculumName': {'in': 'formData', 'description': 'application/json, body required'},
+                'curriculumType': {'in': 'formData', 'description': 'application/json, body required'},
+                'startDate': {'in': 'formData', 'description': 'application/json, body required'},
+                'endDate': {'in': 'formData', 'description': 'application/json, body required'},
+                # You can add formData columns if needed.
+        })
         def put(self):
             infoFromClient = request.form
             try:
@@ -187,17 +145,14 @@ class Curriculums:
             except:
                 db.session.rollback()
                 return {'message': {'title': 'Failed', 'content': 'Updating Curriculum info failed'}}, 500
-    # ---------------------------------------------------------------------------
+        # ---------------------------------------------------------------------------
 
 
-    # ----------------[ Delete a Curriculums data ]----------------------------
-    @apiRestful.route('/resource/curriculums')
-    @apiRestful.doc(params= {
-            'curriculumNo': {'in': 'formData', 'description': 'application/json, body required'},
-            # You can add formData columns if needed.
-    })
-    class delete_Curriculums(Resource):
-
+        # ----------------[ Delete a Curriculums data ]----------------------------
+        @apiRestful.doc(params= {
+                'curriculumNo': {'in': 'formData', 'description': 'application/json, body required'},
+                # You can add formData columns if needed.
+        })
         def delete(self):
             infoFromClient = request.form
             try:
@@ -223,7 +178,44 @@ class Curriculums:
             except:
                 db.session.rollback()
                 return {'message': {'title': 'Failed', 'content': 'Something went wrong'}}, 500
-    # ---------------------------------------------------------------------------  
+        # ---------------------------------------------------------------------------  
+
+
+        # ----------------[ Get Curriculums ]---------------------------------------
+        @apiRestful.doc(params= {
+                'filters': {'in': 'query', 'description': 'URL parameter, required'},
+                'sort': {'in': 'query', 'description': 'URL parameter, required'},
+                'pagination': {'in': 'query', 'description': 'URL parameter, optional'},
+                # You can add query filter columns if needed.
+        })
+        def get(self):
+            infoFromClient = {key: loads(request.args[key]) for key in request.args}
+            try:
+                filterFromClient = infoFromClient['filters']        # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand."), https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
+                sortParamFromClient = infoFromClient['sort']
+            except KeyError:
+                return {'message': {'title': 'Failed', 'content': 'filters/sort args are required'}}, 400
+
+            ormQueryFilters = createOrmModelQueryFiltersDict(filterFromClient)
+            ormQuerySort = createOrmModelQuerySortDict(sortParamFromClient)
+
+            filters = (getattr(CurriculumsModel, target).like(f'%{value}%') for target, value in ormQueryFilters['CurriculumsModel'].items())
+            query = CurriculumsModel.query.filter(and_(*filters))
+            query = sort_query(query, *ormQuerySort)
+            total = query.count()
+
+            try:
+                pagenum, limit = int(infoFromClient['pagination']['pagenum']), int(infoFromClient['pagination']['limit'])
+                start, stop = (pagenum - 1) * limit, pagenum * limit
+                query = query.slice(start, stop).all()
+            except:
+                query = query.all()
+
+            curriculumsSchema = CurriculumsModelSchema(many= True)
+            output = curriculumsSchema.dump(query)
+
+            return {'return': {'items': output, 'total': total}}, 200
+        # ---------------------------------------------------------------------------
 
 
     # ----------------[ Get Curriculums, joined to Members counts ]--------------
@@ -288,17 +280,18 @@ class Curriculums:
 # ------------------------[ API to manage AttendanceLogs ]-----------------------
 class AttendanceLogs:
     
-    # ----------------[ Get new Attendance logs ]--------------------------------
-    @apiRestful.route('/resource/attendancelogs/filter')
-    @apiRestful.doc(params= {
-            'phoneNo': {'in': 'query', 'description': 'URL parameter, optional'},
-            'curriculumNo': {'in': 'query', 'description': 'URL parameter, optional'},
-            'checkInOut': {'in': 'query', 'description': 'URL parameter, optional'},
-            'attendanceDate': {'in': 'query', 'description': 'URL parameter, optional'},
-            # You can add query filter columns if needed.
-    })
-    class get_AttendanceLogs_Filter(Resource):
+    
+    @apiRestful.route('/resource/attendancelogs')
+    class AttendanceLogs(Resource):
 
+        # ----------------[ Get new Attendance logs ]--------------------------------
+        @apiRestful.doc(params= {
+                'phoneNo': {'in': 'query', 'description': 'URL parameter, optional'},
+                'curriculumNo': {'in': 'query', 'description': 'URL parameter, optional'},
+                'checkInOut': {'in': 'query', 'description': 'URL parameter, optional'},
+                'attendanceDate': {'in': 'query', 'description': 'URL parameter, optional'},
+                # You can add query filter columns if needed.
+        })
         def get(self):
             infoFromClient = request.args
             queryFilter = createOrmModelQueryFiltersDict(infoFromClient)
@@ -339,8 +332,88 @@ class AttendanceLogs:
             total = query.count()
 
             return {'return': {'items': output, 'total': total}}, 200
-    # ---------------------------------------------------------------------------
+        # ---------------------------------------------------------------------------
 
+
+        # ----------------[ Create a new Attendance log ]----------------------------
+        @apiRestful.doc(params= {
+                'phoneNo': {'in': 'formData', 'description': 'application/json, body required'},
+                'curriculumNo': {'in': 'formData', 'description': 'application/json, body required'},
+                'checkInOut': {'in': 'formData', 'description': 'application/json, body required'},
+                'signature': {'in': 'formData', 'description': 'application/json, body required'},
+                # You can add formData columns if needed.
+        })
+        def post(self):
+            infoFromClient = request.form
+            try:
+                phoneNoFromClient = infoFromClient['phoneNo']               # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand."), https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
+                curriculumNoFromClient = infoFromClient['curriculumNo']
+                checkInOutFromClient = infoFromClient['checkInOut']
+                signatureB64FromClient = infoFromClient['signature'].split(',')[-1].strip()
+            except KeyError:
+                return {'message': {'title': 'Failed', 'content': 'All of request.args are required'}}, 400
+            
+            attendancePassedMemberCheck = MembersModel.query.filter_by(
+                                                            curriculumNo= curriculumNoFromClient,
+                                                            phoneNo= phoneNoFromClient,
+                                                            attendancePass= 'Y',
+                                                       ).count()
+            if attendancePassedMemberCheck == 1:
+                pass
+            else:
+                return {'message': {'title': 'Failed', 'content': 'Please Check the Phone Number format or Attendance Passed'}}, 400
+
+            # Calculate Korea Standard Time(KST), AttendanceDate/Time must be shown as a KST for filtering etc.
+            attendanceTimestamp = datetime.utcnow() + timedelta(hours= 9)
+            attendanceDate = attendanceTimestamp.strftime('%Y-%m-%d')
+            imgTimestamp = attendanceTimestamp.strftime('%Y-%m-%d %H:%M:%S') + ' KST'
+
+            # Get full duration of a curriculum.
+            curriculumDuration = CurriculumsModel.query.with_entities(CurriculumsModel.startDate, CurriculumsModel.endDate).filter_by(curriculumNo= curriculumNoFromClient).first()
+            startDate, endDate = (curriculumDuration.startDate + timedelta(hours= 9)).strftime('%Y-%m-%dT%H:%M:%SZ'), (curriculumDuration.endDate + timedelta(hours= 9)).strftime('%Y-%m-%dT%H:%M:%SZ')
+            curriculumDuration = [date.strftime('%Y-%m-%d') for date in pd.date_range(start= startDate, end= endDate, freq= 'B')]
+            if attendanceDate in curriculumDuration:
+                pass
+            else:
+                return {'message': {'title': 'Failed', 'content': 'Please Check Duration of the Curriculum'}}, 400
+
+            # Resizing Signature Image(width: 500) and Putting timestamp on it.
+            signatureImg = Image.open(BytesIO(b64decode( signatureB64FromClient.encode() )))
+            imgRatio = signatureImg.height / signatureImg.width
+            baseWidthToResize = 400
+
+            resizedSignature = signatureImg.resize((baseWidthToResize, int(baseWidthToResize * imgRatio))).convert('RGBA')
+            del signatureImg, signatureB64FromClient
+            txt = Image.new('RGBA', resizedSignature.size, (255,255,255,0))
+            d = ImageDraw.Draw(txt)
+            d.text((resizedSignature.width * 0.1, resizedSignature.height * 0.9), imgTimestamp, fill= (0,0,0,255))
+            resizedSignature = Image.alpha_composite(resizedSignature, txt)
+            # resizedSignature.show()
+
+            resizedImgBytes = BytesIO()
+            resizedSignature.save(resizedImgBytes, format='PNG')
+            resizedImgBytesCompressed = compress(resizedImgBytes.getvalue(), level= 9)      # use 'compress' to reduce about 30% of binary size : https://stackoverflow.com/questions/28641731/decode-gzip-compressed-and-base64-encoded-data-to-a-readable-format
+            del resizedImgBytes
+
+            # Create a new attendanceLogs record. 
+            newAttendanceLogData = {
+                "phoneNo": phoneNoFromClient,
+                "curriculumNo": curriculumNoFromClient,
+                "checkInOut": checkInOutFromClient,
+                "signature": resizedImgBytesCompressed,
+                "attendanceDate": attendanceDate,
+            }
+            newAttendanceLog = AttendanceLogsModel(**newAttendanceLogData)
+            
+            try:
+                db.session.add(newAttendanceLog)
+                db.session.commit()
+                return {'message': {'title': 'Succeeded', 'content': 'AttendanceLog Inserted'}}, 201
+            except:
+                db.session.rollback()
+                return {'message': {'title': 'Failed', 'content': 'Something went wrong'}}, 500
+        # ---------------------------------------------------------------------------
+    
 
     # ----------------[ Get attendance list of a specific curriculum ]-----------
     @apiRestful.route('/resource/attendancelogs/list')
@@ -537,90 +610,6 @@ class AttendanceLogs:
 
             #finally return the file
             return send_file(output, attachment_filename= f'attendance_ID_{curriculumNoFromClient}.xlsx', as_attachment=True)
-            # -------------------------------------------------------------------
-    # ---------------------------------------------------------------------------
-
-
-    # ----------------[ Create a new Attendance log ]----------------------------
-    @apiRestful.route('/resource/attendancelogs/new')
-    @apiRestful.doc(params= {
-            'phoneNo': {'in': 'formData', 'description': 'application/json, body required'},
-            'curriculumNo': {'in': 'formData', 'description': 'application/json, body required'},
-            'checkInOut': {'in': 'formData', 'description': 'application/json, body required'},
-            'signature': {'in': 'formData', 'description': 'application/json, body required'},
-            # You can add formData columns if needed.
-    })
-    class post_AttendanceLogs_New(Resource):
-
-        def post(self):
-            infoFromClient = request.form
-            try:
-                phoneNoFromClient = infoFromClient['phoneNo']               # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand."), https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
-                curriculumNoFromClient = infoFromClient['curriculumNo']
-                checkInOutFromClient = infoFromClient['checkInOut']
-                signatureB64FromClient = infoFromClient['signature'].split(',')[-1].strip()
-            except KeyError:
-                return {'message': {'title': 'Failed', 'content': 'All of request.args are required'}}, 400
-            
-            attendancePassedMemberCheck = MembersModel.query.filter_by(
-                                                            curriculumNo= curriculumNoFromClient,
-                                                            phoneNo= phoneNoFromClient,
-                                                            attendancePass= 'Y',
-                                                       ).count()
-            if attendancePassedMemberCheck == 1:
-                pass
-            else:
-                return {'message': {'title': 'Failed', 'content': 'Please Check the Phone Number format or Attendance Passed'}}, 400
-
-            # Calculate Korea Standard Time(KST), AttendanceDate/Time must be shown as a KST for filtering etc.
-            attendanceTimestamp = datetime.utcnow() + timedelta(hours= 9)
-            attendanceDate = attendanceTimestamp.strftime('%Y-%m-%d')
-            imgTimestamp = attendanceTimestamp.strftime('%Y-%m-%d %H:%M:%S') + ' KST'
-
-            # Get full duration of a curriculum.
-            curriculumDuration = CurriculumsModel.query.with_entities(CurriculumsModel.startDate, CurriculumsModel.endDate).filter_by(curriculumNo= curriculumNoFromClient).first()
-            startDate, endDate = (curriculumDuration.startDate + timedelta(hours= 9)).strftime('%Y-%m-%dT%H:%M:%SZ'), (curriculumDuration.endDate + timedelta(hours= 9)).strftime('%Y-%m-%dT%H:%M:%SZ')
-            curriculumDuration = [date.strftime('%Y-%m-%d') for date in pd.date_range(start= startDate, end= endDate, freq= 'B')]
-            if attendanceDate in curriculumDuration:
-                pass
-            else:
-                return {'message': {'title': 'Failed', 'content': 'Please Check Duration of the Curriculum'}}, 400
-
-            # Resizing Signature Image(width: 500) and Putting timestamp on it.
-            signatureImg = Image.open(BytesIO(b64decode( signatureB64FromClient.encode() )))
-            imgRatio = signatureImg.height / signatureImg.width
-            baseWidthToResize = 400
-
-            resizedSignature = signatureImg.resize((baseWidthToResize, int(baseWidthToResize * imgRatio))).convert('RGBA')
-            del signatureImg, signatureB64FromClient
-            txt = Image.new('RGBA', resizedSignature.size, (255,255,255,0))
-            d = ImageDraw.Draw(txt)
-            d.text((resizedSignature.width * 0.1, resizedSignature.height * 0.9), imgTimestamp, fill= (0,0,0,255))
-            resizedSignature = Image.alpha_composite(resizedSignature, txt)
-            # resizedSignature.show()
-
-            resizedImgBytes = BytesIO()
-            resizedSignature.save(resizedImgBytes, format='PNG')
-            resizedImgBytesCompressed = compress(resizedImgBytes.getvalue(), level= 9)      # use 'compress' to reduce about 30% of binary size : https://stackoverflow.com/questions/28641731/decode-gzip-compressed-and-base64-encoded-data-to-a-readable-format
-            del resizedImgBytes
-
-            # Create a new attendanceLogs record. 
-            newAttendanceLogData = {
-                "phoneNo": phoneNoFromClient,
-                "curriculumNo": curriculumNoFromClient,
-                "checkInOut": checkInOutFromClient,
-                "signature": resizedImgBytesCompressed,
-                "attendanceDate": attendanceDate,
-            }
-            newAttendanceLog = AttendanceLogsModel(**newAttendanceLogData)
-            
-            try:
-                db.session.add(newAttendanceLog)
-                db.session.commit()
-                return {'message': {'title': 'Succeeded', 'content': 'AttendanceLog Inserted'}}, 201
-            except:
-                db.session.rollback()
-                return {'message': {'title': 'Failed', 'content': 'Something went wrong'}}, 500
     # ---------------------------------------------------------------------------
 # -------------------------------------------------------------------------------
 
@@ -628,19 +617,21 @@ class AttendanceLogs:
 # ------------------------[ API to manage Members ]------------------------------
 class Members:
 
-    # ----------------[ Get members ]--------------------------------------------
-    @apiRestful.route('/resource/members/filter')
-    @apiRestful.doc(params= {
-            'phoneNo': {'in': 'query', 'description': 'URL parameter, optional'},
-            'curriculumNo': {'in': 'query', 'description': 'URL parameter, optional'},
-            'attendancePass': {'in': 'query', 'description': 'URL parameter, optional'},
-            'attendanceCheck': {'in': 'query', 'description': 'URL parameter, optional'},
-            'curriculumComplete': {'in': 'query', 'description': 'URL parameter, optional'},
-            'employment': {'in': 'query', 'description': 'URL parameter, optional'},
-            # You can add query filter columns if needed.
-    })
-    class get_Members_Filter(Resource):
 
+    
+    @apiRestful.route('/resource/members')
+    class Members(Resource):
+
+        # ----------------[ Get members ]--------------------------------------------
+        @apiRestful.doc(params= {
+                'phoneNo': {'in': 'query', 'description': 'URL parameter, optional'},
+                'curriculumNo': {'in': 'query', 'description': 'URL parameter, optional'},
+                'attendancePass': {'in': 'query', 'description': 'URL parameter, optional'},
+                'attendanceCheck': {'in': 'query', 'description': 'URL parameter, optional'},
+                'curriculumComplete': {'in': 'query', 'description': 'URL parameter, optional'},
+                'employment': {'in': 'query', 'description': 'URL parameter, optional'},
+                # You can add query filter columns if needed.
+        })
         def get(self):
             queryFilter = request.args
             members = MembersModel.query.filter_by(**queryFilter)
@@ -649,7 +640,60 @@ class Members:
             total = members.count()
 
             return {'return': {'items': output, 'total': total}}, 200
-    # -----------------------------------------------------------------------------
+        # -----------------------------------------------------------------------------
+
+
+        # ----------------[ Update members' Info ]-------------------------------------
+        @apiRestful.doc(params= {
+                'phoneNo': {'in': 'formData', 'description': 'application/json, body required'},
+                'curriculumNo': {'in': 'formData', 'description': 'application/json, body required'},
+                'attendancePass': {'in': 'formData', 'description': 'application/json, body required'},
+                'attendanceCheck': {'in': 'formData', 'description': 'application/json, body required'},
+                'curriculumComplete': {'in': 'formData', 'description': 'application/json, body required'},
+                'employment': {'in': 'formData', 'description': 'application/json, body required'},
+                # You can add formData columns if needed.
+        })
+        def put(self):
+            # Convert empty string to None
+            emptyStringToNone = lambda x: None if x == 'null' else x            
+            infoFromClient = {key: emptyStringToNone(request.form[key]) for key in request.form}
+            try:
+                phoneNoFromClient = infoFromClient['phoneNo']       # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand."), https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
+                curriculumNoFromClient = int(infoFromClient['curriculumNo'])
+                attendancePassFromClient = infoFromClient['attendancePass']
+                attendanceCheckFromClient = infoFromClient['attendanceCheck']
+                curriculumCompleteFromClient = infoFromClient['curriculumComplete']
+                employmentFromClient = infoFromClient['employment']
+            except KeyError:
+                return {'message': {'title': 'Failed', 'content': 'All of request.form are required'}}, 400
+            
+            requestedBody = {
+                'phoneNo': phoneNoFromClient,
+                'curriculumNo': curriculumNoFromClient,
+                'attendancePass': attendancePassFromClient,
+                'attendanceCheck': attendanceCheckFromClient,
+                'curriculumComplete': curriculumCompleteFromClient,
+                'employment': employmentFromClient,
+            }
+
+            membersData = MembersModel(**requestedBody)
+
+            try:
+                db.session.merge(membersData)      # session.merge() : A kind of UPSERT, https://docs.sqlalchemy.org/en/latest/orm/session_state_management.html#merging
+                db.session.commit()
+                members = MembersModel.query.filter_by(**requestedBody).one()
+                membersSchema = MembersModelSchema(many= False)
+                argument = membersSchema.dump(members)
+                argumentToJson = dumps(argument)
+                return {'message': {'title': 'Succeeded', 'content': 'Personal info updated'},
+                        'return': {
+                            'argument': f'{argumentToJson}'
+                        }}, 201
+            except:
+                db.session.rollback()
+                return {'message': {'title': 'Failed', 'content': 'Something went wrong'}}, 500
+        # -----------------------------------------------------------------------------
+
 
 
     # ----------------[ Get summary of members count ]-----------------------------
@@ -839,78 +883,24 @@ class Members:
             return send_file(output, attachment_filename="members.xlsx", as_attachment=True), 200
             # ---------------------------------------------------------------------
     # -----------------------------------------------------------------------------
-
-
-    # ----------------[ Update members' Info ]-------------------------------------
-    @apiRestful.route('/resource/members/info')
-    @apiRestful.doc(params= {
-            'phoneNo': {'in': 'formData', 'description': 'application/json, body required'},
-            'curriculumNo': {'in': 'formData', 'description': 'application/json, body required'},
-            'attendancePass': {'in': 'formData', 'description': 'application/json, body required'},
-            'attendanceCheck': {'in': 'formData', 'description': 'application/json, body required'},
-            'curriculumComplete': {'in': 'formData', 'description': 'application/json, body required'},
-            'employment': {'in': 'formData', 'description': 'application/json, body required'},
-            # You can add formData columns if needed.
-    })
-    class put_Members_Info(Resource):
-
-        def put(self):
-            # Convert empty string to None
-            emptyStringToNone = lambda x: None if x == 'null' else x            
-            infoFromClient = {key: emptyStringToNone(request.form[key]) for key in request.form}
-            try:
-                phoneNoFromClient = infoFromClient['phoneNo']       # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand."), https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
-                curriculumNoFromClient = int(infoFromClient['curriculumNo'])
-                attendancePassFromClient = infoFromClient['attendancePass']
-                attendanceCheckFromClient = infoFromClient['attendanceCheck']
-                curriculumCompleteFromClient = infoFromClient['curriculumComplete']
-                employmentFromClient = infoFromClient['employment']
-            except KeyError:
-                return {'message': {'title': 'Failed', 'content': 'All of request.form are required'}}, 400
-            
-            requestedBody = {
-                'phoneNo': phoneNoFromClient,
-                'curriculumNo': curriculumNoFromClient,
-                'attendancePass': attendancePassFromClient,
-                'attendanceCheck': attendanceCheckFromClient,
-                'curriculumComplete': curriculumCompleteFromClient,
-                'employment': employmentFromClient,
-            }
-
-            membersData = MembersModel(**requestedBody)
-
-            try:
-                db.session.merge(membersData)      # session.merge() : A kind of UPSERT, https://docs.sqlalchemy.org/en/latest/orm/session_state_management.html#merging
-                db.session.commit()
-                members = MembersModel.query.filter_by(**requestedBody).one()
-                membersSchema = MembersModelSchema(many= False)
-                argument = membersSchema.dump(members)
-                argumentToJson = dumps(argument)
-                return {'message': {'title': 'Succeeded', 'content': 'Personal info updated'},
-                        'return': {
-                            'argument': f'{argumentToJson}'
-                        }}, 201
-            except:
-                db.session.rollback()
-                return {'message': {'title': 'Failed', 'content': 'Something went wrong'}}, 500
-    # -----------------------------------------------------------------------------
 # ---------------------------------------------------------------------------------
 
 
 # ------------------------[ API to manage Applicants ]-----------------------------
 class Applicants:
 
-    # ----------------[ Get Applicants ]-------------------------------------------
-    @apiRestful.route('/resource/applicants/filter')
-    @apiRestful.doc(params= {
-            'phoneNo': {'in': 'query', 'description': 'URL parameter, optional'},
-            'curriculumNo': {'in': 'query', 'description': 'URL parameter, optional'},
-            'applicantName': {'in': 'query', 'description': 'URL parameter, optional'},
-            'email': {'in': 'query', 'description': 'URL parameter, optional'},
-            # You can add query filter columns if needed.
-    })
-    class get_Applicants_Filter(Resource):
 
+    @apiRestful.route('/resource/applicants')
+    class Applicants(Resource):
+
+        # ----------------[ Get Applicants ]-------------------------------------------
+        @apiRestful.doc(params= {
+                'phoneNo': {'in': 'query', 'description': 'URL parameter, optional'},
+                'curriculumNo': {'in': 'query', 'description': 'URL parameter, optional'},
+                'applicantName': {'in': 'query', 'description': 'URL parameter, optional'},
+                'email': {'in': 'query', 'description': 'URL parameter, optional'},
+                # You can add query filter columns if needed.
+        })
         def get(self):
             queryFilter = request.args
             applicants = ApplicantsModel.query.filter_by(**queryFilter)
@@ -919,7 +909,48 @@ class Applicants:
             total = applicants.count()
 
             return {'return': {'items': output, 'total': total}}, 200
-    # -----------------------------------------------------------------------------
+        # -----------------------------------------------------------------------------
+
+
+        #-----------------------[ Update Applicant memo ]------------------------------
+        @apiRestful.doc(params= {
+                'curriculumNo': {'in': 'formData', 'description': 'application/json, body required'},
+                'phoneNo': {'in': 'formData', 'description': 'application/json, body/xlsx file required'},
+                'operationMemo': {'in': 'formData', 'description': 'application/json, body/xlsx file required'},
+                # You can add formData columns if needed.
+        })
+        def put(self):
+            infoFromClient = request.form
+            try:
+                curriculumNoFromClient = int(infoFromClient['curriculumNo'])        # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand."), https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
+                phoneNoFromClient = infoFromClient['phoneNo']
+                operationMemoFromClient = infoFromClient['operationMemo']
+            except KeyError:
+                return {'message': {'title': 'Failed', 'content': 'All of request.form are required'}}, 400
+
+            requestedBody = {
+                "curriculumNo": curriculumNoFromClient,
+                "phoneNo": phoneNoFromClient,
+                "operationMemo": operationMemoFromClient,
+            }
+            
+            updatedApplicantInfo = ApplicantsModel(**requestedBody)
+
+            try:
+                db.session.merge(updatedApplicantInfo)      # session.merge() : A kind of UPSERT, https://docs.sqlalchemy.org/en/latest/orm/session_state_management.html#merging
+                db.session.commit()
+                applicants = ApplicantsModel.query.filter_by(**requestedBody).one()
+                applicantsSchema = ApplicantsModelSchema(many= False)
+                argument = applicantsSchema.dump(applicants)
+                argumentToJson = dumps(argument)
+                return {'message': {'title': 'Succeeded', 'content': 'Applicant info updated'},
+                        'return': {
+                            'argument': f'{argumentToJson}'
+                        }}, 201
+            except:
+                db.session.rollback()
+                return {'message': {'title': 'Failed', 'content': 'Updating Applicant info failed'}}, 500
+        # -----------------------------------------------------------------------------
 
 
     #--------[ POST Raw Excel File(Google Survey) to Applicants and Members ]------
@@ -970,49 +1001,5 @@ class Applicants:
             except:
                 db.session.rollback()
                 return {'message': {'title': 'Failed', 'content': 'Creating/Replacing all the relavant data failed'}}, 500
-    # -----------------------------------------------------------------------------
-
-
-    #-----------------------[ Update Applicant memo ]------------------------------
-    @apiRestful.route('/resource/applicants/info')
-    @apiRestful.doc(params= {
-            'curriculumNo': {'in': 'formData', 'description': 'application/json, body required'},
-            'phoneNo': {'in': 'formData', 'description': 'application/json, body/xlsx file required'},
-            'operationMemo': {'in': 'formData', 'description': 'application/json, body/xlsx file required'},
-            # You can add formData columns if needed.
-    })
-    class put_Applicants_Info(Resource):
-
-        def put(self):
-            infoFromClient = request.form
-            try:
-                curriculumNoFromClient = int(infoFromClient['curriculumNo'])        # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand."), https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
-                phoneNoFromClient = infoFromClient['phoneNo']
-                operationMemoFromClient = infoFromClient['operationMemo']
-            except KeyError:
-                return {'message': {'title': 'Failed', 'content': 'All of request.form are required'}}, 400
-
-            requestedBody = {
-                "curriculumNo": curriculumNoFromClient,
-                "phoneNo": phoneNoFromClient,
-                "operationMemo": operationMemoFromClient,
-            }
-            
-            updatedApplicantInfo = ApplicantsModel(**requestedBody)
-
-            try:
-                db.session.merge(updatedApplicantInfo)      # session.merge() : A kind of UPSERT, https://docs.sqlalchemy.org/en/latest/orm/session_state_management.html#merging
-                db.session.commit()
-                applicants = ApplicantsModel.query.filter_by(**requestedBody).one()
-                applicantsSchema = ApplicantsModelSchema(many= False)
-                argument = applicantsSchema.dump(applicants)
-                argumentToJson = dumps(argument)
-                return {'message': {'title': 'Succeeded', 'content': 'Applicant info updated'},
-                        'return': {
-                            'argument': f'{argumentToJson}'
-                        }}, 201
-            except:
-                db.session.rollback()
-                return {'message': {'title': 'Failed', 'content': 'Updating Applicant info failed'}}, 500
     # -----------------------------------------------------------------------------
 # ---------------------------------------------------------------------------------
