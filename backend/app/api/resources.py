@@ -3,7 +3,7 @@ from app.api.modules import requireAuth, convertDataframeToDictsList, createOrmM
 from app.config import Config
 from app.extensions import db
 from app.ormmodels import AttendanceLogsModel, ApplicantsModel, CurriculumsModel, MembersModel
-from app.ormmodels import AttendanceLogsModelSchema, ApplicantsModelSchema, CurriculumsModelSchema, MembersModelSchema
+from app.ormmodels import ApplicantsModelSchema, CurriculumsModelSchema, MembersModelSchema
 from base64 import b64encode, b64decode
 from copy import deepcopy
 from datetime import datetime, timedelta
@@ -11,29 +11,17 @@ from flask import request, send_file
 from flask_restplus import Resource     # Reference : http://flask-restplus.readthedocs.io
 from io import BytesIO
 from json import dumps, loads
-from PIL import Image, ImageDraw, ImageFont
-from sqlalchemy import and_, func, null
+from PIL import Image, ImageDraw
+from sqlalchemy import and_, func
 from sqlalchemy_utils import sort_query
 from zlib import compress, decompress
 import pandas as pd
 
 
-# # ---------------------------[ SecureResource ]----------------------------------
-# # Calls requireAuth decorator on all requests
-# class SecureResource(Resource):
-#     method_decorators = [requireAuth]
-# # -------------------------------------------------------------------------------
-
-
-# # ----------------[ API SAMPLE with Applying SecureResources ]-------------------
-# @apiRestful.route('/secure-resource/<string:resource_id>')
-# @apiRestful.param('resource_id', 'Class-wide description')
-# class SecureResourceOne(SecureResource):    # Secure Resource Class: Inherit from Resource
-
-#     @apiRestful.doc(params= {'resource_id': 'An ID'})
-#     def get(self, resource_id):
-#         timestamp = datetime.utcnow().isoformat()
-#         return {'timestamp': timestamp}
+# ---------------------------[ SecureResource ]----------------------------------
+# Calls requireAuth decorator on all requests
+class SecureResource(Resource):
+    method_decorators = [requireAuth]
 # # -------------------------------------------------------------------------------
 
 
@@ -42,7 +30,7 @@ class Curriculums:
 
 
     @apiRestful.route('/resource/curriculums')
-    class Curriculums(Resource):
+    class Curriculums(SecureResource):
 
         # ----------------[ Create a new Curriculums data ]----------------------------
         @apiRestful.doc(params= {
@@ -226,7 +214,7 @@ class Curriculums:
             'pagination': {'in': 'query', 'description': 'URL parameter, required'},
             # You can add query filter columns if needed.
     })
-    class get_Curriculums_WithMemberCount(Resource):
+    class get_Curriculums_WithMemberCount(SecureResource):
 
         def get(self):
             infoFromClient = {key: loads(request.args[key]) for key in request.args}
@@ -282,7 +270,7 @@ class AttendanceLogs:
     
     
     @apiRestful.route('/resource/attendancelogs')
-    class AttendanceLogs(Resource):
+    class AttendanceLogs(SecureResource):
 
         # ----------------[ Get new Attendance logs ]--------------------------------
         @apiRestful.doc(params= {
@@ -420,7 +408,7 @@ class AttendanceLogs:
     @apiRestful.doc(params= {
             'curriculumNo': {'in': 'query', 'description': 'URL parameter, reqired'},
     })
-    class get_AttendanceLogs_List(Resource):
+    class get_AttendanceLogs_List(SecureResource):
 
         def get(self):
             infoFromClient = request.args
@@ -517,7 +505,7 @@ class AttendanceLogs:
             'curriculumNo': {'in': 'query', 'description': 'URL parameter, reqired'},
     })
     # Almost same with @apiRestful.route('/resource/attendancelogs/list')
-    class get_AttendanceLogs_Listfile(Resource):
+    class get_AttendanceLogs_Listfile(SecureResource):
 
         def get(self):
             infoFromClient = request.args
@@ -618,9 +606,8 @@ class AttendanceLogs:
 class Members:
 
 
-    
     @apiRestful.route('/resource/members')
-    class Members(Resource):
+    class Members(SecureResource):
 
         # ----------------[ Get members ]--------------------------------------------
         @apiRestful.doc(params= {
@@ -702,7 +689,7 @@ class Members:
             'curriculumNo': {'in': 'query', 'description': 'URL parameter, optional'},
             # You can add query filter columns if needed.
     })
-    class get_Members_Summarycount(Resource):
+    class get_Members_Summarycount(SecureResource):
 
         def get(self):
             queryFilter = request.args
@@ -740,7 +727,7 @@ class Members:
             'pagination': {'in': 'query', 'description': 'URL parameter, required'},
             # You can add query filter columns if needed.
     })
-    class get_Members_List(Resource):
+    class get_Members_List(SecureResource):
 
         def get(self):
             infoFromClient = {key: loads(request.args[key]) for key in request.args}
@@ -812,7 +799,7 @@ class Members:
             # You can add query filter columns if needed.
     })
     # Almost same with @apiRestful.route('/resource/members/list')
-    class get_Members_Listfile(Resource):
+    class get_Members_Listfile(SecureResource):
 
         def get(self):
             infoFromClient = {key: loads(request.args[key]) for key in request.args}
@@ -891,7 +878,7 @@ class Applicants:
 
 
     @apiRestful.route('/resource/applicants')
-    class Applicants(Resource):
+    class Applicants(SecureResource):
 
         # ----------------[ Get Applicants ]-------------------------------------------
         @apiRestful.doc(params= {
@@ -960,7 +947,7 @@ class Applicants:
             'applicantsBulkXlsxFile': {'in': 'formData', 'type': 'file', 'description': 'application/json, body/xlsx file required'},
             # You can add formData columns if needed.
     })
-    class post_Applicants_Bulk(Resource):
+    class post_Applicants_Bulk(SecureResource):
 
         def post(self):
             infoFromClient = request.form

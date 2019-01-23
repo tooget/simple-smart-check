@@ -1,27 +1,27 @@
 from app.api import apiRestful
-from app.api.modules import requireAuth, convertDataframeToDictsList
+from app.api.modules import requireAuth
 from app.config import Config
 from app.extensions import db
 from app.ormmodels import UsersModel, RevokedTokenModel
-from app.ormmodels import UsersModelSchema, RevokedTokenModelSchema
+from app.ormmodels import UsersModelSchema
 from flask import request
 from flask_restplus import Resource
 from flask_jwt_extended import create_access_token, jwt_required, get_raw_jwt
 from passlib.hash import django_pbkdf2_sha256
 
 
-# # ---------------------------[ SecureResource ]----------------------------------
-# # Calls requireAuth decorator on all requests
-# class SecureResource(Resource):
-#     method_decorators = [requireAuth]
-# # -------------------------------------------------------------------------------
+# ---------------------------[ SecureResource ]----------------------------------
+# Calls requireAuth decorator on all requests
+class SecureResource(Resource):
+    method_decorators = [requireAuth]
+# -------------------------------------------------------------------------------
 
 
 # --------------------[ API to System Users/Admin and Auth ]-----------------------
 class Users:
 
     @apiRestful.route('/users')
-    class Users(Resource):
+    class Users(SecureResource):
 
         # ----------------[ Register a New User ]--------------------------------------
         @apiRestful.doc(params= {
@@ -77,7 +77,7 @@ class Users:
             'username': {'in': 'formData', 'description': 'application/json, body required'},
             'password': {'in': 'formData', 'description': 'application/json, body required'},
     })
-    class post_Users_Login(Resource):
+    class post_Users_Login(SecureResource):
 
         def post(self):
             infoFromClient = request.form
@@ -102,7 +102,7 @@ class Users:
 
     # ----------------[ Logout ]---------------------------------------------------
     @apiRestful.route('/users/logout')
-    class post_Users_Logout(Resource):
+    class post_Users_Logout(SecureResource):
 
         @jwt_required
         def post(self):
