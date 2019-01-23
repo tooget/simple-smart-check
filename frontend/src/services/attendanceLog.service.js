@@ -12,7 +12,7 @@ function checkInOut(phoneNo, curriculumNo, checkInOut, signature) {
     requestBody.append('signature', signature);
     
     return request({
-        url: '/resource/attendancelogs/new',
+        url: '/resource/attendancelogs',
         method: 'post',
         data: requestBody
     });

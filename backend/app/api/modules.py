@@ -24,7 +24,7 @@ def createOrmModelQueryFiltersDict(request_args_filters):
     totalOrmModelTableColumns = set()
     
     for ormClassName, ormModel in inspect.getmembers(app.ormmodels, inspect.isclass):
-        if type(ormModel).__module__ == 'flask_sqlalchemy.model' and ormModel.__bind_key__ == 'mysql':
+        if type(ormModel).__module__ == 'flask_sqlalchemy.model' and ormModel.__bind_key__ == 'mysql-simplesmartcheck':
             ormModelTableColumns = set(ormModel.__table__.columns.keys())
             totalOrmModelTableColumns = totalOrmModelTableColumns | ormModelTableColumns
             columnIntersections = request_args_filters_columns & ormModelTableColumns       # when a column from client exists

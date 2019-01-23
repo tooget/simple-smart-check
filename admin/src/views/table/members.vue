@@ -204,6 +204,14 @@ export default {
         setTimeout(() => {
           this.listLoading = false
         }, 1.5 * 1000)
+      }).catch(error => {
+        const message = error.response.data.message
+        this.$notify({
+          title: message.title,
+          message: message.content,
+          type: 'error',
+          duration: 2000
+        })
       })
     },
     getCurriculumList() {
@@ -214,7 +222,7 @@ export default {
     sortChange(data) {
       const { prop, order } = data
       const sortOption = { ascending: 'asc', descending: 'desc' }
-      const sortChange =  new Object()
+      const sortChange = {}
       sortChange[prop] = sortOption[order]
       this.listQuery.sort = sortChange
       this.handleFilter()

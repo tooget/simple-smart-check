@@ -108,14 +108,14 @@ export default {
         setTimeout(() => {
           this.listLoading = false
         }, 1.5 * 1000)
-      }).catch(() => {
+      }).catch(error => {
+        const message = error.response.data.message
         this.$notify({
-          title: 'Failed',
-          message: 'Attendance Table is not exist',
+          title: message.title,
+          message: message.content,
           type: 'error',
           duration: 2000
         })
-        this.listLoading = false
       })
     },
     getCurriculumList() {
@@ -126,8 +126,8 @@ export default {
     handleFilter() {
       if (!this.listQuery.filters.curriculumNo) {
         this.$notify({
-          title: 'Failed',
-          message: 'Select Curriculum Option First',
+          title: 'Warning',
+          message: '교육과정을 먼저 선택해주세요',
           type: 'warning',
           duration: 2000
         })
@@ -138,8 +138,8 @@ export default {
     handleFileDownload() {
       if (!this.listQuery.filters.curriculumNo) {
         this.$notify({
-          title: 'Failed',
-          message: 'Select Curriculum Option First',
+          title: 'Warning',
+          message: '교육과정을 먼저 선택해주세요',
           type: 'warning',
           duration: 2000
         })

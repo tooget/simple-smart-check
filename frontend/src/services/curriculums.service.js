@@ -6,7 +6,7 @@ export const curriculumsService = {
 
 function fetchCurriculmList(query) {
     return request({
-        url: '/resource/curriculums/filter',
+        url: '/resource/curriculums',
         method: 'get',
         params: query
     })

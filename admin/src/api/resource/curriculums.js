@@ -2,7 +2,7 @@ import request from '@/utils/request'
 
 export function fetchCurriculumList(query) {
   return request({
-    url: '/resource/curriculums/filter',
+    url: '/resource/curriculums',
     method: 'get',
     params: query
   })

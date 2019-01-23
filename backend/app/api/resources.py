@@ -241,9 +241,9 @@ class Curriculums:
             ormQuerySort = createOrmModelQuerySortDict(sortParamFromClient)
             start, stop = (pagenum - 1) * limit, pagenum * limit
 
-            curriculumLikeFilters = (getattr(CurriculumsModel, target) == value for target, value in ormQueryFilters['CurriculumsModel'].items())
-            applicantLikeFilters = (getattr(ApplicantsModel, target) == value for target, value in ormQueryFilters['ApplicantsModel'].items())
-            memberFilters = (getattr(MembersModel, target) == value for target, value in ormQueryFilters['MembersModel'].items())
+            curriculumLikeFilters = (getattr(CurriculumsModel, target) == value for target, value in ormQueryFilters.get('CurriculumsModel', dict()).items())
+            applicantLikeFilters = (getattr(ApplicantsModel, target) == value for target, value in ormQueryFilters.get('ApplicantsModel', dict()).items())
+            memberFilters = (getattr(MembersModel, target) == value for target, value in ormQueryFilters.get('MembersModel', dict()).items())
 
             curriculumList = CurriculumsModel.query.with_entities(CurriculumsModel.curriculumNo, CurriculumsModel.curriculumCategory, CurriculumsModel.ordinalNo, CurriculumsModel.curriculumName, CurriculumsModel.startDate, CurriculumsModel.endDate, CurriculumsModel.curriculumType).filter(and_(*curriculumLikeFilters)).subquery()
             applicantCount = ApplicantsModel.query.with_entities(ApplicantsModel.curriculumNo, func.count(ApplicantsModel.phoneNo).label('ApplicantCount')).filter(and_(*applicantLikeFilters)).group_by(ApplicantsModel.curriculumNo).subquery()
@@ -269,7 +269,7 @@ class Curriculums:
             total = query.count()
             query = sort_query(query, *ormQuerySort).slice(start, stop)
             
-            df = pd.read_sql(query.statement, db.get_engine(bind= 'mysql'))
+            df = pd.read_sql(query.statement, db.get_engine(bind= 'mysql-simplesmartcheck'))
             output = convertDataframeToDictsList(df)
 
             return {'return': {'items': output, 'total': total}}, 200
@@ -326,7 +326,7 @@ class AttendanceLogs:
                                                     ).outerjoin(applicnats, and_(applicnats.c.curriculumNo == attendanceLogs.c.curriculumNo, applicnats.c.phoneNo == attendanceLogs.c.phoneNo))  \
                                                     .outerjoin(curriculums, curriculums.c.curriculumNo == attendanceLogs.c.curriculumNo)
 
-            df = pd.read_sql(query.statement, db.get_engine(bind= 'mysql'))
+            df = pd.read_sql(query.statement, db.get_engine(bind= 'mysql-simplesmartcheck'))
             output = convertDataframeToDictsList(df)
 
             total = query.count()
@@ -441,14 +441,14 @@ class AttendanceLogs:
                                                         membersAttendancePassOnlyQuery,
                                                         applicantNameQuery.c.applicantName
                                                     ).outerjoin(applicantNameQuery, membersAttendancePassOnlyQuery.c.phoneNo == applicantNameQuery.c.phoneNo)
-            applicantsNameAndphoneNoList = pd.read_sql(applicantsNameAndphoneNoQuery.statement, db.get_engine(bind= 'mysql'), index_col= 'phoneNo')
+            applicantsNameAndphoneNoList = pd.read_sql(applicantsNameAndphoneNoQuery.statement, db.get_engine(bind= 'mysql-simplesmartcheck'), index_col= 'phoneNo')
             membersPhoneNoList = list(applicantsNameAndphoneNoList.index)
             membersNameList = list(applicantsNameAndphoneNoList['applicantName'])
             if len(membersPhoneNoList) != len(set(membersPhoneNoList)):
                 return {'message': {'title': 'Failed', 'content': f'Duplicate PhoneNo exists in curriculum ID {curriculumNo}'}}, 400
 
             # Pivot Attendance Check-Table for now.
-            attendanceLogsDf = pd.read_sql(attendanceLogs.statement, db.get_engine(bind= 'mysql'))
+            attendanceLogsDf = pd.read_sql(attendanceLogs.statement, db.get_engine(bind= 'mysql-simplesmartcheck'))
             attendanceLogsDf['attendanceDate'] = attendanceLogsDf['attendanceDate'].astype(str)
             pivot = attendanceLogsDf.set_index(['phoneNo', 'checkInOut', 'attendanceDate'])[['signature', 'insertedTimestamp']]
             pivot['signatureTimestamp'] = pivot['insertedTimestamp'].apply( lambda x: x.strftime('%Y-%m-%dT%H:%M:%SZ') ).astype(str)
@@ -538,14 +538,14 @@ class AttendanceLogs:
                                                         membersAttendancePassOnlyQuery,
                                                         applicantNameQuery.c.applicantName
                                                     ).outerjoin(applicantNameQuery, membersAttendancePassOnlyQuery.c.phoneNo == applicantNameQuery.c.phoneNo)
-            applicantsNameAndphoneNoList = pd.read_sql(applicantsNameAndphoneNoQuery.statement, db.get_engine(bind= 'mysql'), index_col= 'phoneNo')
+            applicantsNameAndphoneNoList = pd.read_sql(applicantsNameAndphoneNoQuery.statement, db.get_engine(bind= 'mysql-simplesmartcheck'), index_col= 'phoneNo')
             membersPhoneNoList = list(applicantsNameAndphoneNoList.index)
             membersNameList = list(applicantsNameAndphoneNoList['applicantName'])
             if len(membersPhoneNoList) != len(set(membersPhoneNoList)):
                 raise KeyError(f'Duplicate PhoneNo exists in curriculum ID {curriculumNoFromClient}.')
 
             # Pivot Attendance Check-Table for now.
-            attendanceLogsDf = pd.read_sql(attendanceLogs.statement, db.get_engine(bind= 'mysql'))
+            attendanceLogsDf = pd.read_sql(attendanceLogs.statement, db.get_engine(bind= 'mysql-simplesmartcheck'))
             attendanceLogsDf['attendanceDate'] = attendanceLogsDf['attendanceDate'].astype(str)
             pivot = attendanceLogsDf.set_index(['phoneNo', 'checkInOut', 'attendanceDate'])[['signature', 'insertedTimestamp']]
             pivot['signatureTimestamp'] = pivot['signature'].apply( lambda x: b64encode(decompress(x)).decode() )
@@ -797,7 +797,7 @@ class Members:
             total = query.count()
             query = sort_query(query, *ormQuerySort).slice(start, stop)
             
-            df = pd.read_sql(query.statement, db.get_engine(bind= 'mysql'))
+            df = pd.read_sql(query.statement, db.get_engine(bind= 'mysql-simplesmartcheck'))
             output = convertDataframeToDictsList(df)
 
             return {'return': {'items': output, 'total': total}}, 200
@@ -866,7 +866,7 @@ class Members:
                                         .join(applicantsQuery, and_(applicantsQuery.c.curriculumNo == membersQuery.c.curriculumNo, applicantsQuery.c.phoneNo == membersQuery.c.phoneNo))
             query = sort_query(query, *ormQuerySort)
             
-            df = pd.read_sql(query.statement, db.get_engine(bind= 'mysql'))
+            df = pd.read_sql(query.statement, db.get_engine(bind= 'mysql-simplesmartcheck'))
 
             # ---------------------------------------------------------------------
             # Different from @apiRestful.route('/resource/members/list')

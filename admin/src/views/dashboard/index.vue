@@ -135,7 +135,7 @@ export default {
     sortChange(data) {
       const { prop, order } = data
       const sortOption = { ascending: 'asc', descending: 'desc' }
-      const sortChange =  new Object()
+      const sortChange = {}
       sortChange[prop] = sortOption[order]
       this.listQuery.sort = sortChange
       this.handleFilter()
