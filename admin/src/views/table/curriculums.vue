@@ -151,8 +151,8 @@ export default {
       dialogFormVisible: false,
       dialogStatus: '',
       textMap: {
-        update: 'Edit',
-        create: 'Create'
+        update: '수정',
+        create: '입력'
       },
       rules: {
         curriculumCategory: [{ required: true, message: 'curriculumCategory is required', trigger: 'blur' }],
@@ -172,6 +172,7 @@ export default {
     getList() {
       this.listLoading = true
       fetchCurriculumList(this.listQuery).then(response => {
+        const message = response.data.message
         this.list = response.data.return.items
         this.total = response.data.return.total
 
@@ -179,6 +180,12 @@ export default {
         setTimeout(() => {
           this.listLoading = false
         }, 1.5 * 1000)
+        this.$notify({
+          title: message.title,
+          message: message.content,
+          type: 'success',
+          duration: 2000
+        })
       }).catch(error => {
         const message = error.response.data.message
         this.$notify({
@@ -370,15 +377,15 @@ export default {
         link.click()
         this.downloadLoading = false
         this.$notify({
-          title: 'Succeeded',
-          message: 'Attendance Table(excel file) downloaded',
+          title: '성공',
+          message: '수강생 명단 엑셀파일을 성공적으로 다운로드하였습니다.',
           type: 'success',
           duration: 2000
         })
       }).catch(() => {
         this.$notify({
-          title: 'Failed',
-          message: 'Attendance Table(excel file) missing',
+          title: '실패',
+          message: '수강생 명단 엑셀파일 다운로드에 실패하였습니다.',
           type: 'warn',
           duration: 2000
         })

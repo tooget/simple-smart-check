@@ -9,7 +9,8 @@
       </v-ons-toolbar-button>
     </custom-toolbar>
 
-    <v-ons-tabbar position="top"
+    <v-ons-tabbar position="bottom"
+      hide-tabs
       swipeable
       :modifier="md ? 'autogrow white-content' : ''"
       :on-swipe="md ? onSwipe : null"

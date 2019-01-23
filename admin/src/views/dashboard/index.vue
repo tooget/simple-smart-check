@@ -118,6 +118,7 @@ export default {
         this.listQuery.filters.curriculumNo = undefined
       }
       fetchCurriculumWithMemberCountList(this.listQuery).then(response => {
+        const message = response.data.message
         this.list = response.data.return.items
         this.total = response.data.return.total
 
@@ -125,6 +126,20 @@ export default {
         setTimeout(() => {
           this.listLoading = false
         }, 1.5 * 1000)
+        this.$notify({
+          title: message.title,
+          message: message.content,
+          type: 'success',
+          duration: 2000
+        })
+      }).catch(error => {
+        const message = error.response.data.message
+        this.$notify({
+          title: message.title,
+          message: message.content,
+          type: 'error',
+          duration: 2000
+        })
       })
     },
     getCurriculumList() {

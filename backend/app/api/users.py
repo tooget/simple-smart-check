@@ -77,7 +77,7 @@ class Users:
             'username': {'in': 'formData', 'description': 'application/json, body required'},
             'password': {'in': 'formData', 'description': 'application/json, body required'},
     })
-    class post_Users_Login(SecureResource):
+    class post_Users_Login(Resource):
 
         def post(self):
             infoFromClient = request.form

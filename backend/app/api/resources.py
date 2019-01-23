@@ -585,7 +585,6 @@ class AttendanceLogs:
 
             # Convert NaN to None.
             pivot = pivot.where((pd.notnull(pivot)), None)
-            print(pivot)
 
             # -------------------------------------------------------------------
             # Different from 'GET @apiRestful.route('/resource/attendancelogs/list')'

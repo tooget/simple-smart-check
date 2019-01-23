@@ -1,10 +1,24 @@
 <template>
   <v-ons-page modifier="white">
-    <div class="profile-pic">
-      <img src="../assets/vue.png">
-    </div>
+    <v-ons-list-title>기능</v-ons-list-title>
+    <v-ons-list>
+      <v-ons-list-item v-for="item in logOut" :key="item.title"
+        :modifier="md ? 'nodivider' : ''"
+        @click="loadLink(item.url)"
+      >
+        <div class="left">
+          <v-ons-icon fixed-width class="list-item__icon" :icon="item.icon"></v-ons-icon>
+        </div>
+        <div class="center">
+          {{ item.title }}
+        </div>
+        <div class="right">
+          <v-ons-icon icon="fa-external-link"></v-ons-icon>
+        </div>
+      </v-ons-list-item>
+    </v-ons-list>
 
-    <v-ons-list-title>Links</v-ons-list-title>
+    <v-ons-list-title>외부링크</v-ons-list-title>
     <v-ons-list>
       <v-ons-list-item v-for="item in links" :key="item.title"
         :modifier="md ? 'nodivider' : ''"
@@ -37,26 +51,18 @@ export default {
   },
   data() {
     return {
+      logOut: [
+        {
+          title: '로그아웃',
+          icon: 'ion-document-text',
+          url: '/login'
+        }
+      ],
       links: [
         {
-          title: 'Google Docs',
+          title: '관리자 페이지',
           icon: 'ion-document-text',
-          url: 'https://drive.google.com/drive/folders/1y1aqwNcGervvuFQIh9Z4AAKbhs0PwlPC'
-        },
-        {
-          title: 'Bitbucket',
-          icon: 'ion-social-github',
-          url: 'https://bitbucket.org/yunsu246/simple-smart-check'
-        },
-        {
-          title: 'Facebook',
-          icon: 'ion-social-twitter',
-          url: 'https://www.facebook.com/kisa118/'
-        },
-        {
-          title: 'OnOffMix',
-          icon: 'ion-chatboxes',
-          url: 'https://www.onoffmix.com/'
+          url: 'https://admin.smartcheck.ml'
         }
       ]
     };

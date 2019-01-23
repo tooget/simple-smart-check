@@ -2,15 +2,17 @@ import axios from 'axios'
 
 // 创建axios实例
 const service = axios.create({
-  baseURL: 'http://localhost:5000/api', // api 的 base_url, https://backend.smartcheck.ml/api
+  baseURL: 'https://backend.smartcheck.ml/api', // api 的 base_url, http://localhost:5000/api
   timeout: 60000 // 请求超时时间
 })
 
 // request拦截器
 service.interceptors.request.use(
   config => {
-    if (localStorage.token) {
-      config.headers['Authorization'] = 'Bearer ' + localStorage.token
+    const user = JSON.parse(localStorage.getItem('user'))
+
+    if (user && user.access_token) {
+      config.headers['Authorization'] = 'Bearer ' + user.access_token
     }
     return config
   },

@@ -18,7 +18,7 @@ export default {
       pages: [
         {
           component: ClassList,
-          label: '출석부',
+          label: '교육과정',
           desc: '(해당 교육과정 클릭 후 입/퇴실 여부를 확인해 주세요)'
         }
       ]

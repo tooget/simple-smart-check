@@ -97,6 +97,13 @@ module.exports = {
       // 'onsenui': path.join(__dirname, '..', 'OnsenUI', 'build'),
     }
   },
+  devServer: {
+    historyApiFallback: true,
+    allowedHosts: [
+      'smartcheck.ml',
+      '.smartcheck.ml'
+    ]
+  },
   externals: {
     // global app config object
     config: JSON.stringify({

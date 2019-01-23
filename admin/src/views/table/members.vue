@@ -197,6 +197,7 @@ export default {
         this.listQuery.filters.curriculumNo = undefined
       }
       fetchMembersList(this.listQuery).then(response => {
+        const message = response.data.message
         this.list = response.data.return.items
         this.total = response.data.return.total
 
@@ -204,6 +205,12 @@ export default {
         setTimeout(() => {
           this.listLoading = false
         }, 1.5 * 1000)
+        this.$notify({
+          title: message.title,
+          message: message.content,
+          type: 'success',
+          duration: 2000
+        })
       }).catch(error => {
         const message = error.response.data.message
         this.$notify({
@@ -278,15 +285,15 @@ export default {
         link.click()
         this.downloadLoading = false
         this.$notify({
-          title: 'Succeeded',
-          message: 'Members List(excel file) downloaded',
+          title: '성공',
+          message: '수강생 명단 엑셀파일을 성공적으로 다운로드하였습니다.',
           type: 'success',
           duration: 2000
         })
       }).catch(() => {
         this.$notify({
-          title: 'Failed',
-          message: 'Members List(excel file) is not exist',
+          title: '실패',
+          message: '수강생 명단 엑셀파일 다운로드에 실패하였습니다.',
           type: 'error',
           duration: 2000
         })

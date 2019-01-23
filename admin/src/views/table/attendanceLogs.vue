@@ -101,6 +101,7 @@ export default {
       this.listLoading = true
       const query = { curriculumNo: this.listQuery.filters.curriculumNo }
       fetchAttendanceLogsList(query).then(response => {
+        const message = response.data.message
         this.list = response.data.return.items
         this.total = response.data.return.total
 
@@ -108,6 +109,12 @@ export default {
         setTimeout(() => {
           this.listLoading = false
         }, 1.5 * 1000)
+        this.$notify({
+          title: message.title,
+          message: message.content,
+          type: 'success',
+          duration: 2000
+        })
       }).catch(error => {
         const message = error.response.data.message
         this.$notify({
@@ -126,7 +133,7 @@ export default {
     handleFilter() {
       if (!this.listQuery.filters.curriculumNo) {
         this.$notify({
-          title: 'Warning',
+          title: '주의',
           message: '교육과정을 먼저 선택해주세요',
           type: 'warning',
           duration: 2000
@@ -138,7 +145,7 @@ export default {
     handleFileDownload() {
       if (!this.listQuery.filters.curriculumNo) {
         this.$notify({
-          title: 'Warning',
+          title: '주의',
           message: '교육과정을 먼저 선택해주세요',
           type: 'warning',
           duration: 2000
@@ -160,15 +167,15 @@ export default {
         link.click()
         this.downloadLoading = false
         this.$notify({
-          title: 'Succeeded',
-          message: 'Attendance Table(excel file) downloaded',
+          title: '성공',
+          message: '출석부 엑셀파일을 성공적으로 다운로드하였습니다.',
           type: 'success',
           duration: 2000
         })
       }).catch(() => {
         this.$notify({
-          title: 'Failed',
-          message: 'Attendance Table(excel file) missing',
+          title: '실패',
+          message: '출석부 엑셀파일 다운로드에 실패하였습니다.',
           type: 'error',
           duration: 2000
         })
