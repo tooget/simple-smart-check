@@ -56,7 +56,7 @@ class Curriculums:
                 filterFromClient = infoFromClient['filters']        # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand."), https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
                 sortParamFromClient = infoFromClient['sort']
             except KeyError:
-                return {'message': { 'title': 'Failed', 'content': 'filters/sort args are required', }}, 400
+                return {'message': {'title': 'Failed', 'content': 'filters/sort args are required'}}, 400
 
             ormQueryFilters = createOrmModelQueryFiltersDict(filterFromClient)
             ormQuerySort = createOrmModelQuerySortDict(sortParamFromClient)
@@ -103,7 +103,7 @@ class Curriculums:
                 startDateFromClient = datetime.fromtimestamp(int(infoFromClient['startDate']) / 1000.0).strftime('%Y-%m-%d')      # Divide by 1000.0, to preserve the millisecond accuracy 
                 endDateFromClient = datetime.fromtimestamp(int(infoFromClient['endDate']) / 1000.0).strftime('%Y-%m-%d')      # Divide by 1000.0, to preserve the millisecond accuracy
             except KeyError:
-                return {'message': { 'title': 'Failed', 'content': 'All of request.form are required', }}, 400
+                return {'message': {'title': 'Failed', 'content': 'All of request.form are required'}}, 400
 
             requestedBody = {
                 "curriculumCategory": curriculumCategoryFromClient,
@@ -124,13 +124,13 @@ class Curriculums:
                 curriculumsSchema = CurriculumsModelSchema(many= False)
                 argument = curriculumsSchema.dump(curriculums)
                 argumentToJson = dumps(argument)
-                return {'message': { 'title': 'Succeeded', 'content': 'New Curriculum Created', },
+                return {'message': {'title': 'Succeeded', 'content': 'New Curriculum Created'},
                         'return': { 
                             'argument': f'{argumentToJson}'
                         }}, 201
             except:
                 db.session.rollback()
-                return {'message': { 'title': 'Failed', 'content': 'New Curriculum creation failed', }}, 500
+                return {'message': {'title': 'Failed', 'content': 'New Curriculum creation failed'}}, 500
     # ---------------------------------------------------------------------------
 
 
@@ -159,7 +159,7 @@ class Curriculums:
                 startDateFromClient = datetime.fromtimestamp(int(infoFromClient['startDate']) / 1000.0).strftime('%Y-%m-%d')      # Divide by 1000.0, to preserve the millisecond accuracy 
                 endDateFromClient = datetime.fromtimestamp(int(infoFromClient['endDate']) / 1000.0).strftime('%Y-%m-%d')      # Divide by 1000.0, to preserve the millisecond accuracy
             except KeyError:
-                return {'message': { 'title': 'Failed', 'content': 'All of request.form are required', }}, 400
+                return {'message': {'title': 'Failed', 'content': 'All of request.form are required'}}, 400
 
             requestedBody = {
                 "curriculumNo": curriculumNoFromClient,
@@ -180,13 +180,13 @@ class Curriculums:
                 curriculumsSchema = CurriculumsModelSchema(many= False)
                 argument = curriculumsSchema.dump(curriculums)
                 argumentToJson = dumps(argument)
-                return {'message': { 'title': 'Succeeded', 'content': 'Curriculum info updated', },
+                return {'message': {'title': 'Succeeded', 'content': 'Curriculum info updated'},
                         'return': {
                             'argument': f'{argumentToJson}'
                         }}, 201
             except:
                 db.session.rollback()
-                return {'message': { 'title': 'Failed', 'content': 'Updating Curriculum info failed', }}, 500
+                return {'message': {'title': 'Failed', 'content': 'Updating Curriculum info failed'}}, 500
     # ---------------------------------------------------------------------------
 
 
@@ -203,7 +203,7 @@ class Curriculums:
             try:
                 curriculumNoFromClient = int(infoFromClient['curriculumNo'])        # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand."), https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
             except KeyError:
-                return {'message': { 'title': 'Failed', 'content': 'All of request.form are required', }}, 400
+                return {'message': {'title': 'Failed', 'content': 'All of request.form are required'}}, 400
 
             targetCurriculumRecord = CurriculumsModel.query.filter_by(curriculumNo= curriculumNoFromClient).one()
             targetApplicants = ApplicantsModel.query.filter_by(curriculumNo= curriculumNoFromClient).all()
@@ -222,7 +222,7 @@ class Curriculums:
                 return {'message': {'title': 'Succeeded', 'content': 'Curriculum/all the relavant data deleted'}}, 201
             except:
                 db.session.rollback()
-                return {'message': 'Something went wrong'}, 500
+                return {'message': {'title': 'Failed', 'content': 'Something went wrong'}}, 500
     # ---------------------------------------------------------------------------  
 
 
@@ -243,7 +243,7 @@ class Curriculums:
                 sortParamFromClient = infoFromClient['sort']
                 pagenum, limit = int(infoFromClient['pagination']['pagenum']), int(infoFromClient['pagination']['limit'])
             except KeyError:
-                return {'message': { 'title': 'Failed', 'content': 'All of request.args are required', }}, 400
+                return {'message': {'title': 'Failed', 'content': 'All of request.args are required'}}, 400
 
             ormQueryFilters = createOrmModelQueryFiltersDict(filterFromClient)
             ormQuerySort = createOrmModelQuerySortDict(sortParamFromClient)
@@ -348,7 +348,7 @@ class AttendanceLogs:
             try:
                 curriculumNoFromClient = int(infoFromClient['curriculumNo'])         # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand."), https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
             except KeyError:
-                return {'message': { 'title': 'Failed', 'content': 'All of request.args are required', }}, 400
+                return {'message': {'title': 'Failed', 'content': 'All of request.args are required'}}, 400
             
             attendanceLogs = AttendanceLogsModel.query.filter_by(curriculumNo= curriculumNoFromClient)
             # Get full duration of a curriculum.
@@ -366,13 +366,13 @@ class AttendanceLogs:
             membersPhoneNoList = list(applicantsNameAndphoneNoList.index)
             membersNameList = list(applicantsNameAndphoneNoList['applicantName'])
             if len(membersPhoneNoList) != len(set(membersPhoneNoList)):
-                raise KeyError(f'Duplicate PhoneNo exists in curriculum ID {curriculumNo}.')
+                return {'message': {'title': 'Failed', 'content': f'Duplicate PhoneNo exists in curriculum ID {curriculumNo}'}}, 400
 
             # Pivot Attendance Check-Table for now.
             attendanceLogsDf = pd.read_sql(attendanceLogs.statement, db.get_engine(bind= 'mysql'))
             attendanceLogsDf['attendanceDate'] = attendanceLogsDf['attendanceDate'].astype(str)
             pivot = attendanceLogsDf.set_index(['phoneNo', 'checkInOut', 'attendanceDate'])[['signature', 'insertedTimestamp']]
-            pivot['signatureTimestamp'] = pivot['insertedTimestamp'].dt.strftime('%Y-%m-%dT%H:%M:%SZ').astype(str)
+            pivot['signatureTimestamp'] = pivot['insertedTimestamp'].apply( lambda x: x.strftime('%Y-%m-%dT%H:%M:%SZ') ).astype(str)
             pivot = pivot.join(applicantsNameAndphoneNoList, on= 'phoneNo')
             pivot = pivot.set_index('applicantName', append= True)
             pivot = pivot.drop(columns= ['signature', 'insertedTimestamp']).unstack(level= [2, 1]).sort_index(axis= 'columns', level= 1)
@@ -445,7 +445,7 @@ class AttendanceLogs:
             try:
                 curriculumNoFromClient = int(infoFromClient['curriculumNo'])        # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand."), https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
             except KeyError:
-                return {'message': { 'title': 'Failed', 'content': 'All of request.args are required', }}, 400
+                return {'message': {'title': 'Failed', 'content': 'All of request.args are required'}}, 400
             
             attendanceLogs = AttendanceLogsModel.query.filter_by(curriculumNo= curriculumNoFromClient)
             # Get full duration of a curriculum.
@@ -554,8 +554,18 @@ class AttendanceLogs:
                 checkInOutFromClient = infoFromClient['checkInOut']
                 signatureB64FromClient = infoFromClient['signature'].split(',')[-1].strip()
             except KeyError:
-                return {'message': { 'title': 'Failed', 'content': 'All of request.args are required', }}, 400
+                return {'message': {'title': 'Failed', 'content': 'All of request.args are required'}}, 400
             
+            attendancePassedMemberCheck = MembersModel.query.filter_by(
+                                                            curriculumNo= curriculumNoFromClient,
+                                                            phoneNo= phoneNoFromClient,
+                                                            attendancePass= 'Y',
+                                                       ).count()
+            if attendancePassedMemberCheck == 1:
+                pass
+            else:
+                return {'message': {'title': 'Failed', 'content': 'Please Check the Phone Number format or Attendance Passed'}}, 400
+
             # Calculate Korea Standard Time(KST), AttendanceDate/Time must be shown as a KST for filtering etc.
             attendanceTimestamp = datetime.utcnow() + timedelta(hours= 9)
             attendanceDate = attendanceTimestamp.strftime('%Y-%m-%d')
@@ -680,7 +690,7 @@ class Members:
                 sortParamFromClient = infoFromClient['sort']
                 pagenum, limit = int(infoFromClient['pagination']['pagenum']), int(infoFromClient['pagination']['limit'])
             except KeyError:
-                return {'message': { 'title': 'Failed', 'content': 'All of request.args are required', }}, 400
+                return {'message': {'title': 'Failed', 'content': 'All of request.args are required'}}, 400
 
             ormQueryFilters = createOrmModelQueryFiltersDict(filterFromClient)
             ormQuerySort = createOrmModelQuerySortDict(sortParamFromClient)
@@ -751,7 +761,7 @@ class Members:
                 filterFromClient = infoFromClient['filters']        # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand."), https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
                 sortParamFromClient = infoFromClient['sort']
             except KeyError:
-                return {'message': { 'title': 'Failed', 'content': 'All of request.args are required', }}, 400
+                return {'message': {'title': 'Failed', 'content': 'All of request.args are required'}}, 400
 
             ormQueryFilters = createOrmModelQueryFiltersDict(filterFromClient)
             ormQuerySort = createOrmModelQuerySortDict(sortParamFromClient)
@@ -811,7 +821,7 @@ class Members:
             output.seek(0)              # go back to the beginning of the stream
 
             #finally return the file
-            return send_file(output, attachment_filename="members.xlsx", as_attachment=True)
+            return send_file(output, attachment_filename="members.xlsx", as_attachment=True), 200
             # ---------------------------------------------------------------------
     # -----------------------------------------------------------------------------
 
@@ -841,7 +851,7 @@ class Members:
                 curriculumCompleteFromClient = infoFromClient['curriculumComplete']
                 employmentFromClient = infoFromClient['employment']
             except KeyError:
-                return {'message': { 'title': 'Failed', 'content': 'All of request.form are required', }}, 400
+                return {'message': {'title': 'Failed', 'content': 'All of request.form are required'}}, 400
             
             requestedBody = {
                 'phoneNo': phoneNoFromClient,
@@ -861,13 +871,13 @@ class Members:
                 membersSchema = MembersModelSchema(many= False)
                 argument = membersSchema.dump(members)
                 argumentToJson = dumps(argument)
-                return {'message': { 'title': 'Succeeded', 'content': 'Personal info updated', },
+                return {'message': {'title': 'Succeeded', 'content': 'Personal info updated'},
                         'return': {
                             'argument': f'{argumentToJson}'
                         }}, 201
             except:
                 db.session.rollback()
-                return {'message': 'Something went wrong'}, 500
+                return {'message': {'title': 'Failed', 'content': 'Something went wrong'}}, 500
     # -----------------------------------------------------------------------------
 # ---------------------------------------------------------------------------------
 
@@ -912,7 +922,7 @@ class Applicants:
                 curriculumNoFromClient = int(request.form['curriculumNo'])          # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand."), https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
                 applicantsBulkFromClient = request.files['applicantsBulkXlsxFile']
             except KeyError:
-                return {'message': { 'title': 'Failed', 'content': 'All of request.form/files are required', }}, 400
+                return {'message': {'title': 'Failed', 'content': 'All of request.form/files are required'}}, 400
 
             applicantsDf = pd.read_excel(applicantsBulkFromClient)
             applicantsDf.columns = applicantsDf.columns.map(lambda x: Config.XLSX_COLUMNS_TO_SCHEMA_MAP[ x[:4]+'_'+str(len(x)//19) ])       # Convert column names, Using "x[:4]+'_'+str(len(x)//19)" as a unique key
@@ -941,10 +951,10 @@ class Applicants:
                 db.session.add_all(newBulkApplicants)
                 db.session.add_all(newBulkMembers)
                 db.session.commit()
-                return {'message': { 'title': 'Succeeded', 'content': 'Created/Replaced all the relavant data', }}, 201
+                return {'message': {'title': 'Succeeded', 'content': 'Created/Replaced all the relavant data'}}, 201
             except:
                 db.session.rollback()
-                return {'message': { 'title': 'Failed', 'content': 'Creating/Replacing all the relavant data failed', }}, 500
+                return {'message': {'title': 'Failed', 'content': 'Creating/Replacing all the relavant data failed'}}, 500
     # -----------------------------------------------------------------------------
 
 
@@ -965,7 +975,7 @@ class Applicants:
                 phoneNoFromClient = infoFromClient['phoneNo']
                 operationMemoFromClient = infoFromClient['operationMemo']
             except KeyError:
-                return {'message': { 'title': 'Failed', 'content': 'All of request.form are required', }}, 400
+                return {'message': {'title': 'Failed', 'content': 'All of request.form are required'}}, 400
 
             requestedBody = {
                 "curriculumNo": curriculumNoFromClient,
@@ -982,12 +992,12 @@ class Applicants:
                 applicantsSchema = ApplicantsModelSchema(many= False)
                 argument = applicantsSchema.dump(applicants)
                 argumentToJson = dumps(argument)
-                return {'message': { 'title': 'Succeeded', 'content': 'Applicant info updated', },
+                return {'message': {'title': 'Succeeded', 'content': 'Applicant info updated'},
                         'return': {
                             'argument': f'{argumentToJson}'
                         }}, 201
             except:
                 db.session.rollback()
-                return {'message': { 'title': 'Failed', 'content': 'Updating Applicant info failed', }}, 500
+                return {'message': {'title': 'Failed', 'content': 'Updating Applicant info failed'}}, 500
     # -----------------------------------------------------------------------------
 # ---------------------------------------------------------------------------------
