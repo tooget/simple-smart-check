@@ -5,7 +5,7 @@ from sqlalchemy import text
 # -------------------[ sqlite: User Schema for SignUp/Login/Logout/Token ]----------------------
 class UsersModel(db.Model):
     __tablename__ = 'users'
-    __bind_key__ = 'sqlite'
+    __bind_key__ = 'mysql-simplesmartcheckusers'
 
     id = db.Column(db.Integer, nullable= False, primary_key= True)
     username = db.Column(db.String(120), nullable= False, unique= True)
@@ -14,7 +14,7 @@ class UsersModel(db.Model):
 
 class RevokedTokenModel(db.Model):
     __tablename__ = 'revoked_tokens'
-    __bind_key__ = 'sqlite'
+    __bind_key__ = 'mysql-simplesmartcheckusers'
 
     id = db.Column(db.Integer, nullable= False, primary_key= True)
     jti = db.Column(db.String(120))
@@ -35,7 +35,7 @@ class RevokedTokenModelSchema(ma.ModelSchema):
 # applicants Schema for Inserting/Querying applicants info, especially imported from google survey form.
 class ApplicantsModel(db.Model):
     __tablename__ = 'applicants'
-    __bind_key__ = 'mysql'
+    __bind_key__ = 'mysql-simplesmartcheck'
 
     phoneNo = db.Column(db.String(16), nullable= False, primary_key= True)
     curriculumNo = db.Column(db.Integer, nullable= False, primary_key= True)
@@ -68,7 +68,7 @@ class ApplicantsModel(db.Model):
 # AttendanceLogs Schema for Inserting/Querying Attendance Logs
 class AttendanceLogsModel(db.Model):
     __tablename__ = 'attendanceLogs'
-    __bind_key__ = 'mysql'
+    __bind_key__ = 'mysql-simplesmartcheck'
 
     phoneNo = db.Column(db.String(16), nullable= False, primary_key= True)
     curriculumNo = db.Column(db.Integer, nullable= False, primary_key= True)
@@ -82,7 +82,7 @@ class AttendanceLogsModel(db.Model):
 # Curriculums Schema for Managing Attendance Check
 class CurriculumsModel(db.Model):
     __tablename__ = 'curriculums'
-    __bind_key__ = 'mysql'
+    __bind_key__ = 'mysql-simplesmartcheck'
 
     curriculumNo = db.Column(db.Integer, nullable= False, primary_key= True)
     curriculumCategory = db.Column(db.Text, nullable= False)
@@ -99,7 +99,7 @@ class CurriculumsModel(db.Model):
 # members Schema for Updating/Querying members(students) info
 class MembersModel(db.Model):
     __tablename__ = 'members'
-    __bind_key__ = 'mysql'
+    __bind_key__ = 'mysql-simplesmartcheck'
 
     phoneNo = db.Column(db.String(16), nullable= False, primary_key= True)
     curriculumNo = db.Column(db.Integer, nullable= False, primary_key= True)
