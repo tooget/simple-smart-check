@@ -17,8 +17,8 @@ class Config(object):
     # Set SQLALCHEMY env on your production Environment
     SQLALCHEMY_TRACK_MODIFICATIONS = os.getenv('SQLALCHEMY_TRACK_MODIFICATIONS', False)
     SQLALCHEMY_BINDS = os.getenv('SQLALCHEMY_BINDS', {  
-        'sqlite': 'sqlite:///app.db',
-        'mysql': 'mysql+pymysql://kisa:kisakisakisakisa!@rds-simplesmartcheck-mysql8.c4bcyomq603x.ap-northeast-2.rds.amazonaws.com:3306/simplesmartcheck?charset=utf8mb4&binary_prefix=true'
+        'mysql-simplesmartcheckusers': 'mysql+pymysql://kisa:kisakisakisakisa!@rds-simplesmartcheck-mysql8.c4bcyomq603x.ap-northeast-2.rds.amazonaws.com:3306/simplesmartcheckusers?charset=utf8mb4',
+        'mysql-simplesmartcheck': 'mysql+pymysql://kisa:kisakisakisakisa!@rds-simplesmartcheck-mysql8.c4bcyomq603x.ap-northeast-2.rds.amazonaws.com:3306/simplesmartcheck?charset=utf8mb4&binary_prefix=true'
     })
     # flask_jwt_extended app.config for jwt.init_app()
     # Set JWT_SECRET env on your production Environment
