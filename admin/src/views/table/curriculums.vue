@@ -2,9 +2,6 @@
   <div class="app-container">
     <div class="filter-container">
       <el-input :placeholder="$t('table.curriculums.curriculumName')" v-model="listQuery.filters.curriculumName" style="width: 200px;" class="filter-item" @keyup.enter.native="handleFilter"/>
-      <el-select v-model="listQuery.filters.curriculumCategory" :placeholder="$t('table.curriculums.curriculumCategory')" clearable class="filter-item" style="width: 130px">
-        <el-option v-for="(item, index) in curriculumCategoryOptions" :key="index" :label="item.display_name" :value="item.key"/>
-      </el-select>
       <el-button v-waves :loading="listLoading" class="filter-item" type="primary" icon="el-icon-search" @click="handleFilter">{{ $t('table.search') }}</el-button>
       <el-button class="filter-item" style="margin-left: 10px;" type="primary" icon="el-icon-edit" @click="handleCreate">{{ $t('table.add') }}</el-button>
       <el-checkbox v-model="showApplicantsBulkInserted" class="filter-item" style="margin-left:15px;" @change="tableKey=tableKey+1">{{ $t($t('table.curriculums.applicantsBulkInserted')) }}</el-checkbox>
@@ -21,63 +18,63 @@
       highlight-current-row
       style="width: 100%;"
       @sort-change="sortChange">
-      <el-table-column :label="$t('table.curriculums.curriculumNo')" prop="curriculumNo" sortable="custom" align="center" width="65">
+      <el-table-column :label="$t('table.curriculums.curriculumNo')" prop="curriculumNo" sortable="custom" width="85px" align="center">
         <template slot-scope="scope">
           <span>{{ scope.row.curriculumNo }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="$t('table.curriculums.curriculumCategory')" width="150px" align="center">
-        <template slot-scope="scope">
-          <span>{{ scope.row.curriculumCategory }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column :label="$t('table.curriculums.ordinalNo')" width="110px" align="center">
-        <template slot-scope="scope">
-          <span>{{ scope.row.ordinalNo }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column :label="$t('table.curriculums.curriculumName')" width="150px" align="center">
+      <el-table-column :label="$t('table.curriculums.curriculumName')" prop="curriculumName" sortable="custom" width="255px" align="center">
         <template slot-scope="scope">
           <span class="link-type" @click="handleUpdate(scope.row)">{{ scope.row.curriculumName }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="$t('table.curriculums.curriculumType')" width="150px" align="center">
+      <el-table-column :label="$t('table.curriculums.ordinalNo')" prop="ordinalNo" sortable="custom" width="100px" align="center">
+        <template slot-scope="scope">
+          <span>{{ scope.row.ordinalNo }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column :label="$t('table.curriculums.curriculumCategory')" prop="curriculumCategory" sortable="custom" width="140px" align="center">
+        <template slot-scope="scope">
+          <span>{{ scope.row.curriculumCategory }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column :label="$t('table.curriculums.curriculumType')" prop="curriculumType" sortable="custom" width="120px" align="center">
         <template slot-scope="scope">
           <span>{{ scope.row.curriculumType }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="$t('table.curriculums.startDate')" prop="startDate" sortable="custom" width="150px" align="center">
+      <el-table-column :label="$t('table.curriculums.startDate')" prop="startDate" sortable="custom" width="110px" align="center">
         <template slot-scope="scope">
           <span>{{ scope.row.startDate | parseTime('{y}-{m}-{d}') }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="$t('table.curriculums.endDate')" width="150px" align="center">
+      <el-table-column :label="$t('table.curriculums.endDate')" prop="endDate" sortable="custom" width="110px" align="center">
         <template slot-scope="scope">
           <span>{{ scope.row.endDate | parseTime('{y}-{m}-{d}') }}</span>
         </template>
       </el-table-column>
-      <el-table-column v-if="showApplicantsBulkInserted" :label="$t('table.curriculums.applicantsBulkInserted')" align="center" width="150" class-name="small-padding fixed-width">
+      <el-table-column v-if="showApplicantsBulkInserted" :label="$t('table.curriculums.applicantsBulkInserted')" width="150px" align="center" class-name="small-padding fixed-width">
         <template slot-scope="scope">
           <input ref="excel-upload-input" class="excel-upload-input" type="file" accept=".xlsx, .xls" @change="handleFileUpload">
           <el-button :loading="uploadExcelLoading" size="mini" type="primary" @click="handleFileSubmit(scope.row)">{{ $t('table.browse') }}</el-button>
         </template>
       </el-table-column>
-      <el-table-column v-if="showDonwnloadAtendanceLogs" :label="$t('table.curriculums.donwnloadAtendanceLogs')" align="center" width="150" class-name="small-padding fixed-width">
+      <el-table-column v-if="showDonwnloadAtendanceLogs" :label="$t('table.curriculums.donwnloadAtendanceLogs')" width="150px" align="center" class-name="small-padding fixed-width">
         <template slot-scope="scope">
           <el-button v-waves :loading="downloadLoading" size="mini" type="primary" @click="handleFileDownload(scope.row)">{{ $t('table.download') }}</el-button>
         </template>
       </el-table-column>
-      <el-table-column v-if="showDelete" :label="$t('table.curriculums.delete')" align="center" width="100" class-name="small-padding fixed-width">
+      <el-table-column v-if="showDelete" :label="$t('table.curriculums.delete')" width="150px" align="center" class-name="small-padding fixed-width">
         <template slot-scope="scope">
           <el-button type="danger" size="mini" @click="handleDelete(scope.row)">{{ $t('table.delete') }}</el-button>
         </template>
       </el-table-column>
-      <el-table-column :label="$t('table.curriculums.insertedTimestamp')" width="150px" align="center">
+      <el-table-column :label="$t('table.curriculums.insertedTimestamp')" prop="insertedTimestamp" sortable="custom" width="175px" align="center">
         <template slot-scope="scope">
           <span>{{ scope.row.insertedTimestamp | parseTime('{y}-{m}-{d} {h}:{i}:{s}') }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="$t('table.curriculums.updatedTimestamp')" width="150px" align="center">
+      <el-table-column :label="$t('table.curriculums.updatedTimestamp')" prop="updatedTimestamp" sortable="custom" width="175px" align="center">
         <template slot-scope="scope">
           <span>{{ scope.row.updatedTimestamp | parseTime('{y}-{m}-{d} {h}:{i}:{s}') }}</span>
         </template>
@@ -123,12 +120,6 @@ import { fetchAttendanceLogsListfile } from '@/api/resource/attendanceLogs'
 import waves from '@/directive/waves' // Waves directive
 import Pagination from '@/components/Pagination' // Secondary package based on el-pagination
 
-const curriculumCategoryOptions = [
-  { key: '단기과정', display_name: '단기과정' },
-  { key: '집중과정', display_name: '집중과정' },
-  { key: '고급과정', display_name: '고급과정' }
-]
-
 export default {
   name: 'ComplexTable',
   components: { Pagination },
@@ -142,10 +133,9 @@ export default {
       listLoading: true,
       listQuery: {
         filters: { curriculumName: undefined, curriculumCategory: undefined },
-        sort: { curriculumNo: 'desc' },
+        sort: { curriculumNo: 'asc' },
         pagination: { pagenum: 1, limit: 20 }
       },
-      curriculumCategoryOptions,
       showApplicantsBulkInserted: false,
       showDonwnloadAtendanceLogs: false,
       showDelete: false,
@@ -203,14 +193,11 @@ export default {
       row.status = status
     },
     sortChange(data) {
-      const sortOption = { ascending: 'asc', descending: 'desc' }
       const { prop, order } = data
-      if (prop === 'curriculumNo') {
-        this.listQuery.sort = { curriculumNo: sortOption[order] }
-      }
-      if (prop === 'startDate') {
-        this.listQuery.sort = { startDate: sortOption[order] }
-      }
+      const sortOption = { ascending: 'asc', descending: 'desc' }
+      const sortChange =  new Object()
+      sortChange[prop] = sortOption[order]
+      this.listQuery.sort = sortChange
       this.handleFilter()
     },
     resetTemp() {
@@ -252,6 +239,14 @@ export default {
               title: message.title,
               message: message.content,
               type: 'success',
+              duration: 2000
+            })
+          }).catch(error => {
+            const message = error.response.data.message
+            this.$notify({
+              title: message.title,
+              message: message.content,
+              type: 'error',
               duration: 2000
             })
           })
@@ -301,7 +296,7 @@ export default {
             this.$notify({
               title: message.title,
               message: message.content,
-              type: 'warn',
+              type: 'error',
               duration: 2000
             })
           })

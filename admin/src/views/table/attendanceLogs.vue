@@ -1,7 +1,7 @@
 <template>
   <div class="app-container">
     <div class="filter-container">
-      <el-select v-model="listQuery.filters.curriculumNo" :placeholder="$t('table.attendanceLogs.curriculumCategory')" clearable class="filter-item" style="width: 250px">
+      <el-select v-model="listQuery.filters.curriculumNo" :placeholder="$t('table.attendanceLogs.curriculumCategory')" clearable class="filter-item" style="width: 400px">
         <el-option v-for="(item, index) in curriculumOptionlist" :key="index" :label="item.curriculumName+'('+item.ordinalNo+')'" :value="item.curriculumNo"/>
       </el-select>
       <el-button v-waves :loading="listLoading" class="filter-item" type="primary" icon="el-icon-search" @click="handleFilter">{{ $t('table.search') }}</el-button>
@@ -17,25 +17,25 @@
       fit
       highlight-current-row
       style="width: 100%;">
-      <el-table-column :label="$t('table.attendanceLogs.phoneNo')" prop="phoneNo" align="center">
+      <el-table-column :label="$t('table.attendanceLogs.phoneNo')" prop="phoneNo" width="135px" align="center">
         <template slot-scope="scope">
           <span>{{ scope.row.phoneNo }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="$t('table.attendanceLogs.applicantName')" prop="applicantName" align="center">
+      <el-table-column :label="$t('table.attendanceLogs.applicantName')" prop="applicantName" width="100px" align="center">
         <template slot-scope="scope">
           <span>{{ scope.row.applicantName }}</span>
         </template>
       </el-table-column>
       <el-table-column :label="$t('table.attendanceLogs.name')" align="center">
         <el-table-column v-for="(attendanceDate, index) of attendanceDates" :label="attendanceDate" :key="index" align="center">
-          <el-table-column :label="$t('table.attendanceLogs.In')" align="center">
+          <el-table-column :label="$t('table.attendanceLogs.In')" width="100px" align="center">
             <template slot-scope="scope">
               <el-tag v-if="scope.row.signatureTimestamp[index].In!==null" :type="scope.row.signatureTimestamp[index].In | statusFilter">{{ scope.row.signatureTimestamp[index].In | parseTime('{h}:{i}') }}</el-tag>
               <el-tag v-else :type="scope.row.signatureTimestamp[index].In | statusFilter">{{ $t('table.attendanceLogs.noSignature') }}</el-tag>
             </template>
           </el-table-column>
-          <el-table-column :label="$t('table.attendanceLogs.Out')" align="center">
+          <el-table-column :label="$t('table.attendanceLogs.Out')" width="100px" align="center">
             <template slot-scope="scope">
               <el-tag v-if="scope.row.signatureTimestamp[index].Out!==null" :type="scope.row.signatureTimestamp[index].Out | statusFilter">{{ scope.row.signatureTimestamp[index].Out | parseTime('{h}:{i}') }}</el-tag>
               <el-tag v-else :type="scope.row.signatureTimestamp[index].Out | statusFilter">{{ $t('table.attendanceLogs.noSignature') }}</el-tag>
@@ -108,6 +108,14 @@ export default {
         setTimeout(() => {
           this.listLoading = false
         }, 1.5 * 1000)
+      }).catch(() => {
+        this.$notify({
+          title: 'Failed',
+          message: 'Attendance Table is not exist',
+          type: 'error',
+          duration: 2000
+        })
+        this.listLoading = false
       })
     },
     getCurriculumList() {
@@ -120,7 +128,7 @@ export default {
         this.$notify({
           title: 'Failed',
           message: 'Select Curriculum Option First',
-          type: 'warn',
+          type: 'warning',
           duration: 2000
         })
       } else {
@@ -132,7 +140,7 @@ export default {
         this.$notify({
           title: 'Failed',
           message: 'Select Curriculum Option First',
-          type: 'warn',
+          type: 'warning',
           duration: 2000
         })
       } else {
@@ -161,7 +169,7 @@ export default {
         this.$notify({
           title: 'Failed',
           message: 'Attendance Table(excel file) missing',
-          type: 'warn',
+          type: 'error',
           duration: 2000
         })
       })

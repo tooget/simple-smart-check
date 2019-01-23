@@ -17,52 +17,57 @@
       highlight-current-row
       style="width: 100%;"
       @sort-change="sortChange">
-      <el-table-column :label="$t('table.dashboard.curriculumNo')" prop="curriculumNo" sortable="custom" align="center" width="65">
+      <el-table-column :label="$t('table.dashboard.curriculumNo')" prop="curriculumNo" sortable="custom" align="center" width="85px">
         <template slot-scope="scope">
           <span>{{ scope.row.curriculumNo }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="$t('table.dashboard.curriculumCategory')" width="150px" align="center">
-        <template slot-scope="scope">
-          <span>{{ scope.row.curriculumCategory }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column :label="$t('table.dashboard.ordinalNo')" width="110px" align="center">
-        <template slot-scope="scope">
-          <span>{{ scope.row.ordinalNo }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column :label="$t('table.dashboard.curriculumName')" width="150px" align="center">
+      <el-table-column :label="$t('table.dashboard.curriculumName')" prop="curriculumName" sortable="custom" width="230px" align="center">
         <template slot-scope="scope">
           <span>{{ scope.row.curriculumName }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="$t('table.dashboard.curriculumPeriod')" width="150px" align="center">
+      <el-table-column :label="$t('table.dashboard.ordinalNo')" prop="ordinalNo" sortable="custom" width="85px" align="center">
         <template slot-scope="scope">
-          <span>{{ scope.row.curriculumPeriod }}</span>
+          <span>{{ scope.row.ordinalNo }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="$t('table.dashboard.curriculumType')" width="150px" align="center">
+      <el-table-column :label="$t('table.dashboard.curriculumCategory')" prop="curriculumCategory" sortable="custom" width="120px" align="center">
+        <template slot-scope="scope">
+          <span>{{ scope.row.curriculumCategory }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column :label="$t('table.dashboard.curriculumType')" prop="curriculumType" sortable="custom" width="100px" align="center">
         <template slot-scope="scope">
           <span>{{ scope.row.curriculumType }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="$t('table.dashboard.ApplicantCount')" width="110px" align="center">
+      <el-table-column :label="$t('table.curriculums.startDate')" prop="startDate" sortable="custom" width="95px" align="center">
+        <template slot-scope="scope">
+          <span>{{ scope.row.startDate | parseTime('{y}-{m}-{d}') }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column :label="$t('table.curriculums.endDate')" prop="endDate" sortable="custom" width="95px" align="center">
+        <template slot-scope="scope">
+          <span>{{ scope.row.endDate | parseTime('{y}-{m}-{d}') }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column :label="$t('table.dashboard.ApplicantCount')" prop="ApplicantCount" sortable="custom" width="110px" align="center">
         <template slot-scope="scope">
           <span>{{ scope.row.ApplicantCount }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="$t('table.dashboard.MemberCount')" width="110px" align="center">
+      <el-table-column :label="$t('table.dashboard.MemberCount')" prop="MemberCount" sortable="custom" width="110px" align="center">
         <template slot-scope="scope">
           <span>{{ scope.row.MemberCount }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="$t('table.dashboard.MemberCompleteCount')" width="110px" align="center">
+      <el-table-column :label="$t('table.dashboard.MemberCompleteCount')" prop="MemberCompleteCount" sortable="custom" width="110px" align="center">
         <template slot-scope="scope">
           <span>{{ scope.row.MemberCompleteCount }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="$t('table.dashboard.MemberEmploymentCount')" width="110px" align="center">
+      <el-table-column :label="$t('table.dashboard.MemberEmploymentCount')" prop="MemberEmploymentCount" sortable="custom" width="110px" align="center">
         <template slot-scope="scope">
           <span>{{ scope.row.MemberEmploymentCount }}</span>
         </template>
@@ -128,11 +133,11 @@ export default {
       })
     },
     sortChange(data) {
-      const sortOption = { ascending: 'asc', descending: 'desc' }
       const { prop, order } = data
-      if (prop === 'curriculumNo') {
-        this.listQuery.sort = { curriculumNo: sortOption[order] }
-      }
+      const sortOption = { ascending: 'asc', descending: 'desc' }
+      const sortChange =  new Object()
+      sortChange[prop] = sortOption[order]
+      this.listQuery.sort = sortChange
       this.handleFilter()
     },
     handleFilter() {
