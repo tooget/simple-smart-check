@@ -43,29 +43,32 @@ class Curriculums:
     # ----------------[ Get Curriculums ]---------------------------------------
     @apiRestful.route('/resource/curriculums/filter')
     @apiRestful.doc(params= {
-            'filters': {'in': 'query', 'description': 'URL parameter, optional'},
-            'sort': {'in': 'query', 'description': 'URL parameter, optional'},
+            'filters': {'in': 'query', 'description': 'URL parameter, required'},
+            'sort': {'in': 'query', 'description': 'URL parameter, required'},
             'pagination': {'in': 'query', 'description': 'URL parameter, optional'},
             # You can add query filter columns if needed.
     })
     class get_Curriculums_Filter(Resource):
 
         def get(self):
-            queryParams = {key: loads(request.args[key]) for key in request.args}
+            infoFromClient = {key: loads(request.args[key]) for key in request.args}
+            try:
+                filterFromClient = infoFromClient['filters']        # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand."), https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
+                sortParamFromClient = infoFromClient['sort']
+            except KeyError:
+                return {'message': { 'title': 'Failed', 'content': 'filters/sort args are required', }}, 400
 
-            ormQueryFilters = createOrmModelQueryFiltersDict(queryParams['filters'])
+            ormQueryFilters = createOrmModelQueryFiltersDict(filterFromClient)
+            ormQuerySort = createOrmModelQuerySortDict(sortParamFromClient)
+
             filters = (getattr(CurriculumsModel, target).like(f'%{value}%') for target, value in ormQueryFilters['CurriculumsModel'].items())
             query = CurriculumsModel.query.filter(and_(*filters))
+            query = sort_query(query, *ormQuerySort)
             total = query.count()
 
-            ormQuerySort = createOrmModelQuerySortDict(queryParams['sort'])
-            query = sort_query(query, *ormQuerySort)
-            
             try:
-                paginationFromClient = queryParams['pagination']
-                pagenum = paginationFromClient['pagenum']
-                limit = paginationLimitConverter(paginationFromClient['limit'])
-                start, stop = (pagenum-1)*limit, pagenum*limit
+                pagenum, limit = int(infoFromClient['pagination']['pagenum']), int(infoFromClient['pagination']['limit'])
+                start, stop = (pagenum - 1) * limit, pagenum * limit
                 query = query.slice(start, stop).all()
             except:
                 query = query.all()
@@ -91,15 +94,16 @@ class Curriculums:
     class post_Curriculums(Resource):
 
         def post(self):
-            # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand.")
-            # Reference : https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
             infoFromClient = request.form
-            curriculumCategoryFromClient = infoFromClient['curriculumCategory']
-            ordinalNoFromClient = infoFromClient['ordinalNo']
-            curriculumNameFromClient = infoFromClient['curriculumName']
-            curriculumTypeFromClient = infoFromClient['curriculumType']
-            startDateFromClient = datetime.fromtimestamp(int(infoFromClient['startDate']) / 1000.0).strftime('%Y-%m-%d')      # Divide by 1000.0, to preserve the millisecond accuracy 
-            endDateFromClient = datetime.fromtimestamp(int(infoFromClient['endDate']) / 1000.0).strftime('%Y-%m-%d')      # Divide by 1000.0, to preserve the millisecond accuracy
+            try:
+                curriculumCategoryFromClient = infoFromClient['curriculumCategory']     # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand."), https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
+                ordinalNoFromClient = infoFromClient['ordinalNo']
+                curriculumNameFromClient = infoFromClient['curriculumName']
+                curriculumTypeFromClient = infoFromClient['curriculumType']
+                startDateFromClient = datetime.fromtimestamp(int(infoFromClient['startDate']) / 1000.0).strftime('%Y-%m-%d')      # Divide by 1000.0, to preserve the millisecond accuracy 
+                endDateFromClient = datetime.fromtimestamp(int(infoFromClient['endDate']) / 1000.0).strftime('%Y-%m-%d')      # Divide by 1000.0, to preserve the millisecond accuracy
+            except KeyError:
+                return {'message': { 'title': 'Failed', 'content': 'All of request.form are required', }}, 400
 
             requestedBody = {
                 "curriculumCategory": curriculumCategoryFromClient,
@@ -145,16 +149,17 @@ class Curriculums:
     class put_Curriculums(Resource):
 
         def put(self):
-            # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand.")
-            # Reference : https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
             infoFromClient = request.form
-            curriculumNoFromClient = int(infoFromClient['curriculumNo'])
-            curriculumCategoryFromClient = infoFromClient['curriculumCategory']
-            ordinalNoFromClient = infoFromClient['ordinalNo']
-            curriculumNameFromClient = infoFromClient['curriculumName']
-            curriculumTypeFromClient = infoFromClient['curriculumType']
-            startDateFromClient = datetime.fromtimestamp(int(infoFromClient['startDate']) / 1000.0).strftime('%Y-%m-%d')      # Divide by 1000.0, to preserve the millisecond accuracy 
-            endDateFromClient = datetime.fromtimestamp(int(infoFromClient['endDate']) / 1000.0).strftime('%Y-%m-%d')      # Divide by 1000.0, to preserve the millisecond accuracy
+            try:
+                curriculumNoFromClient = int(infoFromClient['curriculumNo'])        # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand."), https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
+                curriculumCategoryFromClient = infoFromClient['curriculumCategory']
+                ordinalNoFromClient = infoFromClient['ordinalNo']
+                curriculumNameFromClient = infoFromClient['curriculumName']
+                curriculumTypeFromClient = infoFromClient['curriculumType']
+                startDateFromClient = datetime.fromtimestamp(int(infoFromClient['startDate']) / 1000.0).strftime('%Y-%m-%d')      # Divide by 1000.0, to preserve the millisecond accuracy 
+                endDateFromClient = datetime.fromtimestamp(int(infoFromClient['endDate']) / 1000.0).strftime('%Y-%m-%d')      # Divide by 1000.0, to preserve the millisecond accuracy
+            except KeyError:
+                return {'message': { 'title': 'Failed', 'content': 'All of request.form are required', }}, 400
 
             requestedBody = {
                 "curriculumNo": curriculumNoFromClient,
@@ -194,12 +199,13 @@ class Curriculums:
     class delete_Curriculums(Resource):
 
         def delete(self):
-            # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand.")
-            # Reference : https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
             infoFromClient = request.form
-            curriculumNoFromClient = int(infoFromClient['curriculumNo'])
-            requestedBody = { "curriculumNo": curriculumNoFromClient }
-            targetCurriculumRecord = CurriculumsModel.query.filter_by(**requestedBody).one()
+            try:
+                curriculumNoFromClient = int(infoFromClient['curriculumNo'])        # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand."), https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
+            except KeyError:
+                return {'message': { 'title': 'Failed', 'content': 'All of request.form are required', }}, 400
+
+            targetCurriculumRecord = CurriculumsModel.query.filter_by(curriculumNo= curriculumNoFromClient).one()
             targetApplicants = ApplicantsModel.query.filter_by(curriculumNo= curriculumNoFromClient).all()
             targetMembers = MembersModel.query.filter_by(curriculumNo= curriculumNoFromClient).all()
             targetAttendanceLogs = AttendanceLogsModel.query.filter_by(curriculumNo= curriculumNoFromClient).all()
@@ -222,22 +228,32 @@ class Curriculums:
 
     # ----------------[ Get Curriculums, joined to Members counts ]--------------
     @apiRestful.route('/resource/curriculums/withmembercount')
+    @apiRestful.doc(params= {
+            'filters': {'in': 'query', 'description': 'URL parameter, required'},
+            'sort': {'in': 'query', 'description': 'URL parameter, required'},
+            'pagination': {'in': 'query', 'description': 'URL parameter, required'},
+            # You can add query filter columns if needed.
+    })
     class get_Curriculums_WithMemberCount(Resource):
 
         def get(self):
-            queryParams = {key: loads(request.args[key]) for key in request.args}
+            infoFromClient = {key: loads(request.args[key]) for key in request.args}
+            try:
+                filterFromClient = infoFromClient['filters']        # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand."), https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
+                sortParamFromClient = infoFromClient['sort']
+                pagenum, limit = int(infoFromClient['pagination']['pagenum']), int(infoFromClient['pagination']['limit'])
+            except KeyError:
+                return {'message': { 'title': 'Failed', 'content': 'All of request.args are required', }}, 400
 
-            ormQueryFilters = createOrmModelQueryFiltersDict(queryParams['filters'])
-            # ormQuerySort = createOrmModelQuerySortDict(queryParams['sort'])
+            ormQueryFilters = createOrmModelQueryFiltersDict(filterFromClient)
+            ormQuerySort = createOrmModelQuerySortDict(sortParamFromClient)
+            start, stop = (pagenum - 1) * limit, pagenum * limit
 
-            pagenum, limit = int(queryParams['pagination']['pagenum']), int(queryParams['pagination']['limit'])
-            start, stop = (pagenum-1)*limit, pagenum*limit
-
-            curriculumLikeFilters = (getattr(CurriculumsModel, target).like(f'%{value}%') for target, value in ormQueryFilters['CurriculumsModel'].items())
-            applicantLikeFilters = (getattr(ApplicantsModel, target).like(f'%{value}%') for target, value in ormQueryFilters['ApplicantsModel'].items())
+            curriculumLikeFilters = (getattr(CurriculumsModel, target) == value for target, value in ormQueryFilters['CurriculumsModel'].items())
+            applicantLikeFilters = (getattr(ApplicantsModel, target) == value for target, value in ormQueryFilters['ApplicantsModel'].items())
             memberFilters = (getattr(MembersModel, target) == value for target, value in ormQueryFilters['MembersModel'].items())
 
-            curriculumList = CurriculumsModel.query.with_entities(CurriculumsModel.curriculumNo, CurriculumsModel.curriculumCategory, CurriculumsModel.ordinalNo, CurriculumsModel.curriculumName, func.concat(CurriculumsModel.startDate, '~', CurriculumsModel.endDate).label('curriculumPeriod'), CurriculumsModel.curriculumType).filter(and_(*curriculumLikeFilters)).subquery()
+            curriculumList = CurriculumsModel.query.with_entities(CurriculumsModel.curriculumNo, CurriculumsModel.curriculumCategory, CurriculumsModel.ordinalNo, CurriculumsModel.curriculumName, CurriculumsModel.startDate, CurriculumsModel.endDate, CurriculumsModel.curriculumType).filter(and_(*curriculumLikeFilters)).subquery()
             applicantCount = ApplicantsModel.query.with_entities(ApplicantsModel.curriculumNo, func.count(ApplicantsModel.phoneNo).label('ApplicantCount')).filter(and_(*applicantLikeFilters)).group_by(ApplicantsModel.curriculumNo).subquery()
             memberCount = MembersModel.query.with_entities(MembersModel.curriculumNo, func.count(MembersModel.phoneNo).label('MemberCount')).filter(and_(MembersModel.attendanceCheck == 'Y', *memberFilters)).group_by(MembersModel.curriculumNo).subquery()
             memberCompleteCount = MembersModel.query.with_entities(MembersModel.curriculumNo, func.count(MembersModel.phoneNo).label('MemberCompleteCount')).filter(and_(MembersModel.curriculumComplete == 'Y', *memberFilters)).group_by(MembersModel.curriculumNo).subquery()
@@ -253,8 +269,7 @@ class Curriculums:
                                                     .outerjoin(memberCompleteCount, curriculumList.c.curriculumNo == memberCompleteCount.c.curriculumNo)  \
                                                     .outerjoin(memberEmploymentCount, curriculumList.c.curriculumNo == memberEmploymentCount.c.curriculumNo)
             total = query.count()
-            query = query.slice(start, stop)
-            # query = sort_query(query, *ormQuerySort).slice(start, stop)
+            query = sort_query(query, *ormQuerySort).slice(start, stop)
             
             df = pd.read_sql(query.statement, db.get_engine(bind= 'mysql'))
             output = convertDataframeToDictsList(df)
@@ -279,7 +294,8 @@ class AttendanceLogs:
     class get_AttendanceLogs_Filter(Resource):
 
         def get(self):
-            queryFilter = createOrmModelQueryFiltersDict(request.args)
+            infoFromClient = request.args
+            queryFilter = createOrmModelQueryFiltersDict(infoFromClient)
             attendanceLogsFilter = queryFilter['AttendanceLogsModel']
             applicantsFilter = queryFilter['ApplicantsModel']
             curriculumsFilter = queryFilter['CurriculumsModel']
@@ -328,16 +344,20 @@ class AttendanceLogs:
     class get_AttendanceLogs_List(Resource):
 
         def get(self):
-            queryFilter = request.args
+            infoFromClient = request.args
+            try:
+                curriculumNoFromClient = int(infoFromClient['curriculumNo'])         # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand."), https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
+            except KeyError:
+                return {'message': { 'title': 'Failed', 'content': 'All of request.args are required', }}, 400
             
-            attendanceLogs = AttendanceLogsModel.query.filter_by(**queryFilter)
+            attendanceLogs = AttendanceLogsModel.query.filter_by(curriculumNo= curriculumNoFromClient)
             # Get full duration of a curriculum.
-            curriculumDuration = CurriculumsModel.query.with_entities(CurriculumsModel.startDate, CurriculumsModel.endDate).filter_by(**queryFilter).first()
+            curriculumDuration = CurriculumsModel.query.with_entities(CurriculumsModel.startDate, CurriculumsModel.endDate).filter_by(curriculumNo= curriculumNoFromClient).first()
             startDate, endDate = curriculumDuration.startDate.strftime('%Y-%m-%dT%H:%M:%SZ'), curriculumDuration.endDate.strftime('%Y-%m-%dT%H:%M:%SZ')
             curriculumDuration = [date.strftime('%Y-%m-%d') for date in pd.date_range(start= startDate, end= endDate, freq= 'B')]
             # Get only attendancePassed members and phoneNo list of a curriculum.
-            membersAttendancePassOnlyQuery = MembersModel.query.with_entities(MembersModel.phoneNo).filter_by(**queryFilter, attendancePass= 'Y').subquery()
-            applicantNameQuery = ApplicantsModel.query.with_entities(ApplicantsModel.phoneNo, ApplicantsModel.applicantName).filter_by(**queryFilter).subquery()
+            membersAttendancePassOnlyQuery = MembersModel.query.with_entities(MembersModel.phoneNo).filter_by(curriculumNo= curriculumNoFromClient, attendancePass= 'Y').subquery()
+            applicantNameQuery = ApplicantsModel.query.with_entities(ApplicantsModel.phoneNo, ApplicantsModel.applicantName).filter_by(curriculumNo= curriculumNoFromClient).subquery()
             applicantsNameAndphoneNoQuery = db.session.query(membersAttendancePassOnlyQuery).with_entities(
                                                         membersAttendancePassOnlyQuery,
                                                         applicantNameQuery.c.applicantName
@@ -421,17 +441,20 @@ class AttendanceLogs:
     class get_AttendanceLogs_Listfile(Resource):
 
         def get(self):
-            queryFilter = request.args
-            curriculumNo = queryFilter['curriculumNo']
+            infoFromClient = request.args
+            try:
+                curriculumNoFromClient = int(infoFromClient['curriculumNo'])        # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand."), https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
+            except KeyError:
+                return {'message': { 'title': 'Failed', 'content': 'All of request.args are required', }}, 400
             
-            attendanceLogs = AttendanceLogsModel.query.filter_by(**queryFilter)
+            attendanceLogs = AttendanceLogsModel.query.filter_by(curriculumNo= curriculumNoFromClient)
             # Get full duration of a curriculum.
-            curriculumDuration = CurriculumsModel.query.with_entities(CurriculumsModel.startDate, CurriculumsModel.endDate).filter_by(**queryFilter).first()
+            curriculumDuration = CurriculumsModel.query.with_entities(CurriculumsModel.startDate, CurriculumsModel.endDate).filter_by(curriculumNo= curriculumNoFromClient).first()
             startDate, endDate = curriculumDuration.startDate.strftime('%Y-%m-%dT%H:%M:%SZ'), curriculumDuration.endDate.strftime('%Y-%m-%dT%H:%M:%SZ')
             curriculumDuration = [date.strftime('%Y-%m-%d') for date in pd.date_range(start= startDate, end= endDate, freq= 'B')]
             # Get only attendancePassed members and phoneNo list of a curriculum.
-            membersAttendancePassOnlyQuery = MembersModel.query.with_entities(MembersModel.phoneNo).filter_by(**queryFilter, attendancePass= 'Y').subquery()
-            applicantNameQuery = ApplicantsModel.query.with_entities(ApplicantsModel.phoneNo, ApplicantsModel.applicantName).filter_by(**queryFilter).subquery()
+            membersAttendancePassOnlyQuery = MembersModel.query.with_entities(MembersModel.phoneNo).filter_by(curriculumNo= curriculumNoFromClient, attendancePass= 'Y').subquery()
+            applicantNameQuery = ApplicantsModel.query.with_entities(ApplicantsModel.phoneNo, ApplicantsModel.applicantName).filter_by(curriculumNo= curriculumNoFromClient).subquery()
             applicantsNameAndphoneNoQuery = db.session.query(membersAttendancePassOnlyQuery).with_entities(
                                                         membersAttendancePassOnlyQuery,
                                                         applicantNameQuery.c.applicantName
@@ -440,7 +463,7 @@ class AttendanceLogs:
             membersPhoneNoList = list(applicantsNameAndphoneNoList.index)
             membersNameList = list(applicantsNameAndphoneNoList['applicantName'])
             if len(membersPhoneNoList) != len(set(membersPhoneNoList)):
-                raise KeyError(f'Duplicate PhoneNo exists in curriculum ID {curriculumNo}.')
+                raise KeyError(f'Duplicate PhoneNo exists in curriculum ID {curriculumNoFromClient}.')
 
             # Pivot Attendance Check-Table for now.
             attendanceLogsDf = pd.read_sql(attendanceLogs.statement, db.get_engine(bind= 'mysql'))
@@ -507,7 +530,7 @@ class AttendanceLogs:
             output.seek(0)              #go back to the beginning of the stream
 
             #finally return the file
-            return send_file(output, attachment_filename= f'attendance_ID_{curriculumNo}.xlsx', as_attachment=True)
+            return send_file(output, attachment_filename= f'attendance_ID_{curriculumNoFromClient}.xlsx', as_attachment=True)
             # -------------------------------------------------------------------
     # ---------------------------------------------------------------------------
 
@@ -525,10 +548,13 @@ class AttendanceLogs:
 
         def post(self):
             infoFromClient = request.form
-            phoneNoFromClient = infoFromClient['phoneNo']               # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand."), https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
-            curriculumNoFromClient = infoFromClient['curriculumNo']
-            checkInOutFromClient = infoFromClient['checkInOut']
-            signatureB64FromClient = infoFromClient['signature'].split(',')[-1].strip()
+            try:
+                phoneNoFromClient = infoFromClient['phoneNo']               # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand."), https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
+                curriculumNoFromClient = infoFromClient['curriculumNo']
+                checkInOutFromClient = infoFromClient['checkInOut']
+                signatureB64FromClient = infoFromClient['signature'].split(',')[-1].strip()
+            except KeyError:
+                return {'message': { 'title': 'Failed', 'content': 'All of request.args are required', }}, 400
             
             # Calculate Korea Standard Time(KST), AttendanceDate/Time must be shown as a KST for filtering etc.
             attendanceTimestamp = datetime.utcnow() + timedelta(hours= 9)
@@ -648,13 +674,17 @@ class Members:
     class get_Members_List(Resource):
 
         def get(self):
-            queryParams = {key: loads(request.args[key]) for key in request.args}
+            infoFromClient = {key: loads(request.args[key]) for key in request.args}
+            try:
+                filterFromClient = infoFromClient['filters']        # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand."), https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
+                sortParamFromClient = infoFromClient['sort']
+                pagenum, limit = int(infoFromClient['pagination']['pagenum']), int(infoFromClient['pagination']['limit'])
+            except KeyError:
+                return {'message': { 'title': 'Failed', 'content': 'All of request.args are required', }}, 400
 
-            ormQueryFilters = createOrmModelQueryFiltersDict(queryParams['filters'])
-            ormQuerySort = createOrmModelQuerySortDict(queryParams['sort'])
-
-            pagenum, limit = int(queryParams['pagination']['pagenum']), int(queryParams['pagination']['limit'])
-            start, stop = (pagenum-1)*limit, pagenum*limit
+            ormQueryFilters = createOrmModelQueryFiltersDict(filterFromClient)
+            ormQuerySort = createOrmModelQuerySortDict(sortParamFromClient)
+            start, stop = (pagenum - 1) * limit, pagenum * limit
 
             memberFilters = (getattr(MembersModel, target) == value for target, value in ormQueryFilters['MembersModel'].items())
             curriculumLikeFilters = (getattr(CurriculumsModel, target).like(f'%{value}%') for target, value in ormQueryFilters['CurriculumsModel'].items())
@@ -710,20 +740,21 @@ class Members:
     @apiRestful.doc(params= {
             'filters': {'in': 'query', 'description': 'URL parameter, required'},
             'sort': {'in': 'query', 'description': 'URL parameter, required'},
-            # 'pagination': {'in': 'query', 'description': 'URL parameter, optional'},
             # You can add query filter columns if needed.
     })
     # Almost same with @apiRestful.route('/resource/members/list')
     class get_Members_Listfile(Resource):
 
         def get(self):
-            queryParams = {key: loads(request.args[key]) for key in request.args}
+            infoFromClient = {key: loads(request.args[key]) for key in request.args}
+            try:
+                filterFromClient = infoFromClient['filters']        # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand."), https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
+                sortParamFromClient = infoFromClient['sort']
+            except KeyError:
+                return {'message': { 'title': 'Failed', 'content': 'All of request.args are required', }}, 400
 
-            ormQueryFilters = createOrmModelQueryFiltersDict(queryParams['filters'])
-            ormQuerySort = createOrmModelQuerySortDict(queryParams['sort'])
-
-            # pagenum, limit = int(queryParams['pagination']['pagenum']), int(queryParams['pagination']['limit'])       # Different from @apiRestful.route('/resource/members/list')
-            # start, stop = (pagenum-1)*limit, pagenum*limit                                                            # Different from @apiRestful.route('/resource/members/list')
+            ormQueryFilters = createOrmModelQueryFiltersDict(filterFromClient)
+            ormQuerySort = createOrmModelQuerySortDict(sortParamFromClient)
 
             memberFilters = (getattr(MembersModel, target) == value for target, value in ormQueryFilters['MembersModel'].items())
             curriculumLikeFilters = (getattr(CurriculumsModel, target).like(f'%{value}%') for target, value in ormQueryFilters['CurriculumsModel'].items())
@@ -764,8 +795,6 @@ class Members:
                                             applicantsQuery.c.operationMemo,
                                         ).join(curriculumsQuery, curriculumsQuery.c.curriculumNo == membersQuery.c.curriculumNo)  \
                                         .join(applicantsQuery, and_(applicantsQuery.c.curriculumNo == membersQuery.c.curriculumNo, applicantsQuery.c.phoneNo == membersQuery.c.phoneNo))
-            # total = query.count()
-            # query = sort_query(query, *ormQuerySort).slice(start, stop)       # Different from @apiRestful.route('/resource/members/list')
             query = sort_query(query, *ormQuerySort)
             
             df = pd.read_sql(query.statement, db.get_engine(bind= 'mysql'))
@@ -802,17 +831,17 @@ class Members:
 
         def put(self):
             # Convert empty string to None
-            print(request.form)
-            emptyStringToNone = lambda x: None if x == 'null' else x
-            # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand.")
-            # Reference : https://scotch.io/bar-talk/processing-incoming-request-data-in-flask         
+            emptyStringToNone = lambda x: None if x == 'null' else x            
             infoFromClient = {key: emptyStringToNone(request.form[key]) for key in request.form}
-            phoneNoFromClient = infoFromClient['phoneNo']
-            curriculumNoFromClient = int(infoFromClient['curriculumNo'])
-            attendancePassFromClient = infoFromClient['attendancePass']
-            attendanceCheckFromClient = infoFromClient['attendanceCheck']
-            curriculumCompleteFromClient = infoFromClient['curriculumComplete']
-            employmentFromClient = infoFromClient['employment']
+            try:
+                phoneNoFromClient = infoFromClient['phoneNo']       # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand."), https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
+                curriculumNoFromClient = int(infoFromClient['curriculumNo'])
+                attendancePassFromClient = infoFromClient['attendancePass']
+                attendanceCheckFromClient = infoFromClient['attendanceCheck']
+                curriculumCompleteFromClient = infoFromClient['curriculumComplete']
+                employmentFromClient = infoFromClient['employment']
+            except KeyError:
+                return {'message': { 'title': 'Failed', 'content': 'All of request.form are required', }}, 400
             
             requestedBody = {
                 'phoneNo': phoneNoFromClient,
@@ -878,20 +907,24 @@ class Applicants:
     class post_Applicants_Bulk(Resource):
 
         def post(self):
-            queryParams = {'curriculumNo': int(request.form['curriculumNo'])}               # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand."), https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
-            applicantsBulkFromClient = request.files['applicantsBulkXlsxFile']
+            infoFromClient = request.form
+            try:
+                curriculumNoFromClient = int(request.form['curriculumNo'])          # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand."), https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
+                applicantsBulkFromClient = request.files['applicantsBulkXlsxFile']
+            except KeyError:
+                return {'message': { 'title': 'Failed', 'content': 'All of request.form/files are required', }}, 400
 
             applicantsDf = pd.read_excel(applicantsBulkFromClient)
             applicantsDf.columns = applicantsDf.columns.map(lambda x: Config.XLSX_COLUMNS_TO_SCHEMA_MAP[ x[:4]+'_'+str(len(x)//19) ])       # Convert column names, Using "x[:4]+'_'+str(len(x)//19)" as a unique key
-            applicantsDf['curriculumNo'] = queryParams['curriculumNo']
+            applicantsDf['curriculumNo'] = curriculumNoFromClient
             membersDf = applicantsDf[['phoneNo', 'curriculumNo']]
 
             applicantsDictsList = convertDataframeToDictsList(applicantsDf)
             membersDictsList = convertDataframeToDictsList(membersDf)
 
-            oldBulkApplicants = ApplicantsModel.query.filter_by(curriculumNo= queryParams['curriculumNo']).all()
-            oldBulkMembers = MembersModel.query.filter_by(curriculumNo= queryParams['curriculumNo']).all()
-            oldBulkAttendanceLogs = AttendanceLogsModel.query.filter_by(curriculumNo= queryParams['curriculumNo']).all()
+            oldBulkApplicants = ApplicantsModel.query.filter_by(curriculumNo= curriculumNoFromClient).all()
+            oldBulkMembers = MembersModel.query.filter_by(curriculumNo= curriculumNoFromClient).all()
+            oldBulkAttendanceLogs = AttendanceLogsModel.query.filter_by(curriculumNo= curriculumNoFromClient).all()
 
             newBulkApplicants = [ApplicantsModel(**applicant) for applicant in applicantsDictsList]
             newBulkMembers = [MembersModel(**member) for member in membersDictsList]
@@ -926,12 +959,13 @@ class Applicants:
     class put_Applicants_Info(Resource):
 
         def put(self):
-            # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand.")
-            # Reference : https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
             infoFromClient = request.form
-            curriculumNoFromClient = int(infoFromClient['curriculumNo'])
-            phoneNoFromClient = infoFromClient['phoneNo']
-            operationMemoFromClient = infoFromClient['operationMemo']
+            try:
+                curriculumNoFromClient = int(infoFromClient['curriculumNo'])        # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand."), https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
+                phoneNoFromClient = infoFromClient['phoneNo']
+                operationMemoFromClient = infoFromClient['operationMemo']
+            except KeyError:
+                return {'message': { 'title': 'Failed', 'content': 'All of request.form are required', }}, 400
 
             requestedBody = {
                 "curriculumNo": curriculumNoFromClient,
