@@ -556,6 +556,16 @@ class AttendanceLogs:
             except KeyError:
                 return {'message': { 'title': 'Failed', 'content': 'All of request.args are required', }}, 400
             
+            attendancePassedMemberCheck = MembersModel.query.filter_by(
+                                                            curriculumNo= curriculumNoFromClient,
+                                                            phoneNo= phoneNoFromClient
+                                                            attendancePass= 'Y',
+                                                       ).count()
+            if attendancePassedMemberCheck == 1:
+                continue
+            else:
+                return {'message': { 'title': 'Failed', 'content': 'Please Check the Phone Number format or Attendance Passed ', }}, 400
+
             # Calculate Korea Standard Time(KST), AttendanceDate/Time must be shown as a KST for filtering etc.
             attendanceTimestamp = datetime.utcnow() + timedelta(hours= 9)
             attendanceDate = attendanceTimestamp.strftime('%Y-%m-%d')
