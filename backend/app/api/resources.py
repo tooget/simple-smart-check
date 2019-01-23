@@ -911,4 +911,47 @@ class Applicants:
                 db.session.rollback()
                 return {'message': { 'title': 'Failed', 'content': 'Creating/Replacing all the relavant data failed', }}, 500
     # -----------------------------------------------------------------------------
+
+
+    #--------[ POST Raw Excel File(Google Survey) to Applicants and Members ]------
+    @apiRestful.route('/resource/applicants')
+    @apiRestful.doc(params= {
+            'curriculumNo': {'in': 'formData', 'description': 'application/json, body required'},
+            'phoneNo': {'in': 'formData', 'description': 'application/json, body/xlsx file required'},
+            'operationMemo': {'in': 'formData', 'description': 'application/json, body/xlsx file required'},
+            # You can add formData columns if needed.
+    })
+    class put_Applicants_Info(Resource):
+
+        def put(self):
+            # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand.")
+            # Reference : https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
+            infoFromClient = request.form
+            curriculumNoFromClient = int(infoFromClient['curriculumNo'])
+            phoneNoFromClient = infoFromClient['phoneNo']
+            operationMemoFromClient = infoFromClient['operationMemo']
+
+            requestedBody = {
+                "curriculumNo": curriculumNoFromClient,
+                "phoneNo": phoneNoFromClient,
+                "operationMemo": operationMemoFromClient,
+            }
+            
+            updatedApplicantInfo = ApplicantsModel(**requestedBody)
+
+            try:
+                db.session.merge(updatedApplicantInfo)      # session.merge() : A kind of UPSERT, https://docs.sqlalchemy.org/en/latest/orm/session_state_management.html#merging
+                db.session.commit()
+                applicants = ApplicantsModel.query.filter_by(**requestedBody).one()
+                applicantsSchema = ApplicantsModelSchema(many= False)
+                argument = applicantsSchema.dump(applicants)
+                argumentToJson = dumps(argument)
+                return {'message': { 'title': 'Succeeded', 'content': 'Applicant info updated', },
+                        'return': {
+                            'argument': f'{argumentToJson}'
+                        }}, 201
+            except:
+                db.session.rollback()
+                return {'message': { 'title': 'Failed', 'content': 'Updating Applicant info failed', }}, 500
+    # -----------------------------------------------------------------------------
 # ---------------------------------------------------------------------------------

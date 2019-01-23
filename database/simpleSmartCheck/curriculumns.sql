@@ -6,7 +6,7 @@ CREATE TABLE `curriculums` (
   `curriculumType` text NOT NULL,
   `startDate` date NOT NULL,
   `endDate` date NOT NULL,
-  `applicantsInserted` timestamp NULL,
+  `applicantsBulkInserted` timestamp NULL DEFAULT NULL,
   `insertedTimestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updatedTimestamp` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`curriculumNo`)
