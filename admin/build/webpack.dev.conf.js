@@ -57,7 +57,7 @@ const devWebpackConfig = merge(baseWebpackConfig, {
       template: 'index.html',
       inject: true,
       favicon: resolve('favicon.ico'),
-      title: 'Admin SmartCheck'
+      title: 'smart-check-admin'
     })
   ]
 })

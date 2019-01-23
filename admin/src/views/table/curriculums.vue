@@ -5,7 +5,7 @@
       <el-select v-model="listQuery.filters.curriculumCategory" :placeholder="$t('table.curriculums.curriculumCategory')" clearable class="filter-item" style="width: 130px">
         <el-option v-for="(item, index) in curriculumCategoryOptions" :key="index" :label="item.display_name" :value="item.key"/>
       </el-select>
-      <el-button v-waves class="filter-item" type="primary" icon="el-icon-search" @click="handleFilter">{{ $t('table.search') }}</el-button>
+      <el-button v-waves :loading="listLoading" class="filter-item" type="primary" icon="el-icon-search" @click="handleFilter">{{ $t('table.search') }}</el-button>
       <el-button class="filter-item" style="margin-left: 10px;" type="primary" icon="el-icon-edit" @click="handleCreate">{{ $t('table.add') }}</el-button>
       <el-checkbox v-model="showApplicantsBulkInserted" class="filter-item" style="margin-left:15px;" @change="tableKey=tableKey+1">{{ $t($t('table.curriculums.applicantsBulkInserted')) }}</el-checkbox>
       <el-checkbox v-model="showDonwnloadAtendanceLogs" class="filter-item" style="margin-left:15px;" @change="tableKey=tableKey+1">{{ $t($t('table.curriculums.donwnloadAtendanceLogs')) }}</el-checkbox>
@@ -238,10 +238,11 @@ export default {
         if (valid) {
           const tempData = Object.assign({}, this.temp) // copy obj
           const timezoneOffset = new Date().getTimezoneOffset()
+          const timezoneSeoul = 9 * 60 * 60 * 1000
           tempData.startDate = tempData.startDate.setHours(10, 0, 0, 0)
           tempData.endDate = tempData.endDate.setHours(18, 0, 0, 0)
-          tempData.startDate = +new Date(tempData.startDate + (timezoneOffset * 60 * 1000) + (9 * 60 * 60 * 1000))
-          tempData.endDate = +new Date(tempData.endDate + (timezoneOffset * 60 * 1000) + (9 * 60 * 60 * 1000))
+          tempData.startDate = +new Date(tempData.startDate + (timezoneOffset * 60 * 1000) + timezoneSeoul)
+          tempData.endDate = +new Date(tempData.endDate + (timezoneOffset * 60 * 1000) + timezoneSeoul)
           createCurriculumData(tempData).then(response => {
             const argument = JSON.parse(response.data.return.argument)
             const message = response.data.message
@@ -273,10 +274,11 @@ export default {
         if (valid) {
           const tempData = Object.assign({}, this.temp) // copy obj
           const timezoneOffset = new Date().getTimezoneOffset()
+          const timezoneSeoul = 9 * 60 * 60 * 1000
           tempData.startDate = tempData.startDate.setHours(10, 0, 0, 0)
           tempData.endDate = tempData.endDate.setHours(18, 0, 0, 0)
-          tempData.startDate = +new Date(tempData.startDate + (timezoneOffset * 60 * 1000) + (9 * 60 * 60 * 1000))
-          tempData.endDate = +new Date(tempData.endDate + (timezoneOffset * 60 * 1000) + (9 * 60 * 60 * 1000))
+          tempData.startDate = +new Date(tempData.startDate + (timezoneOffset * 60 * 1000) + timezoneSeoul)
+          tempData.endDate = +new Date(tempData.endDate + (timezoneOffset * 60 * 1000) + timezoneSeoul)
           updateCurriculumData(tempData).then(response => {
             const argument = JSON.parse(response.data.return.argument)
             const message = response.data.message

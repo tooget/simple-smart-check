@@ -123,7 +123,8 @@ export default {
       attendanceDate: '출석일',
       In: '입실',
       Out: '퇴실',
-      curriculumCategory: '과정분류'
+      curriculumCategory: '과정분류',
+      noSignature: '서명없음'
     }
   }
 }

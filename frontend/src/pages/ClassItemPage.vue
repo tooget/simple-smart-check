@@ -12,7 +12,7 @@
           </div>
           <label class="center">
             <v-ons-input float maxlength="20"
-              placeholder="phoneNo"
+              placeholder="ex) 010-1234-5678"
               v-model="phoneNo"
             >
             </v-ons-input>
@@ -40,7 +40,7 @@
         <v-ons-list-header>서명</v-ons-list-header>
         <v-ons-list-item :modifier="md ? 'nodivider' : ''">
           <label class="center">
-            <div align="center">
+            <div class="col-12 mt-2" align="center">
               <VueSignaturePad
                 id="signature"
                 width="60%"
@@ -61,7 +61,7 @@
             <div class="col-6 mt-2">
               <ons-button
                 class="btn btn-outline-secondary float-right"
-                @click="undo"
+                @click="clear"
               >
                 재서명
               </ons-button>
@@ -98,8 +98,8 @@ export default {
     }
   },
   methods: {
-    undo() {
-      this.$refs.signaturePad.undoSignature();
+    clear() {
+      this.$refs.signaturePad.clearSignature();
     },
     handleSubmit (e) {
       const { isEmpty, data } = this.$refs.signaturePad.saveSignature();
@@ -110,10 +110,13 @@ export default {
       const signature = data;
       dispatch('attendanceLog/checkInOut', { phoneNo, curriculumNo, checkInOut, signature }
         ).then(response => {
-          const message = response.data.message
-          this.$ons.notification.toast(message.title +', '+ message.content, {timeout: 5000});
+          const message = response.data.message;
+          this.$ons.notification.toast(message.title +', '+ message.content, {timeout: 3000});
+          this.phoneNo = null;
+          this.selectAttendanceType = undefined;
+          this.$refs.signaturePad.clearSignature();
         }).catch(error => {
-          const message = error.response.data.message
+          const message = error.response.data.message;
           this.$ons.notification.alert(message.title +', '+ message.content);
         })
     }

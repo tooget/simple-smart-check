@@ -92,7 +92,7 @@ export default {
       }
     },
     title() {
-      return this.md ? 'Smart Check' : this.tabs[this.index].title || this.tabs[this.index].label;
+      return this.md ? 'smart-check' : this.tabs[this.index].title || this.tabs[this.index].label;
     },
     swipeTheme() {
       return this.md && {

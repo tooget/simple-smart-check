@@ -32,19 +32,9 @@ export default {
         data() {
           return {
             item: name,
-            phoneNo: null,
+            phoneNo: undefined,
             attendanceTypes: ['In', 'Out'],
-            selectAttendanceType: null,
-            vueSignaturePadOptions: {
-              dotSize: (0.5 + 2.5) / 2,
-              minWidth: 0.5,
-              maxWidth: 2.5,
-              throttle: 16,
-              minDistance: 5,
-              backgroundColor: 'rgba(0,255,255,0)',
-              penColor: 'black',
-              velocityFilterWeight: 0.7,
-            }
+            selectAttendanceType: undefined
           }
         }
       });

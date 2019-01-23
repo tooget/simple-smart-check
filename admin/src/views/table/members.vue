@@ -5,7 +5,7 @@
       <el-select v-model="listQuery.filters.curriculumNo" :placeholder="$t('table.members.curriculumCategory')" clearable class="filter-item" style="width: 250px">
         <el-option v-for="(item, index) in curriculumOptionlist" :key="index" :label="item.curriculumName+'('+item.ordinalNo+')'" :value="item.curriculumNo"/>
       </el-select>
-      <el-button v-waves class="filter-item" type="primary" icon="el-icon-search" @click="handleFilter">{{ $t('table.search') }}</el-button>
+      <el-button v-waves :loading="listLoading" class="filter-item" type="primary" icon="el-icon-search" @click="handleFilter">{{ $t('table.search') }}</el-button>
       <el-button v-waves :loading="downloadLoading" class="filter-item" type="primary" icon="el-icon-download" @click="handleDownload">{{ $t('table.download') }}</el-button>
     </div>
 
@@ -31,28 +31,28 @@
       <el-table-column :label="$t('table.members.attendancePass.name')" width="110px" align="center">
         <template slot-scope="scope">
           <el-button v-if="scope.row.attendancePass=='Y'" :type="scope.row.attendancePass | statusFilter" size="mini" @click="handleModifyStatus(scope.row, 'attendancePass', 'N')">{{ $t('table.members.attendancePass.status.Y') }}</el-button>
-          <el-button v-else-if="scope.row.attendancePass=='N'" :type="scope.row.attendancePass | statusFilter" size="mini" @click="handleModifyStatus(scope.row, 'attendancePass', '')">{{ $t('table.members.attendancePass.status.N') }}</el-button>
+          <el-button v-else-if="scope.row.attendancePass=='N'" :type="scope.row.attendancePass | statusFilter" size="mini" @click="handleModifyStatus(scope.row, 'attendancePass', null)">{{ $t('table.members.attendancePass.status.N') }}</el-button>
           <el-button v-else size="mini" @click="handleModifyStatus(scope.row, 'attendancePass', 'Y')">{{ $t('table.members.attendancePass.status.null') }}</el-button>
         </template>
       </el-table-column>
       <el-table-column :label="$t('table.members.attendanceCheck.name')" width="110px" align="center">
         <template slot-scope="scope">
           <el-button v-if="scope.row.attendanceCheck=='Y'" :type="scope.row.attendanceCheck | statusFilter" size="mini" @click="handleModifyStatus(scope.row, 'attendanceCheck', 'N')">{{ $t('table.members.attendanceCheck.status.Y') }}</el-button>
-          <el-button v-else-if="scope.row.attendanceCheck=='N'" :type="scope.row.attendanceCheck | statusFilter" size="mini" @click="handleModifyStatus(scope.row, 'attendanceCheck', '')">{{ $t('table.members.attendanceCheck.status.N') }}</el-button>
+          <el-button v-else-if="scope.row.attendanceCheck=='N'" :type="scope.row.attendanceCheck | statusFilter" size="mini" @click="handleModifyStatus(scope.row, 'attendanceCheck', null)">{{ $t('table.members.attendanceCheck.status.N') }}</el-button>
           <el-button v-else size="mini" @click="handleModifyStatus(scope.row, 'attendanceCheck', 'Y')">{{ $t('table.members.attendanceCheck.status.null') }}</el-button>
         </template>
       </el-table-column>
       <el-table-column :label="$t('table.members.curriculumComplete.name')" width="110px" align="center">
         <template slot-scope="scope">
           <el-button v-if="scope.row.curriculumComplete=='Y'" :type="scope.row.curriculumComplete | statusFilter" size="mini" @click="handleModifyStatus(scope.row, 'curriculumComplete', 'N')">{{ $t('table.members.curriculumComplete.status.Y') }}</el-button>
-          <el-button v-else-if="scope.row.curriculumComplete=='N'" :type="scope.row.curriculumComplete | statusFilter" size="mini" @click="handleModifyStatus(scope.row, 'curriculumComplete', '')">{{ $t('table.members.curriculumComplete.status.N') }}</el-button>
+          <el-button v-else-if="scope.row.curriculumComplete=='N'" :type="scope.row.curriculumComplete | statusFilter" size="mini" @click="handleModifyStatus(scope.row, 'curriculumComplete', null)">{{ $t('table.members.curriculumComplete.status.N') }}</el-button>
           <el-button v-else size="mini" @click="handleModifyStatus(scope.row, 'curriculumComplete', 'Y')">{{ $t('table.members.curriculumComplete.status.null') }}</el-button>
         </template>
       </el-table-column>
       <el-table-column :label="$t('table.members.employment.name')" width="110px" align="center">
         <template slot-scope="scope">
           <el-button v-if="scope.row.employment=='Y'" :type="scope.row.employment | statusFilter" size="mini" @click="handleModifyStatus(scope.row, 'employment', 'N')">{{ $t('table.members.employment.status.Y') }}</el-button>
-          <el-button v-else-if="scope.row.employment=='N'" :type="scope.row.employment | statusFilter" size="mini" @click="handleModifyStatus(scope.row, 'employment', '')">{{ $t('table.members.employment.status.N') }}</el-button>
+          <el-button v-else-if="scope.row.employment=='N'" :type="scope.row.employment | statusFilter" size="mini" @click="handleModifyStatus(scope.row, 'employment', null)">{{ $t('table.members.employment.status.N') }}</el-button>
           <el-button v-else size="mini" @click="handleModifyStatus(scope.row, 'employment', 'Y')">{{ $t('table.members.employment.status.null') }}</el-button>
         </template>
       </el-table-column>
@@ -182,16 +182,7 @@ export default {
       },
       curriculumOptionlistQuery: {
         filters: { curriculumNo: undefined },
-        sort: { curriculumNo: 'desc' },
-        pagination: { pagenum: 1, limit: '' }
-      },
-      temp: {
-        curriculumNo: undefined,
-        phoneNo: undefined,
-        attendancePass: '',
-        attendanceCheck: '',
-        curriculumComplete: '',
-        employment: ''
+        sort: { curriculumNo: 'desc' }
       }
     }
   },
