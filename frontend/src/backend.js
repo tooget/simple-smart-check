@@ -2,7 +2,7 @@ import axios from 'axios'
 
 // 创建axios实例
 const service = axios.create({
-  baseURL: 'http://localhost:5000/api', // api 的 base_url
+  baseURL: 'http://localhost:5000/api', // api 的 base_url, https://backend.smartcheck.ml/api
   timeout: 60000 // 请求超时时间
 })
 

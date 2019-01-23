@@ -123,7 +123,8 @@ export default {
       attendanceDate: 'attendanceDate',
       In: 'In',
       Out: 'Out',
-      curriculumCategory: 'curriculumCategory'
+      curriculumCategory: 'curriculumCategory',
+      noSignature: 'noSignature'
     }
   }
 }

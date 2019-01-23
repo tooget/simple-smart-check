@@ -5,6 +5,7 @@ from app.extensions import db
 from app.ormmodels import AttendanceLogsModel, ApplicantsModel, CurriculumsModel, MembersModel
 from app.ormmodels import AttendanceLogsModelSchema, ApplicantsModelSchema, CurriculumsModelSchema, MembersModelSchema
 from base64 import b64encode, b64decode
+from copy import deepcopy
 from datetime import datetime, timedelta
 from flask import request, send_file
 from flask_restplus import Resource     # Reference : http://flask-restplus.readthedocs.io
@@ -56,19 +57,21 @@ class Curriculums:
             filters = (getattr(CurriculumsModel, target).like(f'%{value}%') for target, value in ormQueryFilters['CurriculumsModel'].items())
             query = CurriculumsModel.query.filter(and_(*filters))
             total = query.count()
-            
-            paginationLimitConverter = lambda x: x if bool(x) == True else total
-            paginationFromClient = queryParams['pagination']
-            pagenum = paginationFromClient['pagenum']
-            limit = paginationLimitConverter(paginationFromClient['limit'])
-            start, stop = (pagenum-1)*limit, pagenum*limit
 
             ormQuerySort = createOrmModelQuerySortDict(queryParams['sort'])
-            query = sort_query(query, *ormQuerySort).slice(start, stop)
-            curriculums = query.all()
+            query = sort_query(query, *ormQuerySort)
+            
+            try:
+                paginationFromClient = queryParams['pagination']
+                pagenum = paginationFromClient['pagenum']
+                limit = paginationLimitConverter(paginationFromClient['limit'])
+                start, stop = (pagenum-1)*limit, pagenum*limit
+                query = query.slice(start, stop).all()
+            except:
+                query = query.all()
 
             curriculumsSchema = CurriculumsModelSchema(many= True)
-            output = curriculumsSchema.dump(curriculums)
+            output = curriculumsSchema.dump(query)
 
             return {'return': {'items': output, 'total': total}}, 200
     # ---------------------------------------------------------------------------
@@ -377,32 +380,30 @@ class AttendanceLogs:
             pivot = pivot.where((pd.notnull(pivot)), None)
 
             # Make ListedJson for Vue Element-Ui to visualize a multicolumn Table.
-            pivotLebels = list(map(lambda x: x.tolist(), pivot.columns.levels))
-            signatureTimestampLevel, insertedTimestampLevel, checkInOutLevel = pivotLebels
+            signatureTimestampLevel, insertedTimestampLevel, checkInOutLevel = pivot.columns.levels
 
             vueElementUiListedJson = list()
-            for phoneNoAndNameIdx, row in pivot.iterrows():
-                # tuple 'phoneNoAndNameIdx' has phoneNo 'phoneNoAndNameIdx[0]' and applicantName 'phoneNoAndNameIdx[1]'
-                vueElementUiListedJsonItem = dict()
+            vueElementUiListedJsonItem = dict()
+            signatureTimestampList = list()
+            signatureTimestampListItem = dict()
+            
+            for (phoneNo, applicantName), row in pivot.iterrows():
+                # DataFrame 'pivot' has multiple indexes, and it return them as type of 'tuple' like (phoneNo, applicantName) when pivot.iterrows() working.'
+                for signatureTimestampLabel, insertedTimestampLabel, checkInOutLabel in zip(*pivot.columns.labels):
+                    level1 = signatureTimestampLevel[signatureTimestampLabel]
+                    level2 = insertedTimestampLevel[insertedTimestampLabel]
+                    level3 = checkInOutLevel[checkInOutLabel]            
+                    value = row[level1][level2][level3]
+                    signatureTimestampListItem.update({'attendanceDate': level2})
+                    signatureTimestampListItem.update({level3: value})
+                    if checkInOutLabel % 2 == 1:
+                        signatureTimestampList.append(deepcopy(signatureTimestampListItem))
+
+                vueElementUiListedJsonItem.update({'phoneNo': phoneNo})
+                vueElementUiListedJsonItem.update({'applicantName': applicantName})
+                vueElementUiListedJsonItem.update({'signatureTimestamp': signatureTimestampList})
+                vueElementUiListedJson.append(deepcopy(vueElementUiListedJsonItem))
                 signatureTimestampList = list()
-
-                for level1 in signatureTimestampLevel:
-
-                    for level2 in insertedTimestampLevel:
-                        signatureTimestampListItem = dict()
-                        
-                        signatureTimestampListItem['attendanceDate'] = level2
-
-                        for level3 in checkInOutLevel:
-                            signatureTimestampListItem[level3] = row[level1][level2][level3]
-
-                        signatureTimestampList.append(signatureTimestampListItem)
-
-                    vueElementUiListedJsonItem['phoneNo'] = phoneNoAndNameIdx[0]
-                    vueElementUiListedJsonItem['applicantName'] = phoneNoAndNameIdx[1]
-                    vueElementUiListedJsonItem['signatureTimestamp'] = signatureTimestampList
-
-                vueElementUiListedJson.append(vueElementUiListedJsonItem)
 
             output = vueElementUiListedJson
             total = len(pivot)
@@ -545,7 +546,7 @@ class AttendanceLogs:
             d = ImageDraw.Draw(txt)
             d.text((resizedSignature.width * 0.1, resizedSignature.height * 0.9), imgTimestamp, fill= (0,0,0,255))
             resizedSignature = Image.alpha_composite(resizedSignature, txt)
-            resizedSignature.show()
+            # resizedSignature.show()
 
             resizedImgBytes = BytesIO()
             resizedSignature.save(resizedImgBytes, format='PNG')
@@ -561,7 +562,7 @@ class AttendanceLogs:
                 "attendanceDate": attendanceDate,
             }
             newAttendanceLog = AttendanceLogsModel(**newAttendanceLogData)
-
+            
             try:
                 db.session.add(newAttendanceLog)
                 db.session.commit()
@@ -801,7 +802,8 @@ class Members:
 
         def put(self):
             # Convert empty string to None
-            emptyStringToNone = lambda x: x if bool(x) == True else None
+            print(request.form)
+            emptyStringToNone = lambda x: None if x == 'null' else x
             # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand.")
             # Reference : https://scotch.io/bar-talk/processing-incoming-request-data-in-flask         
             infoFromClient = {key: emptyStringToNone(request.form[key]) for key in request.form}

@@ -4,7 +4,7 @@
       <el-select v-model="listQuery.filters.curriculumNo" :placeholder="$t('table.attendanceLogs.curriculumCategory')" clearable class="filter-item" style="width: 250px">
         <el-option v-for="(item, index) in curriculumOptionlist" :key="index" :label="item.curriculumName+'('+item.ordinalNo+')'" :value="item.curriculumNo"/>
       </el-select>
-      <el-button v-waves class="filter-item" type="primary" icon="el-icon-search" @click="handleFilter">{{ $t('table.search') }}</el-button>
+      <el-button v-waves :loading="listLoading" class="filter-item" type="primary" icon="el-icon-search" @click="handleFilter">{{ $t('table.search') }}</el-button>
       <el-button v-waves :loading="downloadLoading" class="filter-item" type="primary" icon="el-icon-download" @click="handleFileDownload">{{ $t('table.download') }}</el-button>
     </div>
 
@@ -29,8 +29,18 @@
       </el-table-column>
       <el-table-column :label="$t('table.attendanceLogs.name')" align="center">
         <el-table-column v-for="(attendanceDate, index) of attendanceDates" :label="attendanceDate" :key="index" align="center">
-          <el-table-column :prop="JSON.stringify({attendanceDate, property:'In'})" :formatter="cellFormatter" :label="$t('table.attendanceLogs.In')" align="center"/>
-          <el-table-column :prop="JSON.stringify({attendanceDate, property:'Out'})" :formatter="cellFormatter" :label="$t('table.attendanceLogs.Out')" align="center"/>
+          <el-table-column :label="$t('table.attendanceLogs.In')" align="center">
+            <template slot-scope="scope">
+              <el-tag v-if="scope.row.signatureTimestamp[index].In!==null" :type="scope.row.signatureTimestamp[index].In | statusFilter">{{ scope.row.signatureTimestamp[index].In | parseTime('{h}:{i}') }}</el-tag>
+              <el-tag v-else :type="scope.row.signatureTimestamp[index].In | statusFilter">{{ $t('table.attendanceLogs.noSignature') }}</el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column :label="$t('table.attendanceLogs.Out')" align="center">
+            <template slot-scope="scope">
+              <el-tag v-if="scope.row.signatureTimestamp[index].Out!==null" :type="scope.row.signatureTimestamp[index].Out | statusFilter">{{ scope.row.signatureTimestamp[index].Out | parseTime('{h}:{i}') }}</el-tag>
+              <el-tag v-else :type="scope.row.signatureTimestamp[index].Out | statusFilter">{{ $t('table.attendanceLogs.noSignature') }}</el-tag>
+            </template>
+          </el-table-column>
         </el-table-column>
       </el-table-column>
     </el-table>
@@ -46,6 +56,15 @@ import waves from '@/directive/waves' // Waves directive
 export default {
   name: 'AttendanceLogs',
   directives: { waves },
+  filters: {
+    statusFilter(status) {
+      if (status) {
+        return 'success'
+      } else {
+        return 'danger'
+      }
+    }
+  },
   data() {
     return {
       tableKey: 0,
@@ -59,8 +78,7 @@ export default {
       },
       curriculumOptionlistQuery: {
         filters: { curriculumNo: undefined },
-        sort: { curriculumNo: 'desc' },
-        pagination: { pagenum: 1, limit: '' }
+        sort: { curriculumNo: 'desc' }
       }
     }
   },
@@ -79,14 +97,6 @@ export default {
     this.getCurriculumList()
   },
   methods: {
-    cellFormatter(row, col) {
-      const key = JSON.parse(col.property)
-      const d = row.signatureTimestamp.find(r => r.attendanceDate === key.attendanceDate)
-      if (d && d[key.property]) {
-        return d[key.property]
-      }
-      return null
-    },
     getList() {
       this.listLoading = true
       const query = { curriculumNo: this.listQuery.filters.curriculumNo }
