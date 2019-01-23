@@ -81,7 +81,7 @@ class Curriculums:
 
 
     # ----------------[ Create a new Curriculums data ]----------------------------
-    @apiRestful.route('/resource/curriculums')
+    @apiRestful.route('/resource/curriculums/new')
     @apiRestful.doc(params= {
             'curriculumCategory': {'in': 'formData', 'description': 'application/json, body required'},
             'ordinalNo': {'in': 'formData', 'description': 'application/json, body required'},
@@ -91,7 +91,7 @@ class Curriculums:
             'endDate': {'in': 'formData', 'description': 'application/json, body required'},
             # You can add formData columns if needed.
     })
-    class post_Curriculums(Resource):
+    class post_Curriculums_New(Resource):
 
         def post(self):
             infoFromClient = request.form
@@ -135,7 +135,7 @@ class Curriculums:
 
 
     # ----------------[ Update a new Curriculums data ]----------------------------
-    @apiRestful.route('/resource/curriculums')
+    @apiRestful.route('/resource/curriculums/info')
     @apiRestful.doc(params= {
             'curriculumNo': {'in': 'formData', 'description': 'application/json, body required'},
             'curriculumCategory': {'in': 'formData', 'description': 'application/json, body required'},
@@ -146,7 +146,7 @@ class Curriculums:
             'endDate': {'in': 'formData', 'description': 'application/json, body required'},
             # You can add formData columns if needed.
     })
-    class put_Curriculums(Resource):
+    class put_Curriculums_Info(Resource):
 
         def put(self):
             infoFromClient = request.form
@@ -259,7 +259,13 @@ class Curriculums:
             memberCompleteCount = MembersModel.query.with_entities(MembersModel.curriculumNo, func.count(MembersModel.phoneNo).label('MemberCompleteCount')).filter(and_(MembersModel.curriculumComplete == 'Y', *memberFilters)).group_by(MembersModel.curriculumNo).subquery()
             memberEmploymentCount = MembersModel.query.with_entities(MembersModel.curriculumNo, func.count(MembersModel.phoneNo).label('MemberEmploymentCount')).filter(and_(MembersModel.employment == 'Y', *memberFilters)).group_by(MembersModel.curriculumNo).subquery()
             query = db.session.query(curriculumList).with_entities(
-                                                        curriculumList,
+                                                        curriculumList.c.curriculumNo.label('curriculumNo'),
+                                                        curriculumList.c.curriculumCategory,
+                                                        curriculumList.c.ordinalNo,
+                                                        curriculumList.c.curriculumName,
+                                                        curriculumList.c.startDate,
+                                                        curriculumList.c.endDate,
+                                                        curriculumList.c.curriculumType,
                                                         func.ifnull(applicantCount.c.ApplicantCount, 0).label('ApplicantCount'),
                                                         func.ifnull(memberCount.c.MemberCount, 0).label('MemberCount'),
                                                         func.ifnull(memberCompleteCount.c.MemberCompleteCount, 0).label('MemberCompleteCount'),
@@ -353,7 +359,7 @@ class AttendanceLogs:
             attendanceLogs = AttendanceLogsModel.query.filter_by(curriculumNo= curriculumNoFromClient)
             # Get full duration of a curriculum.
             curriculumDuration = CurriculumsModel.query.with_entities(CurriculumsModel.startDate, CurriculumsModel.endDate).filter_by(curriculumNo= curriculumNoFromClient).first()
-            startDate, endDate = curriculumDuration.startDate.strftime('%Y-%m-%dT%H:%M:%SZ'), curriculumDuration.endDate.strftime('%Y-%m-%dT%H:%M:%SZ')
+            startDate, endDate = (curriculumDuration.startDate + timedelta(hours= 9)).strftime('%Y-%m-%dT%H:%M:%SZ'), (curriculumDuration.endDate + timedelta(hours= 9)).strftime('%Y-%m-%dT%H:%M:%SZ')
             curriculumDuration = [date.strftime('%Y-%m-%d') for date in pd.date_range(start= startDate, end= endDate, freq= 'B')]
             # Get only attendancePassed members and phoneNo list of a curriculum.
             membersAttendancePassOnlyQuery = MembersModel.query.with_entities(MembersModel.phoneNo).filter_by(curriculumNo= curriculumNoFromClient, attendancePass= 'Y').subquery()
@@ -450,7 +456,7 @@ class AttendanceLogs:
             attendanceLogs = AttendanceLogsModel.query.filter_by(curriculumNo= curriculumNoFromClient)
             # Get full duration of a curriculum.
             curriculumDuration = CurriculumsModel.query.with_entities(CurriculumsModel.startDate, CurriculumsModel.endDate).filter_by(curriculumNo= curriculumNoFromClient).first()
-            startDate, endDate = curriculumDuration.startDate.strftime('%Y-%m-%dT%H:%M:%SZ'), curriculumDuration.endDate.strftime('%Y-%m-%dT%H:%M:%SZ')
+            startDate, endDate = (curriculumDuration.startDate + timedelta(hours= 9)).strftime('%Y-%m-%dT%H:%M:%SZ'), (curriculumDuration.endDate + timedelta(hours= 9)).strftime('%Y-%m-%dT%H:%M:%SZ')
             curriculumDuration = [date.strftime('%Y-%m-%d') for date in pd.date_range(start= startDate, end= endDate, freq= 'B')]
             # Get only attendancePassed members and phoneNo list of a curriculum.
             membersAttendancePassOnlyQuery = MembersModel.query.with_entities(MembersModel.phoneNo).filter_by(curriculumNo= curriculumNoFromClient, attendancePass= 'Y').subquery()
@@ -570,6 +576,15 @@ class AttendanceLogs:
             attendanceTimestamp = datetime.utcnow() + timedelta(hours= 9)
             attendanceDate = attendanceTimestamp.strftime('%Y-%m-%d')
             imgTimestamp = attendanceTimestamp.strftime('%Y-%m-%d %H:%M:%S') + ' KST'
+
+            # Get full duration of a curriculum.
+            curriculumDuration = CurriculumsModel.query.with_entities(CurriculumsModel.startDate, CurriculumsModel.endDate).filter_by(curriculumNo= curriculumNoFromClient).first()
+            startDate, endDate = (curriculumDuration.startDate + timedelta(hours= 9)).strftime('%Y-%m-%dT%H:%M:%SZ'), (curriculumDuration.endDate + timedelta(hours= 9)).strftime('%Y-%m-%dT%H:%M:%SZ')
+            curriculumDuration = [date.strftime('%Y-%m-%d') for date in pd.date_range(start= startDate, end= endDate, freq= 'B')]
+            if attendanceDate in curriculumDuration:
+                pass
+            else:
+                return {'message': {'title': 'Failed', 'content': 'Please Check Duration of the Curriculum'}}, 400
 
             # Resizing Signature Image(width: 500) and Putting timestamp on it.
             signatureImg = Image.open(BytesIO(b64decode( signatureB64FromClient.encode() )))
@@ -827,7 +842,7 @@ class Members:
 
 
     # ----------------[ Update members' Info ]-------------------------------------
-    @apiRestful.route('/resource/members')
+    @apiRestful.route('/resource/members/info')
     @apiRestful.doc(params= {
             'phoneNo': {'in': 'formData', 'description': 'application/json, body required'},
             'curriculumNo': {'in': 'formData', 'description': 'application/json, body required'},
@@ -958,8 +973,8 @@ class Applicants:
     # -----------------------------------------------------------------------------
 
 
-    #--------[ POST Raw Excel File(Google Survey) to Applicants and Members ]------
-    @apiRestful.route('/resource/applicants')
+    #-----------------------[ Update Applicant memo ]------------------------------
+    @apiRestful.route('/resource/applicants/info')
     @apiRestful.doc(params= {
             'curriculumNo': {'in': 'formData', 'description': 'application/json, body required'},
             'phoneNo': {'in': 'formData', 'description': 'application/json, body/xlsx file required'},
