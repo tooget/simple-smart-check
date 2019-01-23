@@ -79,4 +79,30 @@ class Config(object):
         '18. _1': 'howToFindOut',
         '운영메모_0': 'operationMemo'
     }
+
+    COLUMNNAMES_TO_KORNAMES_MAP = {
+        'phoneNo': '전화번호',
+        'curriculumNo': '과정ID',
+        'attendancePass': '선발여부',
+        'attendanceCheck': '참석여부',
+        'curriculumComplete': '수료여부',
+        'employment': '취업여부',
+        'ordinalNo': '기수',
+        'curriculumName': '과정명',
+        'curriculumCategory': '과정분류',
+        'startDate': '시작일',
+        'endDate': '종료일',
+        'applicantName': '지원자명',
+        'birthDate': '생년월일',
+        'email': '이메일',
+        'affiliation': '소속(회사/학교)',
+        'department': '부서(전공)',
+        'position': '직급(학년)',
+        'job': '지원자 상태',
+        'purposeSelection': '수강목적',
+        'careerDuration': '개발경력(기간)',
+        'agreeWithPersonalinfo': '개인정보 제공동의',
+        'agreeWithMktMailSubscription': '핀테크 기술지원센터 소식 수신여부',
+        'operationMemo': '비고'
+    }
     # ------------------------------------------------------------------------------------------
