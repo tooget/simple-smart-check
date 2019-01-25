@@ -632,31 +632,6 @@ class Members:
     @apiRestful.route('/resource/members')
     class Members(SecureResource):
 
-        # ----------------[ Get members ]--------------------------------------------
-        @apiRestful.doc(params= {
-                'phoneNo': {'in': 'query', 'description': 'URL parameter, optional'},
-                'curriculumNo': {'in': 'query', 'description': 'URL parameter, optional'},
-                'attendancePass': {'in': 'query', 'description': 'URL parameter, optional'},
-                'attendanceCheck': {'in': 'query', 'description': 'URL parameter, optional'},
-                'curriculumComplete': {'in': 'query', 'description': 'URL parameter, optional'},
-                'employment': {'in': 'query', 'description': 'URL parameter, optional'},
-                # You can add query filter columns if needed.
-        })
-        def get(self):
-            queryFilter = request.args
-            members = MembersModel.query.filter_by(**queryFilter)
-            membersSchema = MembersModelSchema(many= True)
-            output = membersSchema.dump(members.all())
-            total = members.count()
-
-            return {'message':
-                        {'title': '교육생 목록 조회 성공', 'content': f'{total}명의 교육생 목록를 성공적으로 조회하였습니다.'},
-                    'return':
-                        {'items': output, 'total': total}
-                    }, 200
-        # -----------------------------------------------------------------------------
-
-
         # ----------------[ Update members' Info ]-------------------------------------
         @apiRestful.doc(params= {
                 'phoneNo': {'in': 'formData', 'description': 'application/json, body required'},
@@ -707,47 +682,6 @@ class Members:
                 db.session.rollback()
                 return {'message': {'title': '교육생 정보 업데이트 실패', 'content': '해당 교육생의 정보 업데이트에 실패하였습니다.'}}, 500
         # -----------------------------------------------------------------------------
-
-
-
-    # ----------------[ Get summary of members count ]-----------------------------
-    @apiRestful.route('/resource/members/summarycount')
-    @apiRestful.doc(params= {
-            'curriculumNo': {'in': 'query', 'description': 'URL parameter, optional'},
-            # You can add query filter columns if needed.
-    })
-    class get_Members_Summarycount(SecureResource):
-
-        def get(self):
-            queryFilter = request.args
-
-            curriculumsQuery = CurriculumsModel.query.with_entities(
-                                                CurriculumsModel.curriculumNo,
-                                                CurriculumsModel.curriculumName,
-                                                CurriculumsModel.curriculumCategory,
-                                                CurriculumsModel.ordinalNo,
-                                                CurriculumsModel.startDate,
-                                                CurriculumsModel.endDate,
-                                            ).filter_by(**queryFilter)
-            curriculumsSchema = CurriculumsModelSchema(many= True)
-            curriculumsInfo = curriculumsSchema.dump(curriculumsQuery.all())
-            targetCurriculumsCount = curriculumsQuery.count()
-
-            output = {
-                'curriculumInfo': curriculumsInfo,
-                'applicants_count': MembersModel.query.filter_by(**queryFilter).count(),
-                'members_count': MembersModel.query.filter_by(**queryFilter, attendancePass= 'Y').count(),
-                'membersComplete_count': MembersModel.query.filter_by(**queryFilter, curriculumComplete= 'Y').count(),
-            }
-
-            total = targetCurriculumsCount
-
-            return {'message':
-                        {'title': '교육과정 요약통계 조회 성공', 'content': f'{total}건의 교육과정 요약통계를 성공적으로 조회하였습니다.'},
-                    'return':
-                        {'items': output, 'total': total}
-                    }, 200
-    # -----------------------------------------------------------------------------
 
 
     # -----------------------[ Get Members ]---------------------------------------
@@ -917,29 +851,6 @@ class Applicants:
 
     @apiRestful.route('/resource/applicants')
     class Applicants(SecureResource):
-
-        # ----------------[ Get Applicants ]-------------------------------------------
-        @apiRestful.doc(params= {
-                'phoneNo': {'in': 'query', 'description': 'URL parameter, optional'},
-                'curriculumNo': {'in': 'query', 'description': 'URL parameter, optional'},
-                'applicantName': {'in': 'query', 'description': 'URL parameter, optional'},
-                'email': {'in': 'query', 'description': 'URL parameter, optional'},
-                # You can add query filter columns if needed.
-        })
-        def get(self):
-            queryFilter = request.args
-            applicants = ApplicantsModel.query.filter_by(**queryFilter)
-            applicantsSchema = ApplicantsModelSchema(many= True)
-            output = applicantsSchema.dump(applicants.all())
-            total = applicants.count()
-
-            return {'message':
-                        {'title': '신청자/교육생 목록 조회 성공', 'content': f'{total}명의 신청자/교육생 목록를 성공적으로 조회하였습니다.'},
-                    'return':
-                        {'items': output, 'total': total}
-                    }, 200
-        # -----------------------------------------------------------------------------
-
 
         #-----------------------[ Update Applicant memo ]------------------------------
         @apiRestful.doc(params= {

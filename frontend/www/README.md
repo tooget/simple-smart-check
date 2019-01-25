@@ -1,5 +1,5 @@
-## Frontend DEMO
-https://frontend.smartcheck.ml
+## 서명페이지
+https://www.smartcheck.ml
 
 ## Build Setup
 
@@ -11,5 +11,8 @@ yarn install
 yarn run dev
 
 # build for production with minification
-yarn run build
+yarn build
+
+# deploy for production with minification
+yarn deploy
 ```

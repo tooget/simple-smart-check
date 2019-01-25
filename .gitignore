@@ -5,8 +5,8 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 package-lock.json
-app/__init__.pyc
-backend/Pipfile.lock
+__init__.pyc
+Pipfile.lock
 
 # Editor directories and files
 .idea

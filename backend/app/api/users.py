@@ -58,45 +58,32 @@ class Users:
         # -----------------------------------------------------------------------------
 
 
-        # ----------------[ Get Users ]------------------------------------------------
-        @apiRestful.doc(params= {
-                'username': {'in': 'query', 'description': 'URL parameter, optional'},
-        })
-        def get(self):
-            queryFilter = request.args
-            users = UsersModel.query.filter_by(**queryFilter).all()
-            usersSchema = UsersModelSchema(many= True)
-            output = usersSchema.dump(users)
-            return {'return': output}, 200
-        # -----------------------------------------------------------------------------
-
-
     # ----------------[ Login ]----------------------------------------------------
-    @apiRestful.route('/users/login')
-    @apiRestful.doc(params= {
-            'username': {'in': 'formData', 'description': 'application/json, body required'},
-            'password': {'in': 'formData', 'description': 'application/json, body required'},
-    })
-    class post_Users_Login(Resource):
+    # @apiRestful.route('/users/login')
+    # @apiRestful.doc(params= {
+    #         'username': {'in': 'formData', 'description': 'application/json, body required'},
+    #         'password': {'in': 'formData', 'description': 'application/json, body required'},
+    # })
+    # class post_Users_Login(Resource):
 
-        def post(self):
-            infoFromClient = request.form
-            usernameFromClient = infoFromClient['username']         # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand."), https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
-            passwordFromClient = infoFromClient['password']         # passwordFromClient = django_pbkdf2_sha256.using(salt= Config.SALT_KEYWORD, salt_size= Config.SALT_SIZE, rounds= Config.SALT_ROUNDS).hash(infoFromClient['password']).split('$')[-1]
+    #     def post(self):
+    #         infoFromClient = request.form
+    #         usernameFromClient = infoFromClient['username']         # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand."), https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
+    #         passwordFromClient = infoFromClient['password']         # passwordFromClient = django_pbkdf2_sha256.using(salt= Config.SALT_KEYWORD, salt_size= Config.SALT_SIZE, rounds= Config.SALT_ROUNDS).hash(infoFromClient['password']).split('$')[-1]
 
-            UserInfoFromDB = UsersModel.query.filter_by(username= usernameFromClient).first()
+    #         UserInfoFromDB = UsersModel.query.filter_by(username= usernameFromClient).first()
 
-            if passwordFromClient == UserInfoFromDB.password.split('$')[-1]:        # Successfully Login, return 201
-                accessToken = create_access_token(identity= usernameFromClient)
-                return {'message': f'Logged in as {UserInfoFromDB.username}',
-                        'return': {
-                            'username': usernameFromClient,
-                            'access_token': accessToken,
-                        }}, 201
-            elif not UserInfoFromDB:                                                # if User is not registered, return 500
-                return {'message': f'User {usernameFromClient} doesn\'t exist'}, 500
-            else:
-                return {'message': 'Wrong credentials'}, 500            # Something wrong, return 500
+    #         if passwordFromClient == UserInfoFromDB.password.split('$')[-1]:        # Successfully Login, return 201
+    #             accessToken = create_access_token(identity= usernameFromClient)
+    #             return {'message': f'Logged in as {UserInfoFromDB.username}',
+    #                     'return': {
+    #                         'username': usernameFromClient,
+    #                         'access_token': accessToken,
+    #                     }}, 201
+    #         elif not UserInfoFromDB:                                                # if User is not registered, return 500
+    #             return {'message': f'User {usernameFromClient} doesn\'t exist'}, 500
+    #         else:
+    #             return {'message': 'Wrong credentials'}, 500            # Something wrong, return 500
     # -----------------------------------------------------------------------------
 
 
