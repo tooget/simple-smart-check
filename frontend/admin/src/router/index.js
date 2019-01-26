@@ -41,7 +41,7 @@ export const constantRouterMap = [
   {
     path: '/manage',
     component: Layout,
-    redirect: '/manage/table',
+    redirect: '/manage/curriculums',
     name: 'Manage',
     meta: { title: '관리자 페이지', icon: 'example' },
     children: [
@@ -64,11 +64,22 @@ export const constantRouterMap = [
         meta: { title: '출석부', icon: 'table' }
       }
     ]
+  },
+
+  {
+    path: 'external-link',
+    component: Layout,
+    children: [
+      {
+        path: 'https://www.smartcheck.ml',
+        meta: { title: '출석부 서명 페이지', icon: 'link' }
+      }
+    ]
   }
 ]
 
 export default new Router({
-  // mode: 'history', //后端支持可开
+  mode: 'history',
   scrollBehavior: () => ({ y: 0 }),
   routes: constantRouterMap
 })

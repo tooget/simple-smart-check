@@ -136,11 +136,6 @@
           <span>{{ scope.row.agreeWithMktMailSubscription }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="$t('table.members.operationMemo')" prop="operationMemo" sortable="custom" width="200px" align="center">
-        <template slot-scope="scope">
-          <span>{{ scope.row.operationMemo }}</span>
-        </template>
-      </el-table-column>
     </el-table>
 
     <pagination v-show="total>0" :total="total" :page.sync="listQuery.pagination.pagenum" :limit.sync="listQuery.pagination.limit" @pagination="getList" />

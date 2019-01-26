@@ -7,7 +7,7 @@ export default {
     attendanceLogs: 'attendanceLogs'
   },
   navbar: {
-    logOut: 'LogOut',
+    logOut: '로그아웃',
     dashboard: 'Dashboard'
   },
   login: {
