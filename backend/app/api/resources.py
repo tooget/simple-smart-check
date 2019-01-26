@@ -616,8 +616,9 @@ class AttendanceLogs:
                 except TypeError:
                     continue
 
-            writer.close()              #the writer has done its job
-            output.seek(0)              #go back to the beginning of the stream
+            writer.close()              # the writer has done its job
+            output.seek(0)              # go back to the beginning of the stream
+            del query                   # pymysql connection & lambda session caching issue
 
             #finally return the file
             return send_file(output, attachment_filename= f'attendance_ID_{curriculumNoFromClient}.xlsx', as_attachment= True)
@@ -837,6 +838,7 @@ class Members:
 
             writer.close()              # the writer has done its job
             output.seek(0)              # go back to the beginning of the stream
+            del query                   # pymysql connection & lambda session caching issue
 
             #finally return the file
             return send_file(output, attachment_filename= "members.xlsx", as_attachment= True)
