@@ -20,70 +20,70 @@ class SecureResource(Resource):
 # --------------------[ API to System Users/Admin and Auth ]-----------------------
 class Users:
 
-    @apiRestful.route('/users')
-    class Users(SecureResource):
+    # @apiRestful.route('/users')
+    # class Users(SecureResource):
 
-        # ----------------[ Register a New User ]--------------------------------------
-        @apiRestful.doc(params= {
-                'username': {'in': 'formData', 'description': 'application/json, body required'},
-                'password': {'in': 'formData', 'description': 'application/json, body required'},
-        })
-        def post(self):
-            infoFromClient = request.form
-            usernameFromClient = infoFromClient['username']         # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand."), https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
-            passwordFromClient = infoFromClient['password']
-            
-            if UsersModel.query.filter_by(username= usernameFromClient).first():
-                return {'message': f'User {usernameFromClient} already exists'}
-            
-            pbkdf2_sha256 = django_pbkdf2_sha256.using(salt= Config.SALT_KEYWORD, salt_size= Config.SALT_SIZE, rounds= Config.SALT_ROUNDS)
-            newUserInfoFromClient = UsersModel(
-                username= usernameFromClient,
-                password= pbkdf2_sha256.hash(passwordFromClient)    #Crypt the password with pbkdf2
-            )
-
-            try:
-                db.session.add(newUserInfoFromClient)
-                # [!] New Token Issue when DB insert fails
-                accessToken = create_access_token(identity= usernameFromClient)
-                db.session.commit()
-                return {'message': f'User {usernameFromClient} was created',
-                        'return': {
-                            'username': usernameFromClient,
-                            'access_token': accessToken,
-                        }}, 201
-            except:
-                db.session.rollback()
-                return {'message': 'Something went wrong'}, 500
-        # -----------------------------------------------------------------------------
-
-
-    # ----------------[ Login ]----------------------------------------------------
-    # @apiRestful.route('/users/login')
-    # @apiRestful.doc(params= {
-    #         'username': {'in': 'formData', 'description': 'application/json, body required'},
-    #         'password': {'in': 'formData', 'description': 'application/json, body required'},
-    # })
-    # class post_Users_Login(Resource):
-
+    #     # ----------------[ Register a New User ]--------------------------------------
+    #     @apiRestful.doc(params= {
+    #             'username': {'in': 'formData', 'description': 'application/json, body required'},
+    #             'password': {'in': 'formData', 'description': 'application/json, body required'},
+    #     })
     #     def post(self):
     #         infoFromClient = request.form
     #         usernameFromClient = infoFromClient['username']         # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand."), https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
-    #         passwordFromClient = infoFromClient['password']         # passwordFromClient = django_pbkdf2_sha256.using(salt= Config.SALT_KEYWORD, salt_size= Config.SALT_SIZE, rounds= Config.SALT_ROUNDS).hash(infoFromClient['password']).split('$')[-1]
+    #         passwordFromClient = infoFromClient['password']
+            
+    #         if UsersModel.query.filter_by(username= usernameFromClient).first():
+    #             return {'message': f'User {usernameFromClient} already exists'}
+            
+    #         pbkdf2_sha256 = django_pbkdf2_sha256.using(salt= Config.SALT_KEYWORD, salt_size= Config.SALT_SIZE, rounds= Config.SALT_ROUNDS)
+    #         newUserInfoFromClient = UsersModel(
+    #             username= usernameFromClient,
+    #             password= pbkdf2_sha256.hash(passwordFromClient)    #Crypt the password with pbkdf2
+    #         )
 
-    #         UserInfoFromDB = UsersModel.query.filter_by(username= usernameFromClient).first()
-
-    #         if passwordFromClient == UserInfoFromDB.password.split('$')[-1]:        # Successfully Login, return 201
+    #         try:
+    #             db.session.add(newUserInfoFromClient)
+    #             # [!] New Token Issue when DB insert fails
     #             accessToken = create_access_token(identity= usernameFromClient)
-    #             return {'message': f'Logged in as {UserInfoFromDB.username}',
+    #             db.session.commit()
+    #             return {'message': f'User {usernameFromClient} was created',
     #                     'return': {
     #                         'username': usernameFromClient,
     #                         'access_token': accessToken,
     #                     }}, 201
-    #         elif not UserInfoFromDB:                                                # if User is not registered, return 500
-    #             return {'message': f'User {usernameFromClient} doesn\'t exist'}, 500
-    #         else:
-    #             return {'message': 'Wrong credentials'}, 500            # Something wrong, return 500
+    #         except:
+    #             db.session.rollback()
+    #             return {'message': 'Something went wrong'}, 500
+    #     # -----------------------------------------------------------------------------
+
+
+    # ----------------[ Login ]----------------------------------------------------
+    @apiRestful.route('/users/login')
+    @apiRestful.doc(params= {
+            'username': {'in': 'formData', 'description': 'application/json, body required'},
+            'password': {'in': 'formData', 'description': 'application/json, body required'},
+    })
+    class post_Users_Login(Resource):
+
+        def post(self):
+            infoFromClient = request.form
+            usernameFromClient = infoFromClient['username']         # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand."), https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
+            passwordFromClient = infoFromClient['password']         # passwordFromClient = django_pbkdf2_sha256.using(salt= Config.SALT_KEYWORD, salt_size= Config.SALT_SIZE, rounds= Config.SALT_ROUNDS).hash(infoFromClient['password']).split('$')[-1]
+
+            UserInfoFromDB = UsersModel.query.filter_by(username= usernameFromClient).first()
+
+            if not UserInfoFromDB:                                                    # if User is not registered, return 500
+                return {'message': f'User {usernameFromClient} doesn\'t exist'}, 500
+            elif passwordFromClient == UserInfoFromDB.password.split('$')[-1]:        # Successfully Login, return 201
+                accessToken = create_access_token(identity= usernameFromClient)
+                return {'message': f'Logged in as {UserInfoFromDB.username}',
+                        'return': {
+                            'username': usernameFromClient,
+                            'access_token': accessToken,
+                        }}, 201
+            else:
+                return {'message': 'Wrong credentials'}, 500            # Something wrong, return 500
     # -----------------------------------------------------------------------------
 
 
