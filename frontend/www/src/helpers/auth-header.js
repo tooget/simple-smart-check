@@ -1,10 +1,15 @@
-export function authHeader() {
-    // return authorization header with jwt token
-    let user = JSON.parse(localStorage.getItem('user'));
+import Cookies from 'js-cookie'
 
-    if (user && user.access_token) {
-        return { 'Authorization': 'Bearer ' + user.access_token };
-    } else {
-        return {};
-    }
+const TokenKey = 'user'
+
+export function getToken() {
+  return Cookies.get(TokenKey)
+}
+
+export function setToken(token) {
+  return Cookies.set(TokenKey, token, { expires: (1 / 1440) * 20 })
+}
+
+export function removeToken() {
+  return Cookies.remove(TokenKey)
 }

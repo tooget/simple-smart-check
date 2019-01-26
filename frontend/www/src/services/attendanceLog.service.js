@@ -1,4 +1,4 @@
-import request from '../backend'
+import request from '../request'
 
 export const attendanceLogService = {
     checkInOut

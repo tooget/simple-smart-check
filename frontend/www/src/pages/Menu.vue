@@ -1,10 +1,10 @@
 <template>
   <v-ons-page modifier="white">
-    <v-ons-list-title>기능</v-ons-list-title>
+    <v-ons-list-title>세션관리</v-ons-list-title>
     <v-ons-list>
       <v-ons-list-item v-for="item in logOut" :key="item.title"
         :modifier="md ? 'nodivider' : ''"
-        @click="loadLink(item.url)"
+        @click="logout"
       >
         <div class="left">
           <v-ons-icon fixed-width class="list-item__icon" :icon="item.icon"></v-ons-icon>
@@ -44,6 +44,11 @@ export default {
     loadView(index) {
       this.$store.commit('tabbar/set', index + 1);
       this.$store.commit('splitter/toggle');
+    },
+    logout(url) {
+      const { dispatch } = this.$store;
+      this.$store.commit('splitter/toggle');
+      dispatch('logout');
     },
     loadLink(url) {
       window.open(url, '_blank');

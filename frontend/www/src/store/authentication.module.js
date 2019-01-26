@@ -1,53 +1,47 @@
 import { userService } from '../services';
 import { router } from '../helpers';
-
-const user = JSON.parse(localStorage.getItem('user'));
-const initialState = user
-    ? { status: { loggedIn: true }, user }
-    : { status: {}, user: null };
+import { getToken, setToken, removeToken } from '../helpers/auth-header'
 
 export const authentication = {
-    namespaced: true,
-    state: initialState,
-    actions: {
-        login({ dispatch, commit }, { username, password }) {
-            commit('loginRequest', { username });
-
-            userService.login(username, password)
-                .then(
-                    response => {
-                        commit('loginSuccess', response.data); 
-                        router.push('/');
-                    }
-                )
-                .catch(
-                    error => {
-                        commit('loginFailure', error.response.data);
-                        dispatch('alert/error', error.response.data.message, { root: true });
-                    }
-                );
-        },
-        logout({ commit }) {
-            userService.logout();
-            commit('logout');
-        }
+  state: {
+    token: getToken(),
+    username: ''
+  },
+  mutations: {
+    SET_TOKEN: (state, token) => {
+      state.token = token
     },
-    mutations: {
-        loginRequest(state, user) {
-            state.status = { loggingIn: true };
-            state.user = user;
-        },
-        loginSuccess(state, user) {
-            state.status = { loggedIn: true };
-            state.user = user;
-        },
-        loginFailure(state) {
-            state.status = {};
-            state.user = null;
-        },
-        logout(state) {
-            state.status = {};
-            state.user = null;
-        }
+    SET_USERNAME: (state, username) => {
+      state.name = username
     }
+  },
+  actions: {
+    login({ dispatch, commit }, { username, password }) {
+      return new Promise((resolve, reject) => {
+        userService.login(username, password).then(response => {
+          const data = response.data
+          setToken(data.return.access_token)
+          commit('SET_TOKEN', data.return.access_token)
+          commit('SET_USERNAME', data.username)
+          resolve()
+          router.push('/')
+        }).catch(error => {
+          dispatch('alert/error', error.response.data.message, { root: true });
+          reject(error)
+        })
+      })
+    },
+    logout({ commit }) {
+      return new Promise((resolve, reject) => {
+        userService.logout().then(() => {
+          commit('SET_TOKEN', undefined)
+          removeToken()
+          resolve()
+          router.push('/login');
+        }).catch(error => {
+          reject(error)
+        })            
+      })
+    }
+  }
 }

@@ -99,16 +99,11 @@ module.exports = {
   },
   devServer: {
     historyApiFallback: true,
+    noInfo: true,
     allowedHosts: [
       'smartcheck.ml',
       '.smartcheck.ml'
     ]
-  },
-  externals: {
-    // global app config object
-    config: JSON.stringify({
-      apiUrl: 'https://backend.smartcheck.ml/api'
-    })
   },
   performance: {
     hints: false

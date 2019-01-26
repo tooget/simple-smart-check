@@ -3,6 +3,7 @@ import Router from 'vue-router';
 
 import AppNavigator from '../AppNavigator.vue';
 import AppLogin from '../AppLogin.vue';
+import { getToken } from './auth-header'
 
 Vue.use(Router);
 
@@ -21,7 +22,7 @@ router.beforeEach((to, from, next) => {
   // redirect to login page if not logged in and trying to access a restricted page
   const publicPages = ['/login'];
   const authRequired = !publicPages.includes(to.path);
-  const loggedIn = localStorage.getItem('user');
+  const loggedIn = getToken();
 
   if (authRequired && !loggedIn) {
     return next('/login');

@@ -1,4 +1,4 @@
-import request from '../backend'
+import request from '../request'
 
 export const userService = {
     login,
@@ -11,21 +11,16 @@ function login(username, password) {
     requestBody.append('password', password)
 
     return request({
-            url: '/users/login',
-            method: 'post',
-            data: requestBody
-        }).then(response => {
-            // login successful if there's a jwt token in the response
-            if (response.data.return.access_token) {
-                // store user details and jwt token in local storage to keep user logged in between page refreshes
-                localStorage.setItem('user', JSON.stringify(response.data.return));
-            }
-            
-            return response;
-        });
+        url: '/users/login',
+        method: 'post',
+        data: requestBody
+    })
 }
 
 function logout() {
     // remove user from local storage to log user out
-    localStorage.removeItem('user');
+    return request({
+        url: '/users/logout',
+        method: 'post'
+    })
 }
