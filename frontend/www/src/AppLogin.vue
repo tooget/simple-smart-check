@@ -1,7 +1,7 @@
 <template>
   <div class="jumbotron bg-white">
     <div class="col-sm-6 offset-sm-3">
-      <div v-if="alert.message" :class="`alert ${alert.type}`">{{alert.message}}</div>
+      <div v-if="alert.message" :class="`alert ${alert.type}`">{{ alert.message }}</div>
       <div>
         <h1 align="center">smart-check</h1>
         <form @submit.prevent="handleSubmit">
@@ -26,6 +26,8 @@
 </template>
 
 <script>
+import { removeToken } from './helpers/auth-header'
+
 export default {
   data () {
     return {
@@ -34,9 +36,13 @@ export default {
       submitted: false
     }
   },
+  created () {
+    this.$store.state.authentication.token = undefined;
+    removeToken();
+  },
   computed: {
     alert () {
-      return this.$store.state.alert
+      return this.$store.state.alert;
     },
     loggingIn () {
       return this.$store.state.authentication.token;
