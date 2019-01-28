@@ -618,10 +618,9 @@ class AttendanceLogs:
 
             writer.close()              # the writer has done its job
             output.seek(0)              # go back to the beginning of the stream
-            del query                   # pymysql connection & lambda session caching issue
 
             #finally return the file
-            return send_file(output, attachment_filename= f'attendance_ID_{curriculumNoFromClient}.xlsx', as_attachment= True)
+            return send_file(output, cache_timeout= 0, attachment_filename= f'attendance_ID_{curriculumNoFromClient}.xlsx', as_attachment= True)
     # ---------------------------------------------------------------------------
 # -------------------------------------------------------------------------------
 
@@ -837,11 +836,10 @@ class Members:
             df.to_excel(writer, sheet_name= 'Sheet1')        # taken from the original question
 
             writer.close()              # the writer has done its job
-            output.seek(0)              # go back to the beginning of the stream
-            del query                   # pymysql connection & lambda session caching issue
+            output.seek(0)              # go back to the beginning of the stream`
 
             #finally return the file
-            return send_file(output, attachment_filename= "members.xlsx", as_attachment= True)
+            return send_file(output, cache_timeout= 0, attachment_filename= "members.xlsx", as_attachment= True)
             # ---------------------------------------------------------------------
     # -----------------------------------------------------------------------------
 # ---------------------------------------------------------------------------------
@@ -907,7 +905,7 @@ class Applicants:
         def post(self):
             infoFromClient = request.form
             try:
-                curriculumNoFromClient = int(request.form['curriculumNo'])          # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand."), https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
+                curriculumNoFromClient = int(infoFromClient['curriculumNo'])          # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand."), https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
                 applicantsBulkFromClient = request.files['applicantsBulkXlsxFile']
             except KeyError:
                 return {'message': {'title': '교육과정 신청자 엑셀파일 업로드 오류', 'content': '해당 교육과정 및 엑셀파일 업로드 상태를 확인하여 주시기 바랍니다.'}}, 400

@@ -6,11 +6,11 @@ yarn-debug.log*
 yarn-error.log*
 package-lock.json
 __init__.pyc
-Pipfile.lock
 
 # Editor directories and files
-.idea
-.vscode
+*.idea
+*.lock
+*.vscode
 *.suo
 *.ntvs*
 *.njsproj
