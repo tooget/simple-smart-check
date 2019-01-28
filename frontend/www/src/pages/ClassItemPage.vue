@@ -8,7 +8,7 @@
         <v-ons-list-header>전화번호</v-ons-list-header>
         <v-ons-list-item :modifier="md ? 'nodivider' : ''">
           <div class="left">
-            전화번호:
+            <v-ons-icon icon="ion-ios-telephone" class="list-item__icon"></v-ons-icon>
           </div>
           <label class="center">
             <v-ons-input float maxlength="20"

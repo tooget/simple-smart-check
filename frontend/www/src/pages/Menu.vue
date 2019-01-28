@@ -59,14 +59,14 @@ export default {
       logOut: [
         {
           title: '로그아웃',
-          icon: 'ion-document-text',
+          icon: 'ion-log-out',
           url: '/login'
         }
       ],
       links: [
         {
           title: '관리자 페이지',
-          icon: 'ion-document-text',
+          icon: 'ion-stats-bars',
           url: 'https://admin.smartcheck.ml'
         }
       ]
