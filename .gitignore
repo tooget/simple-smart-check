@@ -11,6 +11,7 @@ Pipfile.lock
 # Editor directories and files
 .idea
 .vscode
+.lock
 *.suo
 *.ntvs*
 *.njsproj
