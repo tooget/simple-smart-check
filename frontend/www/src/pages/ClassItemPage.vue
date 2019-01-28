@@ -43,8 +43,8 @@
             <div class="col-12 mt-2" align="center">
               <VueSignaturePad
                 id="signature"
-                width="60%"
-                height="400px"
+                width="480px"
+                height="360px"
                 ref="signaturePad"
                 :options="{ 
                   dotSize: (2 + 3) / 2,
