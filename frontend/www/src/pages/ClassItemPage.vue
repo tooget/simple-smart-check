@@ -8,7 +8,7 @@
         <v-ons-list-header>전화번호</v-ons-list-header>
         <v-ons-list-item :modifier="md ? 'nodivider' : ''">
           <div class="left">
-            전화번호:
+            <v-ons-icon icon="ion-ios-telephone" class="list-item__icon"></v-ons-icon>
           </div>
           <label class="center">
             <v-ons-input float maxlength="20"
@@ -43,8 +43,8 @@
             <div class="col-12 mt-2" align="center">
               <VueSignaturePad
                 id="signature"
-                width="60%"
-                height="400px"
+                width="480px"
+                height="360px"
                 ref="signaturePad"
                 :options="{ 
                   dotSize: (2 + 3) / 2,

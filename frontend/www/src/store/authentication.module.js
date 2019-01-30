@@ -34,8 +34,6 @@ export const authentication = {
     logout({ commit }) {
       return new Promise((resolve, reject) => {
         userService.logout().then(() => {
-          commit('SET_TOKEN', undefined)
-          removeToken()
           resolve()
           router.push('/login');
         }).catch(error => {
