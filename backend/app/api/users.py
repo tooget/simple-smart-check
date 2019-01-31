@@ -20,42 +20,42 @@ class SecureResource(Resource):
 # --------------------[ API to System Users/Admin and Auth ]-----------------------
 class Users:
 
-    # @apiRestful.route('/users')
-    # class Users(SecureResource):
+    @apiRestful.route('/users')
+    class Users(Resource):
 
-    #     # ----------------[ Register a New User ]--------------------------------------
-    #     @apiRestful.doc(params= {
-    #             'username': {'in': 'formData', 'description': 'application/json, body required'},
-    #             'password': {'in': 'formData', 'description': 'application/json, body required'},
-    #     })
-    #     def post(self):
-    #         infoFromClient = request.form
-    #         usernameFromClient = infoFromClient['username']         # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand."), https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
-    #         passwordFromClient = infoFromClient['password']
+        # ----------------[ Register a New User ]--------------------------------------
+        @apiRestful.doc(params= {
+                'username': {'in': 'formData', 'description': 'application/json, body required'},
+                'password': {'in': 'formData', 'description': 'application/json, body required'},
+        })
+        def post(self):
+            infoFromClient = request.form
+            usernameFromClient = infoFromClient['username']         # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand."), https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
+            passwordFromClient = infoFromClient['password']
             
-    #         if UsersModel.query.filter_by(username= usernameFromClient).first():
-    #             return {'message': f'User {usernameFromClient} already exists'}
+            if UsersModel.query.filter_by(username= usernameFromClient).first():
+                return {'message': f'User {usernameFromClient} already exists'}
             
-    #         pbkdf2_sha256 = django_pbkdf2_sha256.using(salt= Config.SALT_KEYWORD, salt_size= Config.SALT_SIZE, rounds= Config.SALT_ROUNDS)
-    #         newUserInfoFromClient = UsersModel(
-    #             username= usernameFromClient,
-    #             password= pbkdf2_sha256.hash(passwordFromClient)    #Crypt the password with pbkdf2
-    #         )
+            pbkdf2_sha256 = django_pbkdf2_sha256.using(salt= Config.SALT_KEYWORD, salt_size= Config.SALT_SIZE, rounds= Config.SALT_ROUNDS)
+            newUserInfoFromClient = UsersModel(
+                username= usernameFromClient,
+                password= pbkdf2_sha256.hash(passwordFromClient)    #Crypt the password with pbkdf2
+            )
 
-    #         try:
-    #             db.session.add(newUserInfoFromClient)
-    #             # [!] New Token Issue when DB insert fails
-    #             accessToken = create_access_token(identity= usernameFromClient)
-    #             db.session.commit()
-    #             return {'message': f'User {usernameFromClient} was created',
-    #                     'return': {
-    #                         'username': usernameFromClient,
-    #                         'access_token': accessToken,
-    #                     }}, 201
-    #         except:
-    #             db.session.rollback()
-    #             return {'message': 'Something went wrong'}, 500
-    #     # -----------------------------------------------------------------------------
+            try:
+                db.session.add(newUserInfoFromClient)
+                # [!] New Token Issue when DB insert fails
+                accessToken = create_access_token(identity= usernameFromClient)
+                db.session.commit()
+                return {'message': f'User {usernameFromClient} was created',
+                        'return': {
+                            'username': usernameFromClient,
+                            'access_token': accessToken,
+                        }}, 201
+            except:
+                db.session.rollback()
+                return {'message': 'Something went wrong'}, 500
+        # -----------------------------------------------------------------------------
 
 
     # ----------------[ Login ]----------------------------------------------------
