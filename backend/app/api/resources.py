@@ -600,9 +600,9 @@ class AttendanceLogs:
             # Make width of columns and height of rows fit to signature images.
             for rownum in range(pivot.index.size + baseCellx):
                 if rownum > 3:
-                    worksheet.set_row(rownum, 85)                          # Make Height of rows larger
+                    worksheet.set_row(rownum, 110)                           # Make Height of rows larger
             
-            worksheet.set_column(baseCelly, pivot.columns.size + 1, 25)     # Make Width of Columns after C much larger
+            worksheet.set_column(baseCelly, pivot.columns.size + 1, 26.5)   # Make Width of Columns after C much larger
             worksheet.set_column(0, baseCelly - 1, 15)                      # Make Width of A:B column larger
 
             # Insert images to each cell and delete each cell value.
