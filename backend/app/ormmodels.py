@@ -103,10 +103,10 @@ class MembersModel(db.Model):
 
     phoneNo = db.Column(db.String(16), nullable= False, primary_key= True)
     curriculumNo = db.Column(db.Integer, nullable= False, primary_key= True)
-    attendancePass = db.Column(db.Text, nullable= False)
-    attendanceCheck = db.Column(db.Text, nullable= False)
-    curriculumComplete = db.Column(db.Text, nullable= False)
-    employment = db.Column(db.Text, nullable= False)
+    attendancePass = db.Column(db.Text, nullable= True)
+    attendanceCheck = db.Column(db.Text, nullable= True)
+    curriculumComplete = db.Column(db.Text, nullable= True)
+    employment = db.Column(db.Text, nullable= True)
     insertedTimestamp = db.Column(db.TIMESTAMP, nullable= False, server_default= text('CURRENT_TIMESTAMP'))
     updatedTimestamp = db.Column(db.TIMESTAMP, nullable= True, server_default= text('NULL ON UPDATE CURRENT_TIMESTAMP'))
 
