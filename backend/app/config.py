@@ -15,10 +15,11 @@ class Config(object):
 
     # flask_sqlalchemy app.config for db.init_app()
     # Set SQLALCHEMY env on your production Environment
+    SQLALCHEMY_COMMIT_ON_TEARDOWN = os.getenv('SQLALCHEMY_COMMIT_ON_TEARDOWN', False)
     SQLALCHEMY_TRACK_MODIFICATIONS = os.getenv('SQLALCHEMY_TRACK_MODIFICATIONS', False)
     SQLALCHEMY_BINDS = os.getenv('SQLALCHEMY_BINDS', {  
-        'mysql-simplesmartcheckusers': 'mysql+pymysql://root:rootpw@127.0.0.1:3306/simplesmartcheckusers?charset=utf8mb4',
-        'mysql-simplesmartcheck': 'mysql+pymysql://root:rootpw@127.0.0.1:3306/simplesmartcheck?charset=utf8mb4&binary_prefix=true'
+        'mysql-simplesmartcheckusers': 'mysql+pymysql://root:1qaz@127.0.0.1:3306/simplesmartcheckusers?charset=utf8mb4',
+        'mysql-simplesmartcheck': 'mysql+pymysql://root:1qaz@127.0.0.1:3306/simplesmartcheck?charset=utf8mb4&binary_prefix=true'
     })
     # flask_jwt_extended app.config for jwt.init_app()
     # Set JWT_SECRET env on your production Environment
