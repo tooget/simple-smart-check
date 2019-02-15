@@ -18,8 +18,8 @@ class Config(object):
     SQLALCHEMY_COMMIT_ON_TEARDOWN = os.getenv('SQLALCHEMY_COMMIT_ON_TEARDOWN', False)
     SQLALCHEMY_TRACK_MODIFICATIONS = os.getenv('SQLALCHEMY_TRACK_MODIFICATIONS', False)
     SQLALCHEMY_BINDS = os.getenv('SQLALCHEMY_BINDS', {  
-        'mysql-simplesmartcheckusers': 'mysql+pymysql://root:1qaz@127.0.0.1:3306/simplesmartcheckusers?charset=utf8mb4',
-        'mysql-simplesmartcheck': 'mysql+pymysql://root:1qaz@127.0.0.1:3306/simplesmartcheck?charset=utf8mb4&binary_prefix=true'
+        'mysql-simplesmartcheckusers': 'mysql+pymysql://insane:insaneinsane!@{RDS_ENDPOINT_URL}:3306/simplesmartcheckusers?charset=utf8mb4'.format(RDS_ENDPOINT_URL= os.getenv('RDS_ENDPOINT_URL', '127.0.0.1')),
+        'mysql-simplesmartcheck': 'mysql+pymysql://insane:insaneinsane!@{RDS_ENDPOINT_URL}:3306/simplesmartcheck?charset=utf8mb4&binary_prefix=true'.format(RDS_ENDPOINT_URL= os.getenv('RDS_ENDPOINT_URL', '127.0.0.1'))
     })
     # flask_jwt_extended app.config for jwt.init_app()
     # Set JWT_SECRET env on your production Environment
@@ -32,8 +32,8 @@ class Config(object):
     # ------------------------[ Custom Parameters in app.__init__.py ]--------------------------
     # app.Config for cors.init_app()
     CORS_ORIGIN = [
-        'http://127.0.0.1:7000', 'http://localhost:7000', 'https://www.smartcheck.ml/*',
-        'http://127.0.0.1:9528', 'http://localhost:9528', 'https://admin.smartcheck.ml/*'
+        'http://127.0.0.1:7000', 'http://localhost:7000', 'https://www.smartcheck.gq/*',
+        'http://127.0.0.1:9528', 'http://localhost:9528', 'https://admin.smartcheck.gq/*'
     ]
     # ------------------------------------------------------------------------------------------
 

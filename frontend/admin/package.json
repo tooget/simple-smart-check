@@ -12,7 +12,7 @@
     "lint": "eslint --ext .js,.vue src",
     "test": "npm run lint",
     "svgo": "svgo -f src/icons/svg --config=src/icons/svgo.yml",
-    "deploy": "npm run build && aws s3 sync ./dist s3://admin.smartcheck.ml"
+    "deploy": "npm run build && aws s3 sync ./dist s3://admin.smartcheck.gq"
   },
   "dependencies": {
     "axios": "0.18.0",

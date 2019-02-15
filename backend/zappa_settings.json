@@ -1,10 +1,20 @@
 {
     "dev": {
         "app_function": "app.__init__.app",
-        "aws_region": "ap-northeast-2",
-        "profile_name": "yunsoo246@naver.com",
-        "project_name": "backend",
+        "aws_region": "ap-northeast-1",
+        "profile_name": "default",
+        "project_name": "iamyourfather",
         "runtime": "python3.6",
-        "s3_bucket": "zappa-zs80esvjq"
+        "s3_bucket": "backend.smartcheck.gq",
+        "keep_warm": false,
+        "memory_size": 256,
+        "timeout_seconds": 30,
+        "environment_variables": {
+            "RDS_ENDPOINT_URL": "rds-simplesmartcheck-aurora.cluster-cluppgq5lhgs.ap-northeast-1.rds.amazonaws.com"
+        },
+        "vpc_config": {
+            "SubnetIds": ["subnet-06aaa2ceaf1ca551a"],
+            "SecurityGroupIds": ["sg-0b7021beb1ac40c92"]
+        }
     }
 }

@@ -3,11 +3,11 @@
  1. 재무항목 Up & Down 컨센서스 서비스
  2. 코드 템플릿(simple-smart-check)
     - 핵심기능
-      - backend (API 서버, https://backend.smartcheck.ml)
+      - backend (API 서버, https://backend.smartcheck.gq)
       - frontend
-        - www (서명 페이지, https://www.smartcheck.ml)
+        - www (서명 페이지, https://www.smartcheck.gq)
           - 전자서명 및 저장
-        - admin (관리자 페이지, https://admin.smartcheck.ml)
+        - admin (관리자 페이지, https://admin.smartcheck.gq)
           - 수업 목록 관리(추가/삭제)
           - 수업별/참여자별 출석부 관리 및 엑셀파일 다운로드
           - 엑셀파일을 통한 신청자 일괄 업로드
