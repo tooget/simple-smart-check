@@ -21,7 +21,7 @@ const user = {
     Login({ commit }, userInfo) {
       var CryptoJS = require('crypto-js')
       const username = userInfo.username
-      const password = CryptoJS.PBKDF2(userInfo.password, 'kisa', { iterations: 1, keySize: 256 / 32, hasher: CryptoJS.algo.SHA256 }).toString(CryptoJS.enc.Base64)
+      const password = CryptoJS.PBKDF2(userInfo.password, 'salt', { iterations: 1, keySize: 256 / 32, hasher: CryptoJS.algo.SHA256 }).toString(CryptoJS.enc.Base64)
       return new Promise((resolve, reject) => {
         login(username, password).then(response => {
           const data = response.data

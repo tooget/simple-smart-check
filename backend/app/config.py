@@ -17,8 +17,8 @@ class Config(object):
     # Set SQLALCHEMY env on your production Environment
     SQLALCHEMY_TRACK_MODIFICATIONS = os.getenv('SQLALCHEMY_TRACK_MODIFICATIONS', False)
     SQLALCHEMY_BINDS = os.getenv('SQLALCHEMY_BINDS', {  
-        'mysql-simplesmartcheckusers': 'mysql+pymysql://kisa:kisakisakisakisa!@rds-simplesmartcheck-aurora.cluster-c49oihilu6ql.ap-northeast-2.rds.amazonaws.com:3306/simplesmartcheckusers?charset=utf8mb4',
-        'mysql-simplesmartcheck': 'mysql+pymysql://kisa:kisakisakisakisa!@rds-simplesmartcheck-aurora.cluster-c49oihilu6ql.ap-northeast-2.rds.amazonaws.com:3306/simplesmartcheck?charset=utf8mb4&binary_prefix=true'
+        'mysql-simplesmartcheckusers': 'mysql+pymysql://[root]:[password]@[endpoint]:3306/[schema]?charset=utf8mb4',
+        'mysql-simplesmartcheck': 'mysql+pymysql://[root]:[password]@[endpoint]:3306/[schema]?charset=utf8mb4&binary_prefix=true'
     })
     # flask_jwt_extended app.config for jwt.init_app()
     # Set JWT_SECRET env on your production Environment
@@ -30,7 +30,10 @@ class Config(object):
 
     # ------------------------[ Custom Parameters in app.__init__.py ]--------------------------
     # app.Config for cors.init_app()
-    CORS_ORIGIN = ['http://127.0.0.1:7000', 'http://localhost:9528', 'https://www.smartcheck.ml/*', 'https://admin.smartcheck.ml/*']
+    CORS_ORIGIN = [
+        'http://127.0.0.1:7000', 'http://localhost:7000',
+        'http://127.0.0.1:9528', 'http://localhost:9528',
+    ]
     # ------------------------------------------------------------------------------------------
 
 
@@ -42,7 +45,8 @@ class Config(object):
 
     # ------------------------[ Custom Parameters in app.api.__init__.py ]----------------------
     # Hash Parameters for app.api.users.py
-    SALT_KEYWORD = 'kisa'
+    # Below SALT_OPTIONS must be same between frontend & backend 
+    SALT_KEYWORD = 'salt'    
     SALT_SIZE = 256/32
     SALT_ROUNDS = 1
     # ------------------------------------------------------------------------------------------

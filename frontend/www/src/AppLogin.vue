@@ -59,7 +59,7 @@ export default {
       var CryptoJS = require("crypto-js");
       this.submitted = true;
       const username = this.username;
-      const password = CryptoJS.PBKDF2(this.password, 'kisa', { iterations: 1, keySize: 256/32, hasher: CryptoJS.algo.SHA256 }).toString(CryptoJS.enc.Base64);
+      const password = CryptoJS.PBKDF2(this.password, 'salt', { iterations: 1, keySize: 256/32, hasher: CryptoJS.algo.SHA256 }).toString(CryptoJS.enc.Base64);
       const { dispatch } = this.$store;
       if (username && password) {
         dispatch('login', { username, password });
