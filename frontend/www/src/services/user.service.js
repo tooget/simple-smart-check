@@ -1,26 +1,21 @@
-import request from '../request'
+import USERS_LOGIN from '../graphql/UsersLogin.gql'
+import USERS_LOGOUT from '../graphql/UsersLogout.gql'
+import { apolloClient } from '../apollo'
 
 export const userService = {
     login,
     logout
 };
 
-function login(username, password) {
-    const requestBody = new FormData()
-    requestBody.append('username', username)
-    requestBody.append('password', password)
-
-    return request({
-        url: '/users/login',
-        method: 'post',
-        data: requestBody
+async function login(username, password) {
+    return await apolloClient.mutate({
+      mutation: USERS_LOGIN,
+      variables: { username: username, password: password }
     })
-}
+  }
 
-function logout() {
-    // remove user from local storage to log user out
-    return request({
-        url: '/users/logout',
-        method: 'post'
+async function logout() {
+    return await apolloClient.mutate({
+      mutation: USERS_LOGOUT
     })
 }

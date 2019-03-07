@@ -1,4 +1,4 @@
-from app.extensions import db  # Circular import issues in flask, Reference : http://flask.pocoo.org/docs/1.0/patterns/packages, https://stackoverflow.com/questions/22929839/circular-import-of-db-reference-using-flask-sqlalchemy-and-blueprints/23400668#23400668
+from app.extensions import db, ma   # Circular import issues in flask, Reference : http://flask.pocoo.org/docs/1.0/patterns/packages, https://stackoverflow.com/questions/22929839/circular-import-of-db-reference-using-flask-sqlalchemy-and-blueprints/23400668#23400668
 from sqlalchemy import text
 
 
@@ -18,6 +18,16 @@ class RevokedTokenModel(db.Model):
 
     id = db.Column(db.Integer, nullable= False, primary_key= True)
     jti = db.Column(db.String(120))
+
+
+class UsersModelSchema(ma.ModelSchema):
+    class Meta:
+        model = UsersModel
+
+
+class RevokedTokenModelSchema(ma.ModelSchema):
+    class Meta:
+        model = RevokedTokenModel
 # ---------------------------------------------------------------------------------------------
 
 
@@ -93,10 +103,30 @@ class MembersModel(db.Model):
 
     phoneNo = db.Column(db.String(16), nullable= False, primary_key= True)
     curriculumNo = db.Column(db.Integer, nullable= False, primary_key= True)
-    attendancePass = db.Column(db.Text, nullable= False)
-    attendanceCheck = db.Column(db.Text, nullable= False)
-    curriculumComplete = db.Column(db.Text, nullable= False)
-    employment = db.Column(db.Text, nullable= False)
+    attendancePass = db.Column(db.Text, nullable= True)
+    attendanceCheck = db.Column(db.Text, nullable= True)
+    curriculumComplete = db.Column(db.Text, nullable= True)
+    employment = db.Column(db.Text, nullable= True)
     insertedTimestamp = db.Column(db.TIMESTAMP, nullable= False, server_default= text('CURRENT_TIMESTAMP'))
     updatedTimestamp = db.Column(db.TIMESTAMP, nullable= True, server_default= text('NULL ON UPDATE CURRENT_TIMESTAMP'))
+
+
+class ApplicantsModelSchema(ma.ModelSchema):
+    class Meta:
+        model = ApplicantsModel
+
+
+class AttendanceLogsModelSchema(ma.ModelSchema):
+    class Meta:
+        model = AttendanceLogsModel
+
+
+class CurriculumsModelSchema(ma.ModelSchema):
+    class Meta:
+        model = CurriculumsModel
+
+
+class MembersModelSchema(ma.ModelSchema):
+    class Meta:
+        model = MembersModel
 # ---------------------------------------------------------------------------------------------

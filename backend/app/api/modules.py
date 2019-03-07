@@ -4,6 +4,8 @@ from json import loads
 from flask import request
 from flask_restplus import abort
 from functools import wraps
+import graphene
+from sqlalchemy import inspect as inspector
 
 
 # --------------------------[ Data Control in API ]------------------------------
@@ -59,4 +61,21 @@ def requireAuth(func):
         else:
             return abort(401)
     return wrapper
+# -------------------------------------------------------------------------------
+
+
+# ---------[ Create Graphene Enum for sorting a SQLAlchemy class query ]---------
+def sort_enum_for(cls):
+    name = cls.__name__ + 'SortEnum'
+    items = []
+    for attr in inspector(cls).attrs:
+        try:
+            asc = attr.expression
+            desc = asc.desc()
+        except AttributeError:
+            pass
+        else:
+            key = attr.key.upper()
+            items.extend([(key + '_ASC', asc), (key + '_DESC', desc)])
+    return graphene.Enum(name, items)
 # -------------------------------------------------------------------------------

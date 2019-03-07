@@ -11,6 +11,7 @@ import VueSignature from 'vue-signature-pad';
 import { router } from './helpers';
 import { store } from './store';
 import App from './App.vue';
+import apolloProvider from './apollo'
 import CustomToolbar from './partials/CustomToolbar.vue';
 
 
@@ -26,6 +27,7 @@ new Vue({
   el: '#app',
   router: router,
   store: store,
+  provider: apolloProvider,
   render: h => h(App),
   beforeCreate() {
     // Shortcut for Material Design

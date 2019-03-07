@@ -1,0 +1,36 @@
+query allCurriculums(
+    $first: Int! 
+    $after: String! 
+    $order: String! 
+    $curriculumName: String! 
+    $curriculumCategory: String!) {
+  allCurriculums(
+      first: $first
+      after: $after
+      order: $order
+      curriculumName: $curriculumName
+      curriculumCategory: $curriculumCategory
+    ) {
+    message
+    totalCount
+    edges {
+      cursor
+      node {
+        id
+        curriculumNo
+        curriculumName
+        ordinalNo
+        curriculumCategory
+        curriculumType
+        startDate
+        endDate
+        insertedTimestamp
+        updatedTimestamp
+      }
+    }
+    pageInfo {
+      endCursor
+      hasNextPage
+    }
+  }
+}

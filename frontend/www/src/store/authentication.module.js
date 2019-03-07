@@ -19,14 +19,14 @@ export const authentication = {
     login({ dispatch, commit }, { username, password }) {
       return new Promise((resolve, reject) => {
         userService.login(username, password).then(response => {
-          const data = response.data
-          setToken(data.return.access_token)
-          commit('SET_TOKEN', data.return.access_token)
-          commit('SET_USERNAME', data.username)
+          const result = JSON.parse(response.data.usersLogin.result)
+          setToken(result.accessToken)
+          commit('SET_TOKEN', result.accessToken)
+          commit('SET_USERNAME', result.username)
           resolve()
           router.push('/')
         }).catch(error => {
-          dispatch('alert/error', error.response.data.message, { root: true });
+          dispatch('alert/error', error.graphQLErrors[0].message, { root: true });
           reject(error)
         })
       })
