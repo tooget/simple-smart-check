@@ -17,9 +17,17 @@ class Config(object):
     # Set SQLALCHEMY env on your production Environment
     SQLALCHEMY_COMMIT_ON_TEARDOWN = os.getenv('SQLALCHEMY_COMMIT_ON_TEARDOWN', False)
     SQLALCHEMY_TRACK_MODIFICATIONS = os.getenv('SQLALCHEMY_TRACK_MODIFICATIONS', False)
-    SQLALCHEMY_BINDS = os.getenv('SQLALCHEMY_BINDS', {  
-        'mysql-simplesmartcheckusers': 'mysql+pymysql://root:1qaz@{RDS_ENDPOINT_URL}:3306/simplesmartcheckusers?charset=utf8mb4'.format(RDS_ENDPOINT_URL= os.getenv('RDS_ENDPOINT_URL', '127.0.0.1')),
-        'mysql-simplesmartcheck': 'mysql+pymysql://root:1qaz@{RDS_ENDPOINT_URL}:3306/simplesmartcheck?charset=utf8mb4&binary_prefix=true'.format(RDS_ENDPOINT_URL= os.getenv('RDS_ENDPOINT_URL', '127.0.0.1'))
+    SQLALCHEMY_BINDS = os.getenv('SQLALCHEMY_BINDS', {
+        'mysql-simplesmartcheckusers': 'mysql+pymysql://{RDS_USERNAME}:{RDS_USERPASSWORD}@{RDS_ENDPOINT_URL}:3306/simplesmartcheckusers?charset=utf8mb4'.format(
+            RDS_ENDPOINT_URL= os.getenv('RDS_ENDPOINT_URL', '127.0.0.1'),
+            RDS_USERNAME= os.getenv('RDS_USERNAME'),
+            RDS_USERPASSWORD= os.getenv('RDS_USERPASSWORD'),
+        ),
+        'mysql-simplesmartcheck': 'mysql+pymysql://{RDS_USERNAME}:{RDS_USERPASSWORD}@{RDS_ENDPOINT_URL}:3306/simplesmartcheck?charset=utf8mb4&binary_prefix=true'.format(
+            RDS_ENDPOINT_URL= os.getenv('RDS_ENDPOINT_URL', '127.0.0.1'),
+            RDS_USERNAME= os.getenv('RDS_USERNAME'),
+            RDS_USERPASSWORD= os.getenv('RDS_USERPASSWORD'),
+        ),
     })
     # flask_jwt_extended app.config for jwt.init_app()
     # Set JWT_SECRET env on your production Environment
