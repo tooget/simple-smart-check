@@ -1,26 +1,28 @@
 from troposphere import Template, Output, Ref, Join, GetAtt
 from troposphere.route53 import AliasTarget, RecordSetType
+import json
 
 
 class RecordSets(object):
     def __init__(self, sceptre_user_data):
         self.template = Template()
-        self.sceptreUserData = sceptre_user_data
+        self._checkSceptreUserData(sceptre_user_data)
         self._createRecordSet()
         self._addRecordSetOutput()
+    
+    def _checkSceptreUserData(self, sceptre_user_data):
+        self.sceptreUserData = sceptre_user_data
+        try:
+            self.sceptreUserData['recordset_params_recordsetname'] = json.loads(self.sceptreUserData['recordset_params_recordsetname'])['backends3bucketnameoutput']
+        except:
+            pass
 
     def _createRecordSet(self):
-        recordsetName = self.sceptreUserData['recordset_params_s3bucketname'].replace('.', '')
-        print('recordsetName', recordsetName)
-        print('HostedZoneName', self.sceptreUserData['recordset_params_maindomain'] + '.')
-        print('Name', self.sceptreUserData['recordset_params_s3bucketname'] + '.')
-        print('Type', self.sceptreUserData['recordset_params_recordtype'])
-        print('HostedZoneId', self.sceptreUserData['recordset_params_cloudfronthostedzoneid'])
-        print('DNSName', self.sceptreUserData['recordset_params_distibutiondomainname'] + '.')
+        recordsetName = self.sceptreUserData['recordset_params_recordsetname'].replace('.', '')
         self.recordset = self.template.add_resource(RecordSetType(
             recordsetName,
             HostedZoneName = Join('', [self.sceptreUserData['recordset_params_maindomain'], '.']),
-            Name = Join('', [self.sceptreUserData['recordset_params_s3bucketname'], '.']),
+            Name = Join('', [self.sceptreUserData['recordset_params_recordsetname'], '.']),
             Type = self.sceptreUserData['recordset_params_recordtype'],
             AliasTarget = AliasTarget(
                 HostedZoneId = self.sceptreUserData['recordset_params_cloudfronthostedzoneid'],
@@ -34,10 +36,6 @@ class RecordSets(object):
                 self.sceptreUserData['recordset_params_recordsetid_prefix'],
                 Value = Ref(self.recordset),
             ),
-            # Output(
-            #     # self.sceptreUserData['hostedzone_params_maindomain'],
-            #     # Value = self.sceptreUserData['hostedzone_maindomain_prefix'],
-            # ),
         ])
 
 def sceptre_handler(sceptre_user_data):
