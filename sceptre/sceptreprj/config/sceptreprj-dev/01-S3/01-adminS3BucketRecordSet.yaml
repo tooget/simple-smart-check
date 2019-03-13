@@ -1,0 +1,8 @@
+template_path: Route53RecordSets.py
+sceptre_user_data:
+  recordset_params_maindomain: smartcheck.gq
+  recordset_params_cloudfronthostedzoneid: Z2FDTNDATAQYW2
+  recordset_params_s3bucketname: !stack_output sceptreprj-dev/01-S3/01-adminS3Bucket.yaml::admins3bucketnameoutput
+  recordset_params_distibutiondomainname: !stack_output sceptreprj-dev/01-S3/01-adminS3BucketCDN.yaml::admins3distributiondomainnameoutput
+  recordset_params_recordtype: A
+  recordset_params_recordsetid_prefix: admins3recordsetidoutput

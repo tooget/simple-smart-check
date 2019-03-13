@@ -21,15 +21,16 @@ const user = {
     Login({ commit }, userInfo) {
       var CryptoJS = require('crypto-js')
       const username = userInfo.username
-      const password = CryptoJS.PBKDF2(userInfo.password, 'salt', { iterations: 1, keySize: 256 / 32, hasher: CryptoJS.algo.SHA256 }).toString(CryptoJS.enc.Base64)
+      const password = CryptoJS.PBKDF2(userInfo.password, 'AnyKey', { iterations: 1, keySize: 256 / 32, hasher: CryptoJS.algo.SHA256 }).toString(CryptoJS.enc.Base64)
       return new Promise((resolve, reject) => {
         login(username, password).then(response => {
-          const data = response.data
-          setToken(data.return.access_token)
-          commit('SET_TOKEN', data.return.access_token)
-          commit('SET_USERNAME', data.username)
+          const result = JSON.parse(response.data.usersLogin.result)
+          setToken(result.accessToken)
+          commit('SET_TOKEN', result.accessToken)
+          commit('SET_USERNAME', result.username)
           resolve()
         }).catch(error => {
+          console.log(error.graphQLErrors[0].message)
           reject(error)
         })
       })

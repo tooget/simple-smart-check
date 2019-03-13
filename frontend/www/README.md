@@ -1,18 +1,18 @@
-## 서명페이지
-https://www.smartcheck.ml
-
-## Build Setup
-
+## Local Build Setup
 ``` bash
 # install dependencies
 yarn install
 
 # serve with hot reload at localhost:7000
 yarn run dev
+```
 
-# build for production with minification
-yarn build
+## Local env access
+```
+http://localhost:7000
+```
 
-# deploy for production with minification
-yarn deploy
+## Deployed URL access
+```
+https://www.smartcheck.gq
 ```

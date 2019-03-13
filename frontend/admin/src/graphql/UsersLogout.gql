@@ -1,0 +1,5 @@
+mutation usersLogout {
+  usersLogout {
+    message
+  }
+}

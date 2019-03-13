@@ -1,0 +1,6 @@
+mutation usersLogin($username: String! $password: String!) {
+  usersLogin(username: $username password: $password) {
+    message
+    result
+  }
+}

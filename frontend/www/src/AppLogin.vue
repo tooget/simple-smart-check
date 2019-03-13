@@ -1,7 +1,7 @@
 <template>
   <div class="jumbotron bg-white">
     <div class="col-sm-6 offset-sm-3">
-      <div v-if="alert.message" :class="`alert ${alert.type}`">{{ alert.message }}</div>
+      <div v-if="alert.message" :class="`alert ${alert.type}`">{{alert.message}}</div>
       <div>
         <h1 align="center">smart-check</h1>
         <form @submit.prevent="handleSubmit">
@@ -26,8 +26,6 @@
 </template>
 
 <script>
-import { removeToken } from './helpers/auth-header'
-
 export default {
   data () {
     return {
@@ -36,13 +34,9 @@ export default {
       submitted: false
     }
   },
-  created () {
-    this.$store.state.authentication.token = undefined;
-    removeToken();
-  },
   computed: {
     alert () {
-      return this.$store.state.alert;
+      return this.$store.state.alert
     },
     loggingIn () {
       return this.$store.state.authentication.token;
@@ -59,7 +53,7 @@ export default {
       var CryptoJS = require("crypto-js");
       this.submitted = true;
       const username = this.username;
-      const password = CryptoJS.PBKDF2(this.password, 'salt', { iterations: 1, keySize: 256/32, hasher: CryptoJS.algo.SHA256 }).toString(CryptoJS.enc.Base64);
+      const password = CryptoJS.PBKDF2(this.password, 'AnyKey', { iterations: 1, keySize: 256/32, hasher: CryptoJS.algo.SHA256 }).toString(CryptoJS.enc.Base64);
       const { dispatch } = this.$store;
       if (username && password) {
         dispatch('login', { username, password });

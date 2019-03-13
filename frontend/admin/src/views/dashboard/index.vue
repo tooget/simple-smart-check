@@ -80,7 +80,7 @@
 </template>
 
 <script>
-import { fetchCurriculumWithMemberCountList, fetchCurriculumList } from '@/api/resource/curriculums'
+import { fetchCurriculumWithMemberCountList, fetchCurriculumsList } from '@/api/resource/curriculums'
 import waves from '@/directive/waves' // Waves directive
 import Pagination from '@/components/Pagination' // Secondary package based on el-pagination
 
@@ -109,7 +109,7 @@ export default {
   },
   created() {
     this.getList()
-    this.getCurriculumList()
+    this.getCurriculumsList()
   },
   methods: {
     getList() {
@@ -142,8 +142,8 @@ export default {
         })
       })
     },
-    getCurriculumList() {
-      fetchCurriculumList(this.curriculumOptionlistQuery).then(response => {
+    getCurriculumsList() {
+      fetchCurriculumsList(this.curriculumOptionlistQuery).then(response => {
         this.curriculumOptionlist = response.data.return.items
       })
     },

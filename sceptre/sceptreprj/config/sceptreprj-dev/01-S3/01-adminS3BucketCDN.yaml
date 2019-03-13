@@ -1,0 +1,8 @@
+template_path: CloudFronts.py
+sceptre_user_data:
+  distribution_params_s3bucketname: !stack_output sceptreprj-dev/01-S3/01-adminS3Bucket.yaml::admins3bucketnameoutput
+  distribution_params_s3httpurl: !stack_output sceptreprj-dev/01-S3/01-adminS3Bucket.yaml::admins3httpurloutput
+  distribution_params_s3hostingrootfile: !stack_output sceptreprj-dev/01-S3/01-adminS3Bucket.yaml::admins3hostingrootfileoutput
+  distribution_params_certificatearn: arn:aws:acm:us-east-1:458431035434:certificate/deabb27a-be85-4135-963a-d9c74d54fb3f
+  distribution_params_distributionid_prefix: admins3distributionidoutput
+  distribution_params_domainname_prefix: admins3distributiondomainnameoutput

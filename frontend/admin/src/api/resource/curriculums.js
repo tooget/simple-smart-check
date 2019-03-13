@@ -1,6 +1,9 @@
+import CURRICULUMS_ALL from '../../graphql/AllCurriculums.gql'
+import CURRICULUMS_CREATE from '../../graphql/CreateCurriculumsData.gql'
+import { apolloClient } from '../../utils/apollo'
 import request from '@/utils/request'
 
-export function fetchCurriculumList(query) {
+export function fetchCurriculumsList(query) {
   return request({
     url: '/resource/curriculums',
     method: 'get',
@@ -8,23 +11,21 @@ export function fetchCurriculumList(query) {
   })
 }
 
-export function createCurriculumData(data) {
-  const requestBody = new FormData()
-  requestBody.append('curriculumCategory', data.curriculumCategory)
-  requestBody.append('ordinalNo', data.ordinalNo)
-  requestBody.append('curriculumName', data.curriculumName)
-  requestBody.append('curriculumType', data.curriculumType)
-  requestBody.append('startDate', data.startDate)
-  requestBody.append('endDate', data.endDate)
-
-  return request({
-    url: '/resource/curriculums',
-    method: 'post',
-    data: requestBody
+export async function fetchCurriculumsListGql(variables) {
+  return await apolloClient.query({
+    query: CURRICULUMS_ALL,
+    variables: variables
   })
 }
 
-export function updateCurriculumData(data) {
+export async function createCurriculumsData(variables) {
+  return await apolloClient.mutate({
+    mutation: CURRICULUMS_CREATE,
+    variables: variables
+  })
+}
+
+export function updateCurriculumsData(data) {
   const requestBody = new FormData()
   requestBody.append('curriculumNo', data.curriculumNo)
   requestBody.append('curriculumCategory', data.curriculumCategory)
@@ -41,7 +42,7 @@ export function updateCurriculumData(data) {
   })
 }
 
-export function deleteCurriculumData(curriculumNo) {
+export function deleteCurriculumsData(curriculumNo) {
   const requestBody = new FormData()
   requestBody.append('curriculumNo', curriculumNo)
 

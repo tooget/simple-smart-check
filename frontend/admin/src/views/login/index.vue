@@ -33,13 +33,12 @@
 </template>
 
 <script>
-import { isvalidUsername } from '@/utils/validate'
 
 export default {
   name: 'Login',
   data() {
     const validateUsername = (rule, value, callback) => {
-      if (!isvalidUsername(value)) {
+      if (value.length < 1) {
         callback(new Error('INPUT username'))
       } else {
         callback()

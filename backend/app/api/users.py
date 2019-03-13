@@ -1,105 +1,96 @@
-from app.api import apiRestful
-from app.api.modules import requireAuth
 from app.config import Config
 from app.extensions import db
 from app.ormmodels import UsersModel, RevokedTokenModel
-from app.ormmodels import UsersModelSchema
-from flask import request
-from flask_restplus import Resource
+from app.schema import UsersObject, RevokedTokenObject
 from flask_jwt_extended import create_access_token, jwt_required, get_raw_jwt
+import graphene
+from graphql import GraphQLError
 from passlib.hash import django_pbkdf2_sha256
 
 
-# ---------------------------[ SecureResource ]----------------------------------
-# Calls requireAuth decorator on all requests
-class SecureResource(Resource):
-    method_decorators = [requireAuth]
-# -------------------------------------------------------------------------------
-
-
 # --------------------[ API to System Users/Admin and Auth ]-----------------------
-class Users:
+# ---------------------------[ Register a New User ]-------------------------------
+class CreateNewUser(graphene.Mutation):
+    class Arguments:
+        username = graphene.String(required= True)
+        password = graphene.String(required= True)
 
-    @apiRestful.route('/users')
-    class Users(Resource):
+    message = graphene.String()
+    accessToken = graphene.String()
+    post = graphene.Field(lambda: UsersObject)
 
-        # ----------------[ Register a New User ]--------------------------------------
-        @apiRestful.doc(params= {
-                'username': {'in': 'formData', 'description': 'application/json, body required'},
-                'password': {'in': 'formData', 'description': 'application/json, body required'},
-        })
-        def post(self):
-            infoFromClient = request.form
-            usernameFromClient = infoFromClient['username']         # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand."), https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
-            passwordFromClient = infoFromClient['password']
-            
-            if UsersModel.query.filter_by(username= usernameFromClient).first():
-                return {'message': f'User {usernameFromClient} already exists'}
-            
-            pbkdf2_sha256 = django_pbkdf2_sha256.using(salt= Config.SALT_KEYWORD, salt_size= Config.SALT_SIZE, rounds= Config.SALT_ROUNDS)
-            newUserInfoFromClient = UsersModel(
-                username= usernameFromClient,
-                password= pbkdf2_sha256.hash(passwordFromClient)    #Crypt the password with pbkdf2
+    def mutate(self, info, username, password):
+
+        if UsersModel.query.filter_by(username= username).first():
+            raise Exception(f'User {username} already exists')
+
+        pbkdf2_sha256 = django_pbkdf2_sha256.using(salt= Config.SALT_KEYWORD, salt_size= Config.SALT_SIZE, rounds= Config.SALT_ROUNDS)
+        newUserInfoFromClient = UsersModel(
+            username= username,
+            password= pbkdf2_sha256.hash(password)    # Crypt the password with pbkdf2
+        )
+        
+        try:
+            db.session.add(newUserInfoFromClient)
+            # [!] New Token Issue when DB insert fails
+            accessToken = create_access_token(identity= password)
+            db.session.commit()
+            return CreateNewUser(
+                message= f'User {username} was created',
+                accessToken= accessToken,
+                post= newUserInfoFromClient,
             )
-
-            try:
-                db.session.add(newUserInfoFromClient)
-                # [!] New Token Issue when DB insert fails
-                accessToken = create_access_token(identity= usernameFromClient)
-                db.session.commit()
-                return {'message': f'User {usernameFromClient} was created',
-                        'return': {
-                            'username': usernameFromClient,
-                            'access_token': accessToken,
-                        }}, 201
-            except:
-                db.session.rollback()
-                return {'message': 'Something went wrong'}, 500
-        # -----------------------------------------------------------------------------
+        except:
+            db.session.rollback()
+            raise Exception('Something went wrong')
+# ---------------------------------------------------------------------------------
 
 
-    # ----------------[ Login ]----------------------------------------------------
-    @apiRestful.route('/users/login')
-    @apiRestful.doc(params= {
-            'username': {'in': 'formData', 'description': 'application/json, body required'},
-            'password': {'in': 'formData', 'description': 'application/json, body required'},
-    })
-    class post_Users_Login(Resource):
+# ----------------------------------[ Login ]--------------------------------------
+class UsersLogin(graphene.Mutation):
+    class Arguments:
+        username = graphene.String(required= True)
+        password = graphene.String(required= True)
 
-        def post(self):
-            infoFromClient = request.form
-            usernameFromClient = infoFromClient['username']         # if key doesn't exist, returns a 400, bad request error("message": "The browser (or proxy) sent a request that this server could not understand."), https://scotch.io/bar-talk/processing-incoming-request-data-in-flask
-            passwordFromClient = infoFromClient['password']         # passwordFromClient = django_pbkdf2_sha256.using(salt= Config.SALT_KEYWORD, salt_size= Config.SALT_SIZE, rounds= Config.SALT_ROUNDS).hash(infoFromClient['password']).split('$')[-1]
+    message = graphene.String()
+    result = graphene.types.json.JSONString()
 
-            UserInfoFromDB = UsersModel.query.filter_by(username= usernameFromClient).first()
+    def mutate(self, info, username, password):
 
-            if not UserInfoFromDB:                                                    # if User is not registered, return 500
-                return {'message': f'User {usernameFromClient} doesn\'t exist'}, 500
-            elif passwordFromClient == UserInfoFromDB.password.split('$')[-1]:        # Successfully Login, return 201
-                accessToken = create_access_token(identity= usernameFromClient)
-                return {'message': f'Logged in as {UserInfoFromDB.username}',
-                        'return': {
-                            'username': usernameFromClient,
-                            'access_token': accessToken,
-                        }}, 201
-            else:
-                return {'message': 'Wrong credentials'}, 500            # Something wrong, return 500
-    # -----------------------------------------------------------------------------
+        UserInfoFromDB = UsersModel.query.filter_by(username= username).first()
+
+        if not UserInfoFromDB:                                          # if User is not registered, return 500
+            raise Exception(f'User {username} doesn\'t exist')
+        elif password == UserInfoFromDB.password.split('$')[-1]:        # Successfully Login, return 201
+            accessToken = create_access_token(identity= password)
+            return UsersLogin(
+                message= f'Logged in as {UserInfoFromDB.username}',
+                result= {
+                    "accessToken": accessToken,
+                    "username": UserInfoFromDB.username,
+                }
+            )
+        else:                                                           # Something wrong, return 500
+            raise Exception('Wrong credentials')
+# ---------------------------------------------------------------------------------
 
 
-    # ----------------[ Logout ]---------------------------------------------------
-    @apiRestful.route('/users/logout')
-    class post_Users_Logout(SecureResource):
+# ----------------------------------[ Logout ]-------------------------------------
+class UsersLogout(graphene.Mutation):
 
-        @jwt_required
-        def post(self):
-            jti = get_raw_jwt()['jti']
-            try:
-                db.session.add(RevokedTokenModel(jti= jti))
-                db.session.commit()
-                return {'message': 'Successfully Logout, Access token has been revoked'}, 201
-            except:
-                db.session.rollback()
-                return {'message': 'Something went wrong'}, 500
-    # -----------------------------------------------------------------------------
+    message = graphene.String()
+
+    @jwt_required
+    def mutate(self, info):
+        jti = get_raw_jwt()['jti']
+        try:
+            db.session.add(RevokedTokenModel(jti= jti))
+            db.session.commit()
+            return UsersLogout(
+                message= 'Successfully Logout, Access token has been revoked',
+            )
+        except:
+            db.session.rollback()
+            raise Exception('Something went wrong')
+# ---------------------------------------------------------------------------------
 # ---------------------------------------------------------------------------------

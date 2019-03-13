@@ -4,7 +4,7 @@ import { getToken } from './helpers/auth-header'
 
 const baseURL = (process.env.NODE_ENV !== 'production') 
   ? 'http://localhost:5000/api/' 
-  : 'https://backend.smartcheck.ml/api'
+  : 'https://backend.smartcheck.gq/api'
 
 // 创建axios实例
 const service = axios.create({

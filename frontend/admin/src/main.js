@@ -12,6 +12,7 @@ import '@/styles/index.scss' // global css
 import App from './App'
 import router from './router'
 import store from './store'
+import apolloProvider from './utils/apollo'
 
 import i18n from './lang' // Internationalization
 import '@/icons' // icon
@@ -36,6 +37,7 @@ new Vue({
   router,
   store,
   i18n,
+  apolloProvider,
   render: h => h(App)
 })
 

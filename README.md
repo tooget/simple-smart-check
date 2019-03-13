@@ -24,4 +24,4 @@
 - PIPENV : https://github.com/pypa/pipenv
 
 ## Licensing
-[MIT License](LICENSE.md)
+[Apache License 2.0](LICENSE.md)

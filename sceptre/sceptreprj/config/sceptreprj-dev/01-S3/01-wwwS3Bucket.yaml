@@ -1,0 +1,10 @@
+template_path: S3Publics.py
+sceptre_user_data:
+  s3_bucket: wwwSmartcheck
+  s3_policy: wwwBucketPolicy
+  s3_hosting_maindomain: smartcheck.gq
+  s3_hosting_subdomain_url: www   # customization available
+  s3_hosting_rootfile: index.html
+  s3_params_s3bucketname_prefix: wwws3bucketnameoutput
+  s3_params_s3httpurl_prefix: wwws3httpurloutput
+  s3_params_s3hostingrootfile_prefix: wwws3hostingrootfileoutput

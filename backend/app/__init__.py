@@ -41,6 +41,10 @@ def create_tables():
     for key in Config.SQLALCHEMY_BINDS.keys():
         db.create_all(bind= key)
 
+@app.teardown_appcontext
+def shutdown_session(exception= None):
+    db.session.remove()
+
 # Block api request with blacklisted access token
 @jwt.token_in_blacklist_loader
 def check_if_token_in_blacklist(decrypted_token):
@@ -50,6 +54,7 @@ def check_if_token_in_blacklist(decrypted_token):
 
 @apiBlueprint.after_request
 def add_header(response):
+    response.headers['Access-Control-Allow-Origins'] = '*'
     response.headers['Access-Control-Allow-Headers'] = 'Content-Type,Authorization'
     return response
 # ---------------------------------------------------------------------------

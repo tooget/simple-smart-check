@@ -1,0 +1,31 @@
+mutation createCurriculumsData(
+  $curriculumName: String!
+  $ordinalNo: String!
+  $curriculumCategory: String!
+  $curriculumType: String!
+  $startDate: Int!
+  $endDate: Int!
+) {
+  createCurriculumsData(
+    curriculumName: $curriculumName
+    ordinalNo: $ordinalNo
+    curriculumCategory: $curriculumCategory
+    curriculumType: $curriculumType
+    startDate: $startDate
+    endDate: $endDate
+  ) {
+    message
+    result {
+      id
+      curriculumNo
+      curriculumName
+      ordinalNo
+      curriculumCategory
+      curriculumType
+      startDate
+      endDate
+      insertedTimestamp
+      updatedTimestamp
+    }
+  }
+}

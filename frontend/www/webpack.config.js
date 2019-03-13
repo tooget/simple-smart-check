@@ -3,7 +3,6 @@ var path = require('path');
 var webpack = require('webpack');
 var ExtractTextPlugin = require('extract-text-webpack-plugin');
 var HtmlWebpackPlugin = require('html-webpack-plugin');
-var CopyWebpackPlugin = require('copy-webpack-plugin');
 
 var browserTargets = [
   '> 1%',
@@ -78,6 +77,11 @@ module.exports = {
             }
           ]
         })
+      },
+      {
+        test: /\.(graphql|gql)$/,
+        exclude: /node_modules/,
+        loader: 'graphql-tag/loader'
       }
     ]
   },
@@ -101,8 +105,8 @@ module.exports = {
     historyApiFallback: true,
     noInfo: true,
     allowedHosts: [
-      'smartcheck.ml',
-      '.smartcheck.ml'
+      'smartcheck.gq',
+      '.smartcheck.gq'
     ]
   },
   performance: {
