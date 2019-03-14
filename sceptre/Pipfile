@@ -15,3 +15,9 @@ python_version = "3.7"
 
 [pipenv]
 allow_prereleases = true
+
+[scripts]
+create_awsresources = "sceptre create sceptreprj-dev -y"
+query_awsresources_outputs = "sceptre --output json list outputs sceptreprj-dev"
+arrange_awsresources_outputs = "python3 arrange_outputs_json.py"
+create_backendresources = "sceptre create sceptreprj-backend -y"

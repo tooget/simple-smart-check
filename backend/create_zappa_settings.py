@@ -39,7 +39,7 @@ class Zappa(object):
         self.settings['dev']['vpc_config']['SecurityGroupIds'].append(self.sceptreOutputs['sgidoutput'])
 
 JSON_FILE_PATH = os.path.dirname(os.getcwd()) + \
-                    '/sceptre/sceptreprj/sceptreprj-dev_outputs.json'
+                    '/sceptre/sceptreprj-dev_outputs.json'
 zappa = Zappa(JSON_FILE_PATH)
 
 with open('zappa_settings.json', 'w') as f:

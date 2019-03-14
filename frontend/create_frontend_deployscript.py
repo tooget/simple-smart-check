@@ -14,7 +14,8 @@ class Frontend(object):
 
 
 JSON_FILE_PATH = os.path.dirname(os.getcwd()) + \
-                    '/sceptre/sceptreprj/sceptreprj-dev_outputs.json'
+                    '/sceptre/sceptreprj-dev_outputs.json'
+print(JSON_FILE_PATH)
 frontend = Frontend(JSON_FILE_PATH)
 
 with open('admin/deploy.sh', 'w') as f:

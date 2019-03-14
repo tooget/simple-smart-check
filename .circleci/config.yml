@@ -1,0 +1,196 @@
+version: 2
+
+jobs:
+
+  init_awsresources_sceptre:
+    docker:
+      - image: circleci/python:latest
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - run:
+          name: Install sceptre on pipenv
+          command: pipenv install --skip-lock
+          working_directory: ~/repo/sceptre
+      - run:
+          name: Create AWS resources with sceptre
+          command: pipenv run create_awsresources || true
+          working_directory: ~/repo/sceptre
+          no_output_timeout: 30m
+      - run:
+          name: Create sceptreprj-dev_outputs file including AWS resources ids for dependencies
+          command: |
+                pipenv run query_awsresources_outputs > sceptreprj-dev_outputs.json
+                pipenv run arrange_awsresources_outputs
+                cat sceptreprj-dev_outputs.json
+          working_directory: ~/repo/sceptre
+      - save_cache:
+          key: awsresources_outputs
+          paths:
+            - sceptre/sceptreprj-dev_outputs.json
+  
+  deploy_backend_zappa:
+    docker:
+      - image: circleci/python:latest
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - restore_cache:
+          key: awsresources_outputs
+          paths:
+            - ~/repo/sceptre
+      - run:
+          name: Install zappa on pipenv
+          command: pipenv install --skip-lock
+          working_directory: ~/repo/backend
+      - run:
+          name: Create zappa_settings file to deploy with zappa
+          command: |
+                pipenv run create_zappasettings
+                cat zappa_settings.json
+          working_directory: ~/repo/backend
+      - run:
+          name: Create & deploy AWS backend resources with zappa
+          command: pipenv run deploy_backend
+          working_directory: ~/repo/backend
+      - run:
+          name: Update AWS backend resources with zappa, in case of Aurora serverless
+          command: pipenv run update_backend
+          working_directory: ~/repo/backend
+      - run:
+          name: Create zappa_status file for dependencies
+          command: |
+                pipenv run create_zappastatus
+                cat zappa_status.json
+          working_directory: ~/repo/backend
+      - save_cache:
+          key: zappastatus
+          paths:
+            - backend/zappa_status.json
+
+  
+  update_backendresources_sceptre:
+    docker:
+      - image: circleci/python:latest
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - restore_cache:
+          key: awsresources_outputs
+          paths:
+            - ~/repo/sceptre
+      - restore_cache:
+          key: zappastatus
+          paths:
+            - ~/repo/backend
+      - run:
+          name: Install zappa on pipenv
+          command: pipenv install --skip-lock
+          working_directory: ~/repo/sceptre
+      - run:
+          name: Create AWS resources with sceptre
+          command: pipenv run create_backendresources || true
+          working_directory: ~/repo/sceptre
+          no_output_timeout: 30m
+
+  deploy_wwwfrontend_yarn:
+    docker:
+      - image: circleci/python:latest
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - restore_cache:
+          key: awsresources_outputs
+          paths: 
+            - ~/repo/sceptre
+      - run:
+          name: Install python3 on pipenv
+          command: pipenv install --skip-lock
+          working_directory: ~/repo/frontend
+      - run:
+          name: Create deploy.sh to deploy to www S3 bucket, os.path fixed with pipenv
+          command: pipenv run create_frontend_deployscript
+          working_directory: ~/repo/frontend
+      - run:
+          name: Install yarn
+          command: |
+                sudo apt-get install apt-transport-https
+                curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
+                echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
+                sudo apt-get update
+                sudo apt-get install yarn
+                yarn --version
+      - run:
+          name: Install NPM Packages and Deploy to S3 bucket
+          command: |
+                yarn install -y
+                yarn deploy
+          working_directory: ~/repo/frontend/www
+
+  deploy_adminfrontend_yarn:
+    docker:
+      - image: circleci/node:10.15.3-jessie-browsers-legacy
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - restore_cache:
+          key: awsresources_outputs
+          paths: 
+            - ~/repo/sceptre
+      - run:
+          name: Install python3 on pipenv
+          command: pipenv install --skip-lock
+          working_directory: ~/repo/frontend
+      - run:
+          name: Create deploy.sh to deploy to admin S3 bucket, os.path fixed with pipenv
+          command: pipenv run create_frontend_deployscript
+          working_directory: ~/repo/frontend
+      - run:
+          name: Install yarn
+          command: |
+                sudo apt-get install apt-transport-https
+                curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
+                echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
+                sudo apt-get update
+                sudo apt-get install yarn
+                yarn --version
+      - run:
+          name: Install NPM Packages and Deploy to S3 bucket
+          command: |
+                yarn install -y
+                yarn deploy
+          working_directory: ~/repo/frontend/admin
+
+workflows:
+  version: 2
+
+  build-deploy:
+    jobs:
+      - init_awsresources_sceptre:
+          filters:
+            branches:
+              only: simple-smart-check-template
+      - deploy_wwwfrontend_yarn:
+          requires:
+            - init_awsresources_sceptre
+          filters:
+            branches:
+              only: simple-smart-check-template
+      - deploy_adminfrontend_yarn:
+          requires:
+            - init_awsresources_sceptre
+          filters:
+            branches:
+              only: simple-smart-check-template
+      - deploy_backend_zappa:
+          requires:
+            - init_awsresources_sceptre
+          filters:
+            branches:
+              only: simple-smart-check-template
+      - update_backendresources_sceptre:
+          requires:
+            - deploy_backend_zappa
+          filters:
+            branches:
+              only: simple-smart-check-template
