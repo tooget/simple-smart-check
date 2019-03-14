@@ -14,31 +14,34 @@ jobs:
           working_directory: ~/repo/sceptre
       - run:
           name: Create AWS resources with sceptre
-          command: pipenv run create_awsresources || true
+          command: |
+                set +e
+                pipenv run create_awsresources || true
+                pipenv run query_awsresources_outputs
           working_directory: ~/repo/sceptre
-          no_output_timeout: 30m
+          no_output_timeout: 45m
       - run:
           name: Create sceptreprj-dev_outputs file including AWS resources ids for dependencies
           command: |
                 pipenv run query_awsresources_outputs > sceptreprj-dev_outputs.json
-                pipenv run arrange_awsresources_outputs
+                pipenv run python3 arrange_outputs_json.py
                 cat sceptreprj-dev_outputs.json
           working_directory: ~/repo/sceptre
       - save_cache:
-          key: awsresources_outputs
+          key: awsresources_outputs-cache-{{ .BuildNum }}
           paths:
             - sceptre/sceptreprj-dev_outputs.json
   
   deploy_backend_zappa:
     docker:
-      - image: circleci/python:latest
+      - image: circleci/python:3.6.8
     working_directory: ~/repo
     steps:
       - checkout
       - restore_cache:
-          key: awsresources_outputs
-          paths:
-            - ~/repo/sceptre
+          keys:
+            - awsresources_outputs-cache-{{ .BuildNum }}
+            - awsresources_outputs-cache
       - run:
           name: Install zappa on pipenv
           command: pipenv install --skip-lock
@@ -46,25 +49,25 @@ jobs:
       - run:
           name: Create zappa_settings file to deploy with zappa
           command: |
-                pipenv run create_zappasettings
+                pipenv run python3 create_zappa_settings.py
                 cat zappa_settings.json
           working_directory: ~/repo/backend
       - run:
-          name: Create & deploy AWS backend resources with zappa
-          command: pipenv run deploy_backend
-          working_directory: ~/repo/backend
-      - run:
-          name: Update AWS backend resources with zappa, in case of Aurora serverless
-          command: pipenv run update_backend
+          name: Create & deploy AWS backend resources with zappa, Update AWS backend resources with zappa for Aurora serverless coldstart
+          command: |
+                  set +e
+                  pipenv run zappa undeploy -y
+                  pipenv run zappa deploy
+                  pipenv run zappa update
           working_directory: ~/repo/backend
       - run:
           name: Create zappa_status file for dependencies
           command: |
-                pipenv run create_zappastatus
+                pipenv run zappa status -j > zappa_status.json
                 cat zappa_status.json
           working_directory: ~/repo/backend
       - save_cache:
-          key: zappastatus
+          key: zappa_status-cache-{{ .BuildNum }}
           paths:
             - backend/zappa_status.json
 
@@ -76,22 +79,25 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: awsresources_outputs
-          paths:
-            - ~/repo/sceptre
+          keys:
+            - awsresources_outputs-cache-{{ .BuildNum }}
+            - awsresources_outputs-cache
       - restore_cache:
-          key: zappastatus
-          paths:
-            - ~/repo/backend
+          keys:
+            - zappa_status-cache-{{ .BuildNum }}
+            - zappa_status-cache
       - run:
           name: Install zappa on pipenv
           command: pipenv install --skip-lock
           working_directory: ~/repo/sceptre
       - run:
           name: Create AWS resources with sceptre
-          command: pipenv run create_backendresources || true
+          command: |
+                set +e
+                pipenv run create_backendresources || true
+                pipenv run query_backendresources
           working_directory: ~/repo/sceptre
-          no_output_timeout: 30m
+          no_output_timeout: 45m
 
   deploy_wwwfrontend_yarn:
     docker:
@@ -100,66 +106,74 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: awsresources_outputs
-          paths: 
-            - ~/repo/sceptre
+          keys:
+            - awsresources_outputs-cache-{{ .BuildNum }}
+            - awsresources_outputs-cache
       - run:
-          name: Install python3 on pipenv
+          name: Install awdcli, python3 on pipenv to make os.path fixed
           command: pipenv install --skip-lock
           working_directory: ~/repo/frontend
       - run:
-          name: Create deploy.sh to deploy to www S3 bucket, os.path fixed with pipenv
-          command: pipenv run create_frontend_deployscript
+          name: Create deploy.sh to deploy to www S3 bucket
+          command: |
+                pipenv run create_frontend_deployscript
+                chmod 755 www/deploy.sh
           working_directory: ~/repo/frontend
       - run:
-          name: Install yarn
+          name: Install node v10 and yarn
           command: |
+                curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
+                sudo apt-get install -y nodejs
                 sudo apt-get install apt-transport-https
-                curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
+                sudo curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
                 echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
                 sudo apt-get update
-                sudo apt-get install yarn
+                sudo apt-get install -y yarn
                 yarn --version
       - run:
-          name: Install NPM Packages and Deploy to S3 bucket
+          name: Install NPM Packages and Deploy to www S3 bucket
           command: |
-                yarn install -y
-                yarn deploy
-          working_directory: ~/repo/frontend/www
+                yarn --cwd ./www install -y
+                pipenv run yarn --cwd ./www deploy
+          working_directory: ~/repo/frontend
 
   deploy_adminfrontend_yarn:
     docker:
-      - image: circleci/node:10.15.3-jessie-browsers-legacy
+      - image: circleci/python:latest
     working_directory: ~/repo
     steps:
       - checkout
       - restore_cache:
-          key: awsresources_outputs
-          paths: 
-            - ~/repo/sceptre
+          keys:
+            - awsresources_outputs-cache-{{ .BuildNum }}
+            - awsresources_outputs-cache
       - run:
-          name: Install python3 on pipenv
+          name: Install awdcli, python3 on pipenv to make os.path fixed
           command: pipenv install --skip-lock
           working_directory: ~/repo/frontend
       - run:
-          name: Create deploy.sh to deploy to admin S3 bucket, os.path fixed with pipenv
-          command: pipenv run create_frontend_deployscript
+          name: Create deploy.sh to deploy to admin S3 bucket
+          command: |
+                pipenv run create_frontend_deployscript
+                chmod 755 admin/deploy.sh
           working_directory: ~/repo/frontend
       - run:
-          name: Install yarn
+          name: Install node v10 and yarn
           command: |
+                curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
+                sudo apt-get install -y nodejs
                 sudo apt-get install apt-transport-https
-                curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
+                sudo curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
                 echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
                 sudo apt-get update
-                sudo apt-get install yarn
+                sudo apt-get install -y yarn
                 yarn --version
       - run:
-          name: Install NPM Packages and Deploy to S3 bucket
+          name: Install NPM Packages and Deploy to admin S3 bucket
           command: |
-                yarn install -y
-                yarn deploy
-          working_directory: ~/repo/frontend/admin
+                yarn --cwd ./admin install -y
+                pipenv run yarn --cwd ./admin deploy
+          working_directory: ~/repo/frontend
 
 workflows:
   version: 2

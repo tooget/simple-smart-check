@@ -1,6 +1,6 @@
 template_path: APIGatewayHttpsDistributions.py
 sceptre_user_data:
-  apigatewayhttpsdist_params_zappa_status: !file_contents ../../backend/zappa_status.json
+  apigatewayhttpsdist_params_zappa_status: !file_contents ../backend/zappa_status.json
   apigatewayhttpsdist_params_subdomain: !file_contents sceptreprj-dev_outputs.json
   apigatewayhttpsdist_params_certificatearn: arn:aws:acm:us-east-1:458431035434:certificate/deabb27a-be85-4135-963a-d9c74d54fb3f
   apigatewayhttpsdist_params_apigatewayid_prefix: apigatewayidoutput

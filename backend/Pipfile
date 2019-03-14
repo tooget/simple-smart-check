@@ -34,13 +34,7 @@ pytest-sugar = "*"
 pytest-cov = "*"
 
 [requires]
-python_version = "3.7"
+python_version = "3.6"
 
 [pipenv]
 allow_prereleases = true
-
-[scripts]
-create_zappasettings = "python3 create_zappa_settings.py"
-deploy_backend = "zappa deploy -y"
-update_backend = "zappa update -y"
-create_zappastatus = "zappa status -j > zappa_status.json"

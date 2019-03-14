@@ -19,7 +19,7 @@ print(JSON_FILE_PATH)
 frontend = Frontend(JSON_FILE_PATH)
 
 with open('admin/deploy.sh', 'w') as f:
-    f.write(frontend.wwwDeployScript)
+    f.write(frontend.adminDeployScript)
     f.close()
 
 with open('www/deploy.sh', 'w') as f:
