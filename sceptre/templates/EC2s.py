@@ -35,7 +35,7 @@ class EC2s(object):
                 Sub("mysql --protocol=tcp --host=${dbhost} --port=3306 --user=${dbusername} --password=${dbuserpassword} --execute='CREATE SCHEMA `simplesmartcheckusers` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_520_ci;'", **self.mysqlCommandSubMapper)
             ])),
         ))
-        print("mysql --protocol=tcp --host=${dbhost} --port=3306 --user=${dbusername} --password=${dbuserpassword}".format(**self.mysqlCommandSubMapper))
+        print("mysql --protocol=tcp --host={dbhost} --port=3306 --user={dbusername} --password={dbuserpassword}".format(**self.mysqlCommandSubMapper))
 
 def sceptre_handler(sceptre_user_data):
     ec2 = EC2s(sceptre_user_data)

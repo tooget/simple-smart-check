@@ -12,7 +12,7 @@
     "lint": "eslint --ext .js,.vue src",
     "test": "npm run lint",
     "svgo": "svgo -f src/icons/svg --config=src/icons/svgo.yml",
-    "deploy": "npm run build && aws s3 sync ./dist s3://admin.smartcheck.gq"
+    "deploy": "./deploy.sh"
   },
   "dependencies": {
     "apollo-cache-inmemory": "^1.4.3",
