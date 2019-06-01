@@ -14,5 +14,5 @@ http://localhost:9528
 
 ## Deployed URL access
 ```
-https://admin.smartcheck.gq
+https://admin.smartcheck.ml
 ```

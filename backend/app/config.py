@@ -40,8 +40,8 @@ class Config(object):
     # ------------------------[ Custom Parameters in app.__init__.py ]--------------------------
     # app.Config for cors.init_app()
     CORS_ORIGIN = [
-        'http://127.0.0.1:7000', 'http://localhost:7000', 'https://www.smartcheck.gq/*',
-        'http://127.0.0.1:9528/*', 'http://localhost:9528', 'https://admin.smartcheck.gq/*'
+        'http://127.0.0.1:7000', 'http://localhost:7000', 'https://www.smartcheck.ml/*',
+        'http://127.0.0.1:9528/*', 'http://localhost:9528', 'https://admin.smartcheck.ml/*'
     ]
     # ------------------------------------------------------------------------------------------
 

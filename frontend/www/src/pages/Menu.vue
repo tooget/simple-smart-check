@@ -67,7 +67,7 @@ export default {
         {
           title: '관리자 페이지',
           icon: 'ion-stats-bars',
-          url: 'https://admin.smartcheck.gq'
+          url: 'https://admin.smartcheck.ml'
         }
       ]
     };

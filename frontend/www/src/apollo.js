@@ -8,7 +8,7 @@ import { getToken } from './helpers/auth-header'
 
 const graphqlURL = (process.env.NODE_ENV !== 'production') 
   ? 'http://localhost:5000/api/graphql' 
-  : 'https://backend.smartcheck.gq/api/graphql'
+  : 'https://backend.smartcheck.ml/api/graphql'
 
 Vue.use(VueApollo)
 

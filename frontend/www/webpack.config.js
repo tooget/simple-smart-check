@@ -105,8 +105,8 @@ module.exports = {
     historyApiFallback: true,
     noInfo: true,
     allowedHosts: [
-      'smartcheck.gq',
-      '.smartcheck.gq'
+      'smartcheck.ml',
+      '.smartcheck.ml'
     ]
   },
   performance: {

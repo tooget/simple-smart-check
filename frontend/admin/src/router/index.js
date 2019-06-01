@@ -71,7 +71,7 @@ export const constantRouterMap = [
     component: Layout,
     children: [
       {
-        path: 'https://www.smartcheck.gq',
+        path: 'https://www.smartcheck.ml',
         meta: { title: '출석부 서명 페이지', icon: 'link' }
       }
     ]
