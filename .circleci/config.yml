@@ -56,9 +56,7 @@ jobs:
           name: Create & deploy AWS backend resources with zappa, Update AWS backend resources with zappa for Aurora serverless coldstart
           command: |
                   set +e
-                  pipenv run zappa undeploy -y
-                  pipenv run zappa deploy
-                  pipenv run zappa update
+                  pipenv run zappa deploy || pipenv run zappa update
           working_directory: ~/repo/backend
       - run:
           name: Create zappa_status file for dependencies
@@ -183,28 +181,28 @@ workflows:
       - init_awsresources_sceptre:
           filters:
             branches:
-              only: simple-smart-check-template
+              only: master
       - deploy_wwwfrontend_yarn:
           requires:
             - init_awsresources_sceptre
           filters:
             branches:
-              only: simple-smart-check-template
+              only: master
       - deploy_adminfrontend_yarn:
           requires:
             - init_awsresources_sceptre
           filters:
             branches:
-              only: simple-smart-check-template
+              only: master
       - deploy_backend_zappa:
           requires:
             - init_awsresources_sceptre
           filters:
             branches:
-              only: simple-smart-check-template
+              only: master
       - update_backendresources_sceptre:
           requires:
             - deploy_backend_zappa
           filters:
             branches:
-              only: simple-smart-check-template
+              only: master

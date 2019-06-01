@@ -31,11 +31,13 @@ class EC2s(object):
             UserData = Base64(Join("\n", [
                 "#!/bin/bash",
                 "sudo apt-get update && sudo apt-get -y install mysql-client awscli",
-                Sub("mysql --protocol=tcp --host=${dbhost} --port=3306 --user=${dbusername} --password=${dbuserpassword} --execute='CREATE SCHEMA `simplesmartcheck` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_520_ci;'", **self.mysqlCommandSubMapper),
-                Sub("mysql --protocol=tcp --host=${dbhost} --port=3306 --user=${dbusername} --password=${dbuserpassword} --execute='CREATE SCHEMA `simplesmartcheckusers` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_520_ci;'", **self.mysqlCommandSubMapper)
+                "mysql --protocol=tcp --host={dbhost} --port=3306 --user={dbusername} --password={dbuserpassword} --execute='CREATE SCHEMA `simplesmartcheck` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_520_ci;'".format(**self.mysqlCommandSubMapper),
+                "mysql --protocol=tcp --host={dbhost} --port=3306 --user={dbusername} --password={dbuserpassword} --execute='CREATE SCHEMA `simplesmartcheckusers` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_520_ci;'".format(**self.mysqlCommandSubMapper)
             ])),
         ))
         print("mysql --protocol=tcp --host={dbhost} --port=3306 --user={dbusername} --password={dbuserpassword}".format(**self.mysqlCommandSubMapper))
+        print("mysql --protocol=tcp --host={dbhost} --port=3306 --user={dbusername} --password={dbuserpassword} --execute='CREATE SCHEMA `simplesmartcheck` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_520_ci;'".format(**self.mysqlCommandSubMapper))
+        print("mysql --protocol=tcp --host={dbhost} --port=3306 --user={dbusername} --password={dbuserpassword} --execute='CREATE SCHEMA `simplesmartcheckusers` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_520_ci;'".format(**self.mysqlCommandSubMapper))
 
 def sceptre_handler(sceptre_user_data):
     ec2 = EC2s(sceptre_user_data)

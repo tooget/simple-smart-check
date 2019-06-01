@@ -59,8 +59,8 @@ apiRestful = Api(apiBlueprint,
                     description= 'Backend API for simple-smart-check Project',
                     default= 'app.api.__init__.py',
                     default_label= 'simple-smart-check API LIST',
-                    # ui= False,  # False: Make Swagger UI disable
-                    # doc= False, # False: Do not use Swagger UI
+                    ui= False,  # False: Make Swagger UI disable
+                    doc= False, # False: Do not use Swagger UI
                 )
 
 # API Routing with @apiRestful.route in app.api.resources.RESTful
@@ -73,7 +73,7 @@ apiBlueprint.add_url_rule('/graphql',
         'graphql',
         schema= schema,
         batch= True,
-        graphiql= True, # DEFAULT: False, Do not use GraphiQL UI
+        graphiql= False, # DEFAULT: False, Do not use GraphiQL UI
     )
 )
 # -------------------------------------------------------------------------------

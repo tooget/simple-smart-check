@@ -1,6 +1,6 @@
 project_code: sceptreprj-backend
 region: ap-northeast-2
 
-# certificatearn: arn:aws:acm:us-east-1:458431035434:certificate/deabb27a-be85-4135-963a-d9c74d54fb3f
+# certificatearn: arn:aws:acm:us-east-1:850600621207:certificate/8dff5516-02e5-4b19-944e-4814469b738c
 # maindomain: smartcheck.ml
 # hostedzoneid: Z38HJIDXJR4H59

@@ -5,6 +5,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 package-lock.json
+zappa_settings.json
+sceptreprj-dev_outputs.json
+sceptreprj-dev-template-1559546213.json
 __init__.pyc
 
 # Editor directories and files
