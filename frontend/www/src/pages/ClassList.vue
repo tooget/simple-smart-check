@@ -28,7 +28,7 @@ export default {
   created () {
     curriculumsService.fetchCurriculmList(this.listQuery)
       .then(response => {
-        this.list = response.data.return.items[0]
+        this.list = response.data.return.items
       })
   },
   components: { ClassItem }

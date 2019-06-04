@@ -290,10 +290,11 @@ export default {
           tempData.startDate = +new Date(tempData.startDate + (timezoneOffset * 60 * 1000) + timezoneSeoul) / 1000.0
           tempData.endDate = +new Date(tempData.endDate + (timezoneOffset * 60 * 1000) + timezoneSeoul) / 1000.0
           updateCurriculumsData(tempData).then(response => {
-            const argument = { node: response.data.createCurriculumsData.result }
-            const message = JSON.parse(response.data.createCurriculumsData.message)
+            console.log(JSON.parse(response.data.return.argument))
+            const argument = { node: JSON.parse(response.data.return.argument) }
+            const message = response.data.message
             for (const v of this.list) {
-              if (v.node.curriculumNo === argument.node.curriculumNo) {
+              if (Number(v.node.curriculumNo) === Number(argument.node.curriculumNo)) {
                 const index = this.list.indexOf(v)
                 this.list.splice(index, 1, argument)
                 break
@@ -307,6 +308,7 @@ export default {
               duration: 2000
             })
           }).catch(error => {
+            console.log(error)
             const message = error.graphQLErrors[0].message
             this.$notify({
               title: message.title,
@@ -319,7 +321,7 @@ export default {
       })
     },
     handleDelete(row) {
-      const curriculumNo = row.curriculumNo
+      const curriculumNo = row.node.curriculumNo
       deleteCurriculumsData(curriculumNo).then(response => {
         const message = response.data.message
         const index = this.list.indexOf(row)
@@ -334,7 +336,7 @@ export default {
     },
     handleFileSubmit(row) {
       this.temp = Object.assign({}, row) // copy obj
-      this.temp.curriculumNo = row.curriculumNo
+      this.temp.curriculumNo = row.node.curriculumNo
       this.$refs['excel-upload-input'].click()
     },
     handleFileUpload(e) {

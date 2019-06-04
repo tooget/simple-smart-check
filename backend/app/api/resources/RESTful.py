@@ -102,8 +102,10 @@ class Curriculums:
                 ordinalNoFromClient = infoFromClient['ordinalNo']
                 curriculumNameFromClient = infoFromClient['curriculumName']
                 curriculumTypeFromClient = infoFromClient['curriculumType']
-                startDateFromClient = datetime.fromtimestamp(int(infoFromClient['startDate']) / 1000.0).strftime('%Y-%m-%d')      # Divide by 1000.0, to preserve the millisecond accuracy 
-                endDateFromClient = datetime.fromtimestamp(int(infoFromClient['endDate']) / 1000.0).strftime('%Y-%m-%d')      # Divide by 1000.0, to preserve the millisecond accuracy
+                startDateFromClient = datetime.fromtimestamp(int(infoFromClient['startDate'])).strftime('%Y-%m-%d')
+                endDateFromClient = datetime.fromtimestamp(int(infoFromClient['endDate'])).strftime('%Y-%m-%d')
+                # startDateFromClient = datetime.fromtimestamp(int(infoFromClient['startDate']) / 1000).strftime('%Y-%m-%d')      # Divide by 1000.0, to preserve the millisecond accuracy
+                # endDateFromClient = datetime.fromtimestamp(int(infoFromClient['endDate']) / 1000).strftime('%Y-%m-%d')      # Divide by 1000.0, to preserve the millisecond accuracy
             except KeyError:
                 return {'message': {'title': '교육과정 입력 데이터 오류', 'content': '업데이트할 교육과정 데이터를 확인해 주시기 바랍니다.'}}, 400
 
@@ -124,8 +126,8 @@ class Curriculums:
                 db.session.commit()
                 curriculums = CurriculumsModel.query.filter_by(**requestedBody).one()
                 curriculumsSchema = CurriculumsModelSchema(many= False)
-                argument = curriculumsSchema.dump(curriculums)
-                argumentToJson = dumps(argument)
+                argument = curriculumsSchema.dump(curriculums)      # dump 결과가 1) data / 2) error 로 나뉘어서 나타남
+                argumentToJson = dumps(argument.data)
                 return {'message': {'title': '교육과정 업데이트 성공', 'content': '교육과정 정보가 업데이트 되었습니다.'},
                         'return': {
                             'argument': f'{argumentToJson}'
@@ -200,7 +202,7 @@ class Curriculums:
                 query = query.all()
 
             curriculumsSchema = CurriculumsModelSchema(many= True)
-            output = curriculumsSchema.dump(query)
+            output = curriculumsSchema.dump(query).data
 
             return {'message':
                         {'title': '교육과정 목록조회 성공', 'content': f'{total}건의 교육과정을 성공적으로 조회하였습니다.'},
@@ -673,7 +675,7 @@ class Members:
                 members = MembersModel.query.filter_by(**requestedBody).one()
                 membersSchema = MembersModelSchema(many= False)
                 argument = membersSchema.dump(members)
-                argumentToJson = dumps(argument)
+                argumentToJson = dumps(argument.data)
                 return {'message': {'title': '교육생 정보 업데이트 성공', 'content': '해당 교육생의 정보를 성공적으로 업데이트 하였습니다.'},
                         'return': {
                             'argument': f'{argumentToJson}'
@@ -753,7 +755,7 @@ class Members:
             output = convertDataframeToDictsList(df)
 
             return {'message':
-                        {'title': '출석부 조회 성공', 'content': f'교육생 {total}명의 출석부를 성공적으로 조회하였습니다.'},
+                        {'title': '신청자/교육생 명단 조회 성공', 'content': f'신청자/교육생 {total}명의 명단를 성공적으로 조회하였습니다.'},
                     'return':
                         {'items': output, 'total': total}
                     }, 200

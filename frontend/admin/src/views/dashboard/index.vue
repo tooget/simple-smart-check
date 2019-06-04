@@ -144,7 +144,7 @@ export default {
     },
     getCurriculumsList() {
       fetchCurriculumsList(this.curriculumOptionlistQuery).then(response => {
-        this.curriculumOptionlist = response.data.return.items[0]
+        this.curriculumOptionlist = response.data.return.items
       })
     },
     sortChange(data) {
